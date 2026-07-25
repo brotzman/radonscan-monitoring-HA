@@ -13,11 +13,13 @@ class HomeAssistantError(RuntimeError):
 
 class HomeAssistantClient:
     def __init__(self, access_token: str = "") -> None:
-        self.base_url = os.environ.get("HOME_ASSISTANT_API_URL", "http://supervisor/core/api").rstrip("/")
-        # Administrator-only Recorder actions may reject the Supervisor token.
-        # An optional long-lived Home Assistant administrator token therefore takes precedence.
-        self.token_source = "homeassistant_access_token" if str(access_token).strip() else "supervisor_token"
-        self.token = str(access_token).strip() or os.environ.get("SUPERVISOR_TOKEN", "")
+        configured_token = str(access_token).strip()
+        self.token_source = "homeassistant_access_token" if configured_token else "supervisor_token"
+        self.token = configured_token or os.environ.get("SUPERVISOR_TOKEN", "")
+        # Long-lived Home Assistant tokens authenticate directly against Core.
+        # The Supervisor proxy is used only with the add-on Supervisor token.
+        default_url = "http://homeassistant:8123/api" if configured_token else "http://supervisor/core/api"
+        self.base_url = os.environ.get("HOME_ASSISTANT_API_URL", default_url).rstrip("/")
 
     @property
     def available(self) -> bool:
@@ -104,49 +106,30 @@ class HomeAssistantClient:
             raise HomeAssistantError("Invalid event type")
         return self._request("POST", f"events/{cleaned}", event_data or {})
 
-    def purge_entities(self, entity_ids: list[str], keep_days: int = 0) -> dict[str, object]:
-        cleaned = sorted({str(entity).strip() for entity in entity_ids if str(entity).strip()})
-        if not cleaned:
-            raise HomeAssistantError("At least one entity must be selected")
-        if len(cleaned) > 100:
-            raise HomeAssistantError("No more than 100 entities can be purged at once")
+    def purge_entities(
+        self,
+        entity_ids: list[str] | None = None,
+        keep_days: int = 0,
+        entity_globs: list[str] | None = None,
+    ) -> dict[str, object]:
+        cleaned = sorted({str(entity).strip() for entity in (entity_ids or []) if str(entity).strip()})
+        globs = sorted({str(pattern).strip() for pattern in (entity_globs or []) if str(pattern).strip()})
+        if not cleaned and not globs:
+            raise HomeAssistantError("At least one entity or entity glob is required")
         for entity_id in cleaned:
             if "." not in entity_id or any(char.isspace() for char in entity_id):
                 raise HomeAssistantError(f"Invalid entity ID: {entity_id}")
         keep_days = max(0, min(3650, int(keep_days)))
-        # Verify that the action is visible for the current authentication context.
-        services = self._request("GET", "services")
-        recorder_services = {}
-        if isinstance(services, list):
-            for domain in services:
-                if isinstance(domain, dict) and domain.get("domain") == "recorder":
-                    recorder_services = domain.get("services") if isinstance(domain.get("services"), dict) else {}
-                    break
-        if "purge_entities" not in recorder_services:
-            if self.token_source == "supervisor_token":
-                raise HomeAssistantError(
-                    "Home Assistant exposes recorder.purge_entities only to an administrator context. "
-                    "Create a long-lived access token for an administrator and enter it in the app option "
-                    "'Home Assistant administrator token'."
-                )
-            raise HomeAssistantError("The recorder.purge_entities action is not available in this Home Assistant instance")
-        try:
-            response = self._request(
-                "POST",
-                "services/recorder/purge_entities",
-                {"entity_id": cleaned, "keep_days": keep_days},
-            )
-        except HomeAssistantError as exc:
-            message = str(exc)
-            if "Service recorder/purge_entities not found" in message and self.token_source == "supervisor_token":
-                raise HomeAssistantError(
-                    "Home Assistant rejected recorder.purge_entities for the Supervisor token. "
-                    "Configure a long-lived administrator token in the app options and restart the app."
-                ) from exc
-            raise
+        payload: dict[str, object] = {"keep_days": keep_days}
+        if cleaned:
+            payload["entity_id"] = cleaned
+        if globs:
+            payload["entity_globs"] = globs
+        response = self._request("POST", "services/recorder/purge_entities", payload)
         return {
             "requested": True,
             "entity_ids": cleaned,
+            "entity_globs": globs,
             "keep_days": keep_days,
             "authentication": self.token_source,
             "response": response,

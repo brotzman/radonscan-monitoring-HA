@@ -1,3 +1,19 @@
+# 4.4.6
+
+- Fixed the refresh error `can't access property "value", $(...) is null` by making catalogue and filter rendering tolerant of missing or cached interface elements.
+- A secondary catalogue/history rendering failure no longer changes a successfully received device status to “Not connected”.
+- The connection pill, sidebar status and dashboard system status now remain consistent after manual refreshes.
+- Added defensive handling for mixed Ingress HTML/JavaScript versions during add-on updates.
+
+# 4.4.5
+
+- Removed the obsolete Home Assistant entity-selection list and detection button from data management.
+- Fixed the web server so the configured Home Assistant administrator token is actually used.
+- Long-lived access tokens now connect directly to Home Assistant Core instead of the Supervisor API proxy.
+- Purges current and historical RadonScan entity names using both discovered entity IDs and stable entity globs.
+- Added visible in-card progress and success/error status for Recorder purge requests.
+- Kept navigation inside Radon Monitoring and returns to the app overview after an accepted request.
+
 # Changelog
 
 ## 4.4.4

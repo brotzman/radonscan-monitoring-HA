@@ -100,12 +100,22 @@
   }
 
   function setConnection(connected) {
-    const pill=$('connectionPill'); pill.className=`status-pill ${connected?'ok':'error'}`;
-    pill.querySelector('span:last-child').textContent=connected?tr('connected'):tr('disconnected');
-    $('sidebar').classList.toggle('connected',connected);
-    $('sidebar').classList.toggle('disconnected',!connected);
-    const footer=$('sidebar').querySelector('.sidebar-footer'); footer.className=`sidebar-footer ${connected?'ok':'error'}`;
-    $('sidebarConnection').textContent=connected?tr('connected'):tr('disconnected');
+    connected=Boolean(connected);
+    const pill=$('connectionPill');
+    if(pill) {
+      pill.className=`status-pill ${connected?'ok':'error'}`;
+      const label=pill.querySelector('span:last-child');
+      if(label) label.textContent=connected?tr('connected'):tr('disconnected');
+    }
+    const sidebar=$('sidebar');
+    if(sidebar) {
+      sidebar.classList.toggle('connected',connected);
+      sidebar.classList.toggle('disconnected',!connected);
+      const footer=sidebar.querySelector('.sidebar-footer');
+      if(footer) footer.className=`sidebar-footer ${connected?'ok':'error'}`;
+    }
+    const sidebarConnection=$('sidebarConnection');
+    if(sidebarConnection) sidebarConnection.textContent=connected?tr('connected'):tr('disconnected');
   }
 
   function periodReason(period) {
@@ -223,10 +233,10 @@
   }
 
   function analysisQuery() {
-    const preset=$('analysisPreset').value;const params=new URLSearchParams();
+    const value=id=>$(id)?.value||'';const preset=value('analysisPreset')||'30d';const params=new URLSearchParams();
     if(preset!=='custom') params.set('days',preset);
-    if(preset==='custom') {const start=toIso($('analysisStart').value),end=toIso($('analysisEnd').value);if(start)params.set('start',start);if(end)params.set('end',end);}
-    if($('analysisDevice').value)params.set('device_id',$('analysisDevice').value);if($('analysisLocation').value)params.set('location_id',$('analysisLocation').value);if($('analysisCampaign').value)params.set('campaign_id',$('analysisCampaign').value);
+    if(preset==='custom') {const start=toIso(value('analysisStart')),end=toIso(value('analysisEnd'));if(start)params.set('start',start);if(end)params.set('end',end);}
+    if(value('analysisDevice'))params.set('device_id',value('analysisDevice'));if(value('analysisLocation'))params.set('location_id',value('analysisLocation'));if(value('analysisCampaign'))params.set('campaign_id',value('analysisCampaign'));
     return params;
   }
 
@@ -272,18 +282,40 @@
 
   function options(items,valueKey,labelFn,allLabel) {return `${allLabel!==undefined?`<option value="">${escapeHtml(allLabel)}</option>`:''}${items.map(item=>`<option value="${escapeHtml(item[valueKey])}">${escapeHtml(labelFn(item))}</option>`).join('')}`;}
   function renderCatalog() {
+    const updateSelect=(id,html,restoreValue=true,preferredValue=null)=>{
+      const element=$(id);
+      if(!element) return;
+      const old=element.value;
+      element.innerHTML=html;
+      if(restoreValue && old) element.value=old;
+      if(preferredValue!==null && (!element.value || !Array.from(element.options).some(option=>option.value===element.value))) {
+        element.value=String(preferredValue);
+      }
+    };
     const locOpts=options(catalog.locations,'id',l=>[l.building,l.floor,l.name].filter(Boolean).join(' · '),tr('all_sites'));
-    ['analysisLocation','historyLocation','reportLocation','eventLocation'].forEach(id=>{const old=$(id).value;$(id).innerHTML=locOpts;$(id).value=old;});
-    ['assignLocation'].forEach(id=>{const old=$(id).value;$(id).innerHTML=options(catalog.locations,'id',l=>[l.building,l.floor,l.name].filter(Boolean).join(' · '));$(id).value=old;});
+    ['analysisLocation','historyLocation','reportLocation','eventLocation'].forEach(id=>updateSelect(id,locOpts));
+    ['assignLocation'].forEach(id=>updateSelect(id,options(catalog.locations,'id',l=>[l.building,l.floor,l.name].filter(Boolean).join(' · '))));
     const deviceLabel=d=>[d.model,d.serial_number||d.device_id].filter(Boolean).join(' · ');
     const allDeviceOpts=options(catalog.devices,'device_id',deviceLabel,tr('all_devices_combined'));
-    ['analysisDevice','historyDevice'].forEach(id=>{const old=$(id).value;$(id).innerHTML=allDeviceOpts;if(old&&catalog.devices.some(d=>String(d.device_id)===old))$(id).value=old;else if(!catalogInitialised&&catalog.devices.length)$(id).value=String(catalog.devices[0].device_id);});
+    ['analysisDevice','historyDevice'].forEach(id=>{
+      const element=$(id); if(!element) return;
+      const old=element.value; element.innerHTML=allDeviceOpts;
+      if(old&&catalog.devices.some(d=>String(d.device_id)===old)) element.value=old;
+      else if(!catalogInitialised&&catalog.devices.length) element.value=String(catalog.devices[0].device_id);
+    });
     const singleDeviceOpts=options(catalog.devices,'device_id',deviceLabel);
-    ['assignDevice','reportDevice'].forEach(id=>{const old=$(id).value;$(id).innerHTML=singleDeviceOpts;if(old&&catalog.devices.some(d=>String(d.device_id)===old))$(id).value=old;else if(catalog.devices.length)$(id).value=String(catalog.devices[0].device_id);});
+    ['assignDevice','reportDevice'].forEach(id=>{
+      const element=$(id); if(!element) return;
+      const old=element.value; element.innerHTML=singleDeviceOpts;
+      if(old&&catalog.devices.some(d=>String(d.device_id)===old)) element.value=old;
+      else if(catalog.devices.length) element.value=String(catalog.devices[0].device_id);
+    });
     const campOpts=options(catalog.campaigns,'id',c=>`#${c.id} · ${fmtDate(c.started_at)} · ${c.sample_count} ${tr('samples')}`,tr('all_campaigns'));
-    ['analysisCampaign','historyCampaign'].forEach(id=>{const old=$(id).value;$(id).innerHTML=campOpts;$(id).value=old;});
+    ['analysisCampaign','historyCampaign'].forEach(id=>updateSelect(id,campOpts));
     catalogInitialised=true;
-    renderLocations();renderEvents();renderReports();
+    if($('locationCards')) renderLocations();
+    if($('eventList')) renderEvents();
+    if($('reportList')) renderReports();
   }
 
   function renderLocations() {
@@ -298,7 +330,7 @@
 
   function renderReports() {$('reportCount').textContent=catalog.reports.length;const wrap=$('reportList');if(!catalog.reports.length){wrap.innerHTML=`<div class="empty">${tr('no_reports')}</div>`;return;}wrap.innerHTML=catalog.reports.map(r=>`<div class="report-item"><small>${fmtDate(r.created_at)}</small><div><strong>${escapeHtml(r.title)}</strong><small>${escapeHtml(r.location_name||tr('all_sites'))} · ${escapeHtml(r.device_model||r.device_id||tr('not_available'))} · ${escapeHtml(r.profile)}</small></div><div><strong>${r.mean_bq_m3===null||r.mean_bq_m3===undefined?'–':radon(r.mean_bq_m3)}</strong><small>${fmtInteger(r.samples)} ${tr('samples')} · ${fmtNumber(r.coverage_percent,0)} %</small></div><div class="report-actions"><a class="mini-button" href="reports/${encodeURIComponent(r.report_id)}" target="_blank">PDF</a><button class="mini-button" data-delete-report="${escapeHtml(r.report_id)}">${tr('delete')}</button></div></div>`).join('');wrap.querySelectorAll('[data-delete-report]').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm(tr('confirm_delete_report')))return;try{await api(`api/reports/${encodeURIComponent(btn.dataset.deleteReport)}`,{method:'DELETE'});toast(tr('deleted'));await reloadCatalog();}catch(err){toast(err.message,true);}}));}
 
-  function historyQuery() {const params=new URLSearchParams({limit:'10000'});const start=toIso($('historyStart').value),end=toIso($('historyEnd').value);if(start)params.set('start',start);if(end)params.set('end',end);if($('historyDevice').value)params.set('device_id',$('historyDevice').value);if($('historyLocation').value)params.set('location_id',$('historyLocation').value);if($('historyCampaign').value)params.set('campaign_id',$('historyCampaign').value);return params;}
+  function historyQuery() {const params=new URLSearchParams({limit:'10000'});const value=id=>$(id)?.value||'';const start=toIso(value('historyStart')),end=toIso(value('historyEnd'));if(start)params.set('start',start);if(end)params.set('end',end);if(value('historyDevice'))params.set('device_id',value('historyDevice'));if(value('historyLocation'))params.set('location_id',value('historyLocation'));if(value('historyCampaign'))params.set('campaign_id',value('historyCampaign'));return params;}
   async function loadHistoryFiltered() {try{const payload=await api(`api/history?${historyQuery()}`);records=payload.items||[];renderHistory();renderOverviewChart();const exportParams=historyQuery();exportParams.delete('limit');$('historyCsv').href=`export/history.csv?${exportParams}`;}catch(err){toast(err.message,true);}}
   function renderHistory() {const body=$('historyBody');$('historySummary').textContent=`${fmtInteger(records.length)} ${tr('samples')}`;if(!records.length){body.innerHTML=`<tr><td colspan="7" class="empty-cell">${tr('history_empty')}</td></tr>`;return;}body.innerHTML=records.slice(0,1000).map(row=>`<tr><td>${fmtDate(row.completed_at)}</td><td>${radon(row.bq_m3)}</td><td>${row.raw_cph}</td><td>${escapeHtml([row.model,row.serial_number||row.device_id].filter(Boolean).join(' · '))}</td><td>${escapeHtml(row.location_name||tr('not_assigned'))}</td><td>#${row.campaign_id}</td><td>${tr('source_spir')}</td></tr>`).join('');}
 
@@ -325,27 +357,28 @@
 
   async function loadAudit() {try{const payload=await api('api/audit?limit=200');const body=$('auditBody'),items=payload.items||[];body.innerHTML=items.length?items.map(item=>`<tr><td>${fmtDate(item.created_at)}</td><td>${escapeHtml(item.action)}</td><td>${escapeHtml(item.target||'–')}</td><td>${escapeHtml(item.user_name||'–')}</td><td><code>${escapeHtml(JSON.stringify(item.details||{}))}</code></td></tr>`).join(''):`<tr><td colspan="5" class="empty-cell">${tr('no_data')}</td></tr>`;}catch(err){toast(err.message,true);}}
 
-  async function loadHaEntities() {
-    const button=$('loadHaEntities');button.disabled=true;
-    try{
-      const payload=await api('api/homeassistant/entities');const items=payload.items||[];
-      $('haEntityList').innerHTML=items.length?items.map(item=>`<div class="checkbox-item readonly"><span><strong>${escapeHtml(item.friendly_name)}</strong><small>${escapeHtml(item.entity_id)} · ${escapeHtml(item.state??'–')} ${escapeHtml(item.unit||'')}</small></span></div>`).join(''):`<div class="notice">${tr('no_ha_entities')}</div>`;
-      $('haStatus').textContent=`${items.length} ${tr('radonscan_entities_detected')}`;
-    }catch(err){$('haStatus').textContent=err.message;toast(err.message,true);}finally{button.disabled=false;}
-  }
   async function purgeHa(event) {
     if(event) event.preventDefault();
-    const confirmation=($('haConfirmation').value||'').trim().toUpperCase().replace(/\s+/g,'');
-    if(!['PURGE','LÖSCHEN','LOESCHEN','DELETE'].includes(confirmation)){toast(tr('confirmation_invalid'),true);$('haConfirmation').focus();return;}
-    if(!confirm(tr('confirm_purge_all_radonscan')))return;
-    const button=$('purgeHaHistory');button.disabled=true;
+    const input=$('haConfirmation');
+    const confirmation=(input.value||'').trim().toUpperCase().replace(/\s+/g,'');
+    if(!['PURGE','LÖSCHEN','LOESCHEN','DELETE'].includes(confirmation)){
+      toast(tr('confirmation_invalid'),true);input.focus();return;
+    }
+    const button=$('purgeHaHistory');
+    const status=$('haStatus');
+    button.disabled=true;
+    status.textContent=tr('ha_purge_running');
     try{
-      const result=await api('api/homeassistant/purge-all',{method:'POST',body:{confirmed:true},confirmation});
-      $('haConfirmation').value='';
+      const result=await api('api/homeassistant/purge-all',{method:'POST',body:{confirmed:true,confirmation},confirmation});
+      input.value='';
+      status.textContent=tr('ha_purge_started');
       setView('overview');
-      await loadAll();
-      toast(`${tr('purge_requested')}: ${fmtInteger(result.entity_ids?.length||0)} ${tr('entities')}`);
-    }catch(err){toast(err.message,true);}finally{button.disabled=false;}
+      await loadStateFast();
+      const total=(result.entity_ids?.length||0)+(result.entity_globs?.length||0);
+      toast(`${tr('purge_requested')}: ${fmtInteger(total)} ${tr('purge_targets')}`);
+    }catch(err){
+      status.textContent=err.message;toast(err.message,true);
+    }finally{button.disabled=false;}
   }
 
 
@@ -367,7 +400,7 @@
   async function loadAll() {
     if(loadInProgress) return;
     loadInProgress=true;
-    $('refreshButton').disabled=true;
+    const refreshButton=$('refreshButton'); if(refreshButton) refreshButton.disabled=true;
     try {
       // Load and render the compact state first. Slow history, catalogue or analysis
       // requests must never keep the complete dashboard in its loading state.
@@ -399,12 +432,15 @@
         const exportParams=historyQuery();exportParams.delete('limit');$('historyCsv').href=`export/history.csv?${exportParams}`;
       } else console.warn('History refresh failed',results[1].reason);
     } catch(err) {
-      setConnection(false);
+      // Only a failed state request means that the app/device status is unknown.
+      // Rendering or secondary catalogue/history errors must not overwrite a
+      // successfully received connection state with “Not connected”.
+      if(!state) setConnection(false);
       toast(err.message,true);
       console.error(err);
     } finally {
       loadInProgress=false;
-      $('refreshButton').disabled=false;
+      if(refreshButton) refreshButton.disabled=false;
     }
   }
 
@@ -413,10 +449,10 @@
     $('menuButton').addEventListener('click',()=>setSidebar(!$('sidebar').classList.contains('open')));
     $('sidebarBackdrop').addEventListener('click',closeSidebar);
     document.addEventListener('keydown',event=>{if(event.key==='Escape')closeSidebar();});
-    $('refreshButton').addEventListener('click',loadAll);
+    $('refreshButton')?.addEventListener('click',loadAll);
     $('languageSelect').addEventListener('change',event=>{const url=new URL(location.href);url.searchParams.set('lang',event.target.value);location.href=url.toString();});
     $$('#rangeSwitch button').forEach(button=>button.addEventListener('click',()=>{chartDays=Number(button.dataset.days);$$('#rangeSwitch button').forEach(x=>x.classList.toggle('active',x===button));renderOverviewChart();}));
-    $('analysisApply').addEventListener('click',loadAnalysis);$('analysisPreset').addEventListener('change',()=>{const custom=$('analysisPreset').value==='custom';$('analysisStart').disabled=!custom;$('analysisEnd').disabled=!custom;});
+    $('analysisApply')?.addEventListener('click',loadAnalysis);$('analysisPreset')?.addEventListener('change',()=>{const custom=$('analysisPreset')?.value==='custom';if($('analysisStart'))$('analysisStart').disabled=!custom;if($('analysisEnd'))$('analysisEnd').disabled=!custom;});
     $('analysisCsvButton').addEventListener('click',()=>{const params=analysisQuery();location.href=`export/history.csv?${params}`;});
     $('copyHashes').addEventListener('click',async()=>{await navigator.clipboard.writeText($('hashes').textContent);toast(tr('copied'));});
     $('locationForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;const payload={id:$('locationId').value||null,name:$('locationName').value,building:$('locationBuilding').value,floor:$('locationFloor').value,room_type:$('locationRoomType').value,map_id:null,x_percent:null,y_percent:null,measurement_height_m:$('locationHeight').value||null,notes:$('locationNotes').value,active:true};try{await api('api/locations',{method:'POST',body:payload});toast(tr('saved'));form.reset();$('locationId').value='';await reloadCatalog();}catch(err){toast(err.message,true);}});
@@ -427,13 +463,17 @@
     $('reportForm').addEventListener('submit',async event=>{event.preventDefault();const button=$('createReportButton');button.disabled=true;button.textContent=tr('generating');try{const result=await api('api/reports',{method:'POST',body:{title:$('reportTitle').value,profile:$('reportProfile').value,locale:$('reportLocale').value,device_id:$('reportDevice').value,location_id:$('reportLocation').value||null,days:Number($('reportDays').value),start:toIso($('reportStart').value),end:toIso($('reportEnd').value)}});toast(tr('report_created'));await reloadCatalog();window.open(`reports/${encodeURIComponent(result.item.report_id)}`,'_blank');}catch(err){toast(err.message,true);}finally{button.disabled=false;button.textContent=tr('generate_pdf');}});
     $('deleteDataForm').addEventListener('submit',deleteData);
     $('restoreForm').addEventListener('submit',async event=>{event.preventDefault();if(!confirm(tr('confirm_restore')))return;const formElement=event.currentTarget;const form=new FormData(formElement);form.set('file',$('restoreFile').files[0]);form.set('confirmation',$('restoreConfirmation').value);try{await api('api/data/restore',{method:'POST',body:form});toast(tr('restored'));formElement.reset();await loadAll();}catch(err){toast(err.message,true);}});
-    $('loadHaEntities').addEventListener('click',loadHaEntities);$('purgeHaHistory').addEventListener('click',purgeHa);$('refreshAudit').addEventListener('click',loadAudit);
+    $('purgeHaHistory').addEventListener('click',purgeHa);$('refreshAudit').addEventListener('click',loadAudit);
     $('modalClose').addEventListener('click',()=> $('modal').classList.add('hidden'));
   }
 
   function initializeDefaults() {
-    $('analysisStart').disabled=true;$('analysisEnd').disabled=true;$('eventTime').value=toInput(new Date());
-    const latest=state?.measurement?.completed_at||new Date();$('assignStart').value=toInput(latest);$('reportLocale').value=locale()==='de'?'de':'en';
+    if($('analysisStart')) $('analysisStart').disabled=true;
+    if($('analysisEnd')) $('analysisEnd').disabled=true;
+    if($('eventTime')) $('eventTime').value=toInput(new Date());
+    const latest=state?.measurement?.completed_at||new Date();
+    if($('assignStart')) $('assignStart').value=toInput(latest);
+    if($('reportLocale')) $('reportLocale').value=locale()==='de'?'de':'en';
   }
 
   applyTranslations();bindEvents();initializeDefaults();

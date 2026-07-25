@@ -57,7 +57,7 @@ class WebServer:
         self.docs_dir = Path("/usr/local/share/radonscan3/docs")
         if not self.docs_dir.is_dir():
             self.docs_dir = Path(__file__).resolve().parents[2] / "share" / "radonscan3" / "docs"
-        self.ha = HomeAssistantClient()
+        self.ha = HomeAssistantClient(settings.homeassistant_access_token)
         self.reporter = ScientificReport(storage, settings)
         self.gmcmap = GmcMapClient(settings, storage)
         self.csrf_token = secrets.token_urlsafe(24)
@@ -505,7 +505,16 @@ class WebServer:
                         self.require_data_management()
                         entities = app.ha.radonscan_entities()
                         entity_ids = [str(item.get("entity_id") or "") for item in entities]
-                        result = app.ha.purge_entities(entity_ids, 0)
+                        entity_globs = [
+                            "sensor.gq_radonscan_*",
+                            "binary_sensor.gq_radonscan_*",
+                            "update.gq_radonscan_*",
+                            "sensor.radon_monitoring_*",
+                            "binary_sensor.radon_monitoring_*",
+                            "update.radon_monitoring_*",
+                            "*.radonscan_*",
+                        ]
+                        result = app.ha.purge_entities(entity_ids, 0, entity_globs)
                         app.storage.audit("homeassistant_purge_all", "recorder", result, self.user_name)
                         self.json_response({"ok": True, **result})
                         return

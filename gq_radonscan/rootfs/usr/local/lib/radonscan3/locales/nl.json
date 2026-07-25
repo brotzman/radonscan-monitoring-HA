@@ -395,10 +395,14 @@
   "confirmation_delete_database_invalid": "Enter DELETE or LÖSCHEN exactly.",
   "confirm_delete_entire_database": "Permanently delete the complete local Radon Monitoring database? This cannot be undone.",
   "database_deleted": "Local database deleted",
-  "ha_purge_all_hint": "Deletes the complete Home Assistant Recorder history of all detected RadonScan and Radon Monitoring entities. Local app data remains unchanged.",
+  "ha_purge_all_hint": "Deletes the complete Home Assistant Recorder history of all RadonScan and Radon Monitoring entities. Individual selection has been removed. Name patterns also cover entities that no longer exist but still have stored history. Local app data remains unchanged.",
   "detect_radonscan_entities": "Detect RadonScan entities",
   "radonscan_entities_detected": "RadonScan entities detected",
   "purge_all_radonscan_history": "Delete all RadonScan history",
   "confirm_purge_all_radonscan": "Permanently delete all Home Assistant history for every detected RadonScan entity?",
-  "entities": "entities"
+  "entities": "entities",
+  "ha_purge_ready": "Ready. Enter PURGE or DELETE to start.",
+  "ha_purge_running": "Sending the purge request to Home Assistant …",
+  "ha_purge_started": "Home Assistant accepted the purge request.",
+  "purge_targets": "entities/patterns"
 }
