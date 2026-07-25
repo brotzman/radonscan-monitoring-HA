@@ -1,0 +1,76 @@
+configuration:
+  device_name:
+    name: Nombre del dispositivo
+    description: Nombre mostrado para el RadonScan en Home Assistant y en la interfaz
+      web.
+  scan_interval:
+    name: Intervalo de consulta
+    description: Segundos entre consultas SPIR de solo lectura.
+  preferred_unit:
+    name: Unidad preferida
+    description: Unidad utilizada en Home Assistant y en la interfaz web.
+  language:
+    name: Idioma
+    description: Idioma de la interfaz ingress y del manual vinculado.
+  warning_threshold_bq_m3:
+    name: Umbral de aviso
+    description: Valor de radón en Bq/m³ a partir del cual se muestra el estado de
+      aviso.
+  danger_threshold_bq_m3:
+    name: Umbral de peligro
+    description: Valor de radón en Bq/m³ a partir del cual se muestra el estado de
+      peligro.
+  factor_bq_m3_per_cph:
+    name: Factor de conversión CPH
+    description: Factor experimental en Bq/m³ por count/h; se guarda con cada medición.
+  backfill_history:
+    name: Importar historial del dispositivo
+    description: Importa los valores horarios completados ya guardados tras la primera
+      lectura correcta.
+  history_retention_days:
+    name: Periodo de conservación
+    description: Elimina de SQLite las mediciones locales después de este número de
+      días.
+  serial_port:
+    name: Puerto serie
+    description: Déjelo vacío para detección automática o indique una ruta fija del
+      dispositivo.
+  serial_timeout_seconds:
+    name: Tiempo límite serie
+    description: Segundos máximos de espera para una respuesta del dispositivo.
+  mqtt_topic_prefix:
+    name: Prefijo de temas MQTT
+    description: Tema base para los mensajes de estado y disponibilidad.
+  discovery_prefix:
+    name: Prefijo de Discovery
+    description: Prefijo utilizado por los temas de Home Assistant MQTT Discovery.
+  diagnostic_logging:
+    name: Registro de diagnóstico detallado
+    description: Registra detalles técnicos adicionales sobre puertos, lecturas SPIR
+      y decodificación.
+  log_level:
+    name: Nivel de registro
+    description: Nivel de detalle del registro de la app.
+  minimum_data_coverage_percent:
+    name: Minimum data coverage
+    description: Required percentage of available hourly values before a period average
+      is considered calculable.
+  report_author:
+    name: Report author
+    description: Optional author name for scientific PDF reports.
+  report_organisation:
+    name: Organisation
+    description: Optional organisation or institution for PDF reports.
+  report_disclaimer:
+    name: Additional report notice
+    description: Optional custom notice included in scientific PDF reports.
+  gmcmap_max_age_hours:
+    name: World Map maximum data age
+    description: Maximum age of readings queued for upload.
+  gmcmap_retry_limit:
+    name: World Map retry limit
+    description: Maximum number of upload attempts before a reading is marked failed.
+  analysis_timezone:
+    name: Analysis time zone
+    description: IANA time zone used for day, weekday and hourly profiles; auto uses
+      Home Assistant.

@@ -1,0 +1,31 @@
+#include <tunables/global>
+
+profile gq_radonscan flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+  file,
+  network,
+  signal (send) set=(kill,term,int,hup,cont),
+
+  /init ix,
+  /bin/** ix,
+  /usr/bin/** ix,
+  /usr/local/bin/** ix,
+  /usr/local/lib/** rix,
+  /usr/local/share/radonscan3/** r,
+  /usr/lib/bashio/** rix,
+  /run/{s6,s6-rc*,service}/** ix,
+  /package/** ix,
+  /command/** ix,
+  /etc/services.d/** rwix,
+  /run/{,**} rwk,
+
+  /data/{,**} rwk,
+  /tmp/{,**} rwk,
+  /dev/shm/{,**} rwk,
+
+  /dev/ttyUSB* rw,
+  /dev/ttyACM* rw,
+  /dev/ttyAMA* rw,
+  /dev/serial/** rw,
+  /run/udev/** r,
+}

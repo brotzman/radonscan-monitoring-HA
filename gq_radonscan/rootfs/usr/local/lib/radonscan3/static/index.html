@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="__LOCALE__">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Radon Monitoring</title>
+  <link rel="icon" href="assets/icon.png">
+  <link rel="stylesheet" href="assets/app.css?v=__VERSION__">
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <img src="assets/icon.png" alt="" class="brand-icon">
+        <div><strong>Radon Monitoring</strong><small>v__VERSION__</small></div>
+      </div>
+      <nav class="side-nav" data-i18n-aria-label="main_navigation" aria-label="Main navigation">
+        <button class="nav-item active" data-view="overview"><span class="nav-icon">⌂</span><span data-i18n="overview"></span></button>
+        <button class="nav-item" data-view="analysis"><span class="nav-icon">⌁</span><span data-i18n="analysis"></span></button>
+        <button class="nav-item" data-view="expert"><span class="nav-icon">⌘</span><span data-i18n="expert_view"></span></button>
+        <div class="nav-separator"></div>
+        <button class="nav-item" data-view="map"><span class="nav-icon">◎</span><span data-i18n="gmcmap_nav"></span></button>
+        <button class="nav-item" data-view="history"><span class="nav-icon">≋</span><span data-i18n="history"></span></button>
+        <button class="nav-item" data-view="reports"><span class="nav-icon">▤</span><span data-i18n="reports"></span></button>
+        <button class="nav-item" data-view="data"><span class="nav-icon">◫</span><span data-i18n="data_management"></span></button>
+        <div class="nav-separator"></div>
+        <button class="nav-item" data-view="system"><span class="nav-icon">◉</span><span data-i18n="device_system"></span></button>
+        <button class="nav-item" data-view="settings"><span class="nav-icon">⚙</span><span data-i18n="settings"></span></button>
+        <button class="nav-item" data-view="help"><span class="nav-icon">?</span><span data-i18n="help"></span></button>
+      </nav>
+      <div class="sidebar-footer">
+        <span id="sidebarConnectionDot" class="status-dot"></span>
+        <span id="sidebarConnection" data-i18n="loading"></span>
+      </div>
+    </aside>
+
+    <div class="content-shell">
+      <header class="topbar">
+        <button id="menuButton" class="icon-button menu-button" data-i18n-aria-label="menu" aria-label="Menu" aria-expanded="false" aria-controls="sidebar">☰</button>
+        <div class="page-brand">
+          <h1 data-i18n="app_title">Radon Monitoring</h1>
+          <p data-i18n="app_subtitle">Lokale Überwachung für GQ RadonScan Geräte</p>
+        </div>
+        <div class="top-actions">
+          <div id="connectionPill" class="status-pill neutral"><span class="status-dot"></span><span data-i18n="loading"></span></div>
+          <select id="languageSelect" data-i18n-aria-label="language" aria-label="Language"></select>
+          <button id="refreshButton" class="icon-button" data-i18n-title="refresh" data-i18n-aria-label="refresh" aria-label="Refresh">↻</button>
+        </div>
+      </header>
+
+      <main>
+        <section id="view-overview" class="view active">
+          <div class="hero-grid">
+            <article class="primary-card" id="currentCard">
+              <div class="card-kicker"><span data-i18n="hourly_value"></span><span id="currentStatus" class="badge neutral" data-i18n="unknown"></span></div>
+              <div class="radon-reading"><span id="currentValue">–</span><span id="currentUnit">Bq/m³</span></div>
+              <div class="reading-meta"><span id="currentTime">–</span><span id="currentAge">–</span></div>
+              <div class="micro-grid">
+                <div><span data-i18n="measurement_site"></span><strong id="currentLocation">–</strong></div>
+                <div><span data-i18n="raw_cph"></span><strong id="currentRaw">–</strong></div>
+                <div><span data-i18n="sample_count"></span><strong id="sampleCount">0</strong></div>
+              </div>
+            </article>
+            <article class="system-card">
+              <div class="panel-heading compact"><div><span class="eyebrow" data-i18n="system_status"></span><h2 data-i18n="health"></h2></div><span id="qualityBadge" class="badge neutral">–</span></div>
+              <div class="status-list">
+                <div><span data-i18n="device_connection"></span><strong id="overviewDeviceStatus">–</strong></div>
+                <div><span data-i18n="mqtt"></span><strong id="overviewMqttStatus">–</strong></div>
+                <div><span data-i18n="last_update"></span><strong id="overviewLastUpdate">–</strong></div>
+                <div><span data-i18n="database"></span><strong id="overviewDatabaseStatus">–</strong></div>
+                <div><span data-i18n="coverage_30d"></span><strong id="overviewCoverage">–</strong></div>
+              </div>
+            </article>
+          </div>
+
+          <div class="metric-grid">
+            <article class="metric-card" id="metric24"><span data-i18n="average_24h"></span><strong id="avg24">–</strong><small id="coverage24">–</small></article>
+            <article class="metric-card" id="metric7d"><span data-i18n="average_7d"></span><strong id="avg7d">–</strong><small id="coverage7d">–</small></article>
+            <article class="metric-card" id="metric30d"><span data-i18n="average_30d"></span><strong id="avg30d">–</strong><small id="coverage30d">–</small></article>
+            <article class="metric-card"><span data-i18n="average_all"></span><strong id="avgAll">–</strong><small id="rangeAll">–</small></article>
+          </div>
+
+          <article class="panel chart-panel">
+            <div class="panel-heading">
+              <div><span class="eyebrow" data-i18n="local_data"></span><h2 data-i18n="chart_title"></h2><p id="chartSubtitle">–</p></div>
+              <div class="range-switch" id="rangeSwitch">
+                <button data-days="1" data-i18n="show_24h"></button>
+                <button data-days="7" class="active" data-i18n="show_7d"></button>
+                <button data-days="30" data-i18n="show_30d"></button>
+                <button data-days="0" data-i18n="show_all"></button>
+              </div>
+            </div>
+            <div id="chart" class="chart"><div class="empty" data-i18n="chart_empty"></div></div>
+            <div class="chart-legend"><span><i class="legend-line"></i><span data-i18n="hourly_measurement"></span></span><span><i class="legend-warning"></i><span data-i18n="warning_threshold"></span></span><span><i class="legend-danger"></i><span data-i18n="danger_threshold"></span></span></div>
+          </article>
+        </section>
+
+        <section id="view-analysis" class="view">
+          <div class="section-header"><div><span class="eyebrow" data-i18n="statistical_evaluation"></span><h2 data-i18n="analysis_title"></h2><p data-i18n="analysis_hint"></p></div></div>
+          <article class="panel filter-panel">
+            <div class="filter-grid">
+              <label><span data-i18n="period"></span><select id="analysisPreset"><option value="1" data-i18n="last_24h"></option><option value="7" data-i18n="last_7d"></option><option value="30" selected data-i18n="last_30d"></option><option value="90" data-i18n="last_90d"></option><option value="365" data-i18n="last_365d"></option><option value="custom" data-i18n="custom"></option></select></label>
+              <label><span data-i18n="device"></span><select id="analysisDevice"></select></label>
+              <label><span data-i18n="start"></span><input type="datetime-local" id="analysisStart"></label>
+              <label><span data-i18n="end"></span><input type="datetime-local" id="analysisEnd"></label>
+              <label><span data-i18n="measurement_site"></span><select id="analysisLocation"></select></label>
+              <label><span data-i18n="campaign"></span><select id="analysisCampaign"></select></label>
+              <button id="analysisApply" class="button primary align-end" data-i18n="apply"></button>
+            </div>
+          </article>
+          <div class="analysis-metrics">
+            <article class="metric-card"><span data-i18n="mean"></span><strong id="analysisMean">–</strong><small id="analysisCoverage">–</small></article>
+            <article class="metric-card"><span data-i18n="median"></span><strong id="analysisMedian">–</strong><small id="analysisSamples">–</small></article>
+            <article class="metric-card"><span data-i18n="p95"></span><strong id="analysisP95">–</strong><small id="analysisStddev">–</small></article>
+            <article class="metric-card"><span data-i18n="trend"></span><strong id="analysisTrend">–</strong><small id="analysisR2">–</small></article>
+            <article class="metric-card"><span data-i18n="above_warning"></span><strong id="analysisWarning">–</strong><small id="analysisWarningRun">–</small></article>
+            <article class="metric-card"><span data-i18n="above_danger"></span><strong id="analysisDanger">–</strong><small id="analysisDangerRun">–</small></article>
+            <article class="metric-card"><span data-i18n="scientific_quality"></span><strong id="analysisScienceClass">–</strong><small id="analysisQcStatus">–</small></article>
+            <article class="metric-card"><span data-i18n="measurement_uncertainty"></span><strong id="analysisUncertainty">–</strong><small id="analysisUncertaintyNote">–</small></article>
+          </div>
+          <div id="analysisNotice" class="notice hidden"></div>
+          <div class="two-column wide-left">
+            <article class="panel"><div class="panel-heading"><h3 data-i18n="time_series"></h3><span id="analysisPeriodLabel" class="muted">–</span></div><div id="analysisChart" class="chart compact-chart"></div></article>
+            <article class="panel"><div class="panel-heading"><h3 data-i18n="distribution"></h3></div><div id="histogramChart" class="chart compact-chart"></div></article>
+          </div>
+          <article class="panel"><div class="panel-heading"><div><h3 data-i18n="weekly_heatmap"></h3><p data-i18n="heatmap_hint"></p></div></div><div id="weeklyHeatmap" class="heatmap"></div></article>
+          <div class="two-column">
+            <article class="panel"><h3 data-i18n="time_patterns"></h3><div id="profileBars" class="profile-bars"></div></article>
+            <article class="panel"><h3 data-i18n="data_quality"></h3><dl id="analysisQualityFacts" class="facts-grid"></dl></article>
+            <article class="panel"><h3 data-i18n="scientific_interpretation"></h3><dl id="scientificFacts" class="facts-grid"></dl><div id="scientificNotice" class="notice info"></div></article>
+          </div>
+          <article class="panel"><div class="panel-heading"><h3 data-i18n="daily_statistics"></h3><button id="analysisCsvButton" class="button secondary" data-i18n="export_csv"></button></div><div class="table-wrap"><table><thead><tr><th data-i18n="date"></th><th data-i18n="samples"></th><th data-i18n="coverage"></th><th data-i18n="minimum"></th><th data-i18n="median"></th><th data-i18n="maximum"></th><th data-i18n="mean"></th></tr></thead><tbody id="dailyBody"></tbody></table></div></article>
+        </section>
+
+        <section id="view-expert" class="view">
+          <div class="section-header"><div><span class="eyebrow" data-i18n="technical_diagnostics"></span><h2 data-i18n="expert_title"></h2><p data-i18n="expert_hint"></p></div><a class="button secondary" href="api/diagnostics" download data-i18n="download_diagnostics"></a></div>
+          <div class="three-column">
+            <article class="panel facts-panel"><h3 data-i18n="device"></h3><dl id="expertDeviceFacts"></dl></article>
+            <article class="panel facts-panel"><h3 data-i18n="decoder_protocol"></h3><dl id="expertProtocolFacts"></dl></article>
+            <article class="panel facts-panel"><h3 data-i18n="data_path"></h3><dl id="expertDataFacts"></dl></article>
+          </div>
+          <div class="two-column">
+            <article class="panel"><div class="panel-heading"><h3 data-i18n="block_hashes"></h3><button id="copyHashes" class="button secondary" data-i18n="copy"></button></div><pre id="hashes" class="code-block">–</pre></article>
+            <article class="panel"><h3 data-i18n="runtime_state"></h3><pre id="runtimeSummary" class="code-block">–</pre></article>
+          </div>
+          <article class="panel"><h3 data-i18n="methodological_notes"></h3><div class="notice-list"><p data-i18n="read_only_notice"></p><p data-i18n="experimental_notice"></p><p data-i18n="scientific_limit_notice"></p></div></article>
+        </section>
+
+        <section id="view-map" class="view gmcmap-view">
+          <div class="section-header gmcmap-header"><div><span class="eyebrow" data-i18n="external_data_sharing"></span><h2 data-i18n="gmcmap_title"></h2><p data-i18n="gmcmap_hint"></p></div><a class="button secondary" href="https://www.gmcmap.com/" target="_blank" rel="noopener noreferrer" data-i18n="open_gmcmap"></a></div>
+          <div class="two-column">
+            <article class="panel">
+              <div class="panel-heading gmcmap-connection-heading"><div><h3 data-i18n="gmcmap_connection"></h3><p data-i18n="gmcmap_config_hint"></p></div><span id="gmcmapStatusBadge" class="badge neutral">–</span></div>
+              <dl id="gmcmapFacts" class="facts-panel"></dl>
+              <div id="gmcmapNotice" class="notice warning"></div>
+            </article>
+            <article class="panel">
+              <h3 data-i18n="manual_upload"></h3>
+              <p data-i18n="manual_upload_hint"></p>
+              <div class="upload-preview">
+                <span data-i18n="latest_measurement"></span>
+                <strong id="gmcmapLatestValue">–</strong>
+                <small id="gmcmapLatestTime">–</small>
+              </div>
+              <label><span data-i18n="confirmation"></span><input id="gmcmapConfirmation" data-i18n-placeholder="confirm_upload_word" placeholder="HOCHLADEN"></label>
+              <div class="button-row"><button id="gmcmapUploadButton" class="button primary" data-i18n="upload_now"></button><button id="gmcmapRetryButton" class="button secondary" data-i18n="retry_failed_uploads"></button></div>
+            </article>
+          </div>
+          <article class="panel">
+            <h3 data-i18n="gmcmap_privacy_title"></h3>
+            <div class="notice-list"><p data-i18n="gmcmap_privacy_1"></p><p data-i18n="gmcmap_privacy_2"></p><p data-i18n="gmcmap_protocol_note"></p></div>
+          </article>
+          <article class="panel"><div class="panel-heading"><h3 data-i18n="upload_history"></h3><button id="refreshGmcmap" class="button secondary" data-i18n="refresh"></button></div><div class="table-wrap"><table><thead><tr><th data-i18n="time"></th><th data-i18n="measurement_time"></th><th>Bq/m³</th><th>pCi/L</th><th data-i18n="trigger"></th><th data-i18n="status"></th><th data-i18n="response"></th></tr></thead><tbody id="gmcmapHistoryBody"></tbody></table></div></article>
+
+          <div class="section-header sub-section"><div><span class="eyebrow" data-i18n="local_metadata"></span><h2 data-i18n="measurement_sites"></h2><p data-i18n="sites_without_floorplan_hint"></p></div></div>
+          <div class="two-column">
+            <article class="panel">
+              <h3 data-i18n="measurement_site"></h3>
+              <form id="locationForm" class="form-stack">
+                <input type="hidden" id="locationId">
+                <label><span data-i18n="name"></span><input id="locationName" required></label>
+                <div class="two-field"><label><span data-i18n="building"></span><input id="locationBuilding"></label><label><span data-i18n="floor"></span><input id="locationFloor"></label></div>
+                <div class="two-field"><label><span data-i18n="room_type"></span><input id="locationRoomType"></label><label><span data-i18n="measurement_height"></span><input id="locationHeight" type="number" min="0" max="10" step="0.1"></label></div>
+                <label><span data-i18n="notes"></span><textarea id="locationNotes" rows="3"></textarea></label>
+                <button class="button primary" type="submit" data-i18n="save_site"></button>
+              </form>
+            </article>
+            <article class="panel">
+              <h3 data-i18n="assign_measurements"></h3>
+              <form id="assignForm" class="form-stack">
+                <label><span data-i18n="device"></span><select id="assignDevice" required></select></label>
+                <label><span data-i18n="measurement_site"></span><select id="assignLocation" required></select></label>
+                <label><span data-i18n="session_title"></span><input id="assignTitle" required></label>
+                <div class="two-field"><label><span data-i18n="start"></span><input id="assignStart" type="datetime-local" required></label><label><span data-i18n="end_optional"></span><input id="assignEnd" type="datetime-local"></label></div>
+                <label><span data-i18n="purpose"></span><input id="assignPurpose"></label>
+                <label><span data-i18n="notes"></span><textarea id="assignNotes" rows="2"></textarea></label>
+                <button type="submit" class="button primary" data-i18n="assign"></button>
+              </form>
+            </article>
+          </div>
+          <article class="panel"><div class="panel-heading"><h3 data-i18n="measurement_sites"></h3><span id="locationCount" class="muted">0</span></div><div id="locationCards" class="location-grid"></div></article>
+          <div class="two-column"><article class="panel"><h3 data-i18n="add_event"></h3><form id="eventForm" class="form-stack"><div class="two-field"><label><span data-i18n="event_type"></span><select id="eventType"><option value="ventilation" data-i18n="ventilation"></option><option value="window" data-i18n="window"></option><option value="construction" data-i18n="construction"></option><option value="device_move" data-i18n="device_move"></option><option value="outage" data-i18n="outage"></option><option value="note" data-i18n="note"></option></select></label><label><span data-i18n="time"></span><input id="eventTime" type="datetime-local" required></label></div><label><span data-i18n="measurement_site"></span><select id="eventLocation"></select></label><label><span data-i18n="title"></span><input id="eventTitle" required></label><label><span data-i18n="notes"></span><textarea id="eventNotes" rows="2"></textarea></label><button type="submit" class="button primary" data-i18n="save_event"></button></form></article><article class="panel"><div class="panel-heading"><h3 data-i18n="events"></h3><span id="eventCount" class="muted">0</span></div><div id="eventList" class="event-list"></div></article></div>
+        </section>
+
+        <section id="view-history" class="view">
+          <div class="section-header"><div><span class="eyebrow" data-i18n="hourly_data"></span><h2 data-i18n="history_title"></h2><p data-i18n="accuracy_note"></p></div></div>
+          <article class="panel filter-panel"><div class="filter-grid history-filter"><label><span data-i18n="device"></span><select id="historyDevice"></select></label><label><span data-i18n="start"></span><input id="historyStart" type="datetime-local"></label><label><span data-i18n="end"></span><input id="historyEnd" type="datetime-local"></label><label><span data-i18n="measurement_site"></span><select id="historyLocation"></select></label><label><span data-i18n="campaign"></span><select id="historyCampaign"></select></label><button id="historyApply" class="button primary align-end" data-i18n="apply"></button><a id="historyCsv" class="button secondary align-end" href="export/history.csv" download data-i18n="export_csv"></a></div></article>
+          <article class="panel"><div class="panel-heading"><div><h3 data-i18n="hourly_measurements"></h3><p id="historySummary">–</p></div></div><div class="table-wrap"><table><thead><tr><th data-i18n="time"></th><th data-i18n="value"></th><th data-i18n="raw_cph"></th><th data-i18n="device"></th><th data-i18n="measurement_site"></th><th data-i18n="campaign"></th><th data-i18n="source"></th></tr></thead><tbody id="historyBody"><tr><td colspan="7" class="empty-cell" data-i18n="history_empty"></td></tr></tbody></table></div></article>
+        </section>
+
+        <section id="view-reports" class="view">
+          <div class="section-header"><div><span class="eyebrow" data-i18n="documentation"></span><h2 data-i18n="reports_title"></h2><p data-i18n="reports_hint"></p></div></div>
+          <div class="two-column">
+            <article class="panel">
+              <h3 data-i18n="create_report"></h3>
+              <form id="reportForm" class="form-stack">
+                <label><span data-i18n="report_title"></span><input id="reportTitle"></label>
+                <div class="two-field"><label><span data-i18n="report_profile"></span><select id="reportProfile"><option value="compact" data-i18n="compact_report"></option><option value="detailed" selected data-i18n="detailed_report"></option></select></label><label><span data-i18n="report_language"></span><select id="reportLocale"><option value="de">Deutsch</option><option value="en">English</option></select></label></div>
+                <label><span data-i18n="device"></span><select id="reportDevice" required></select></label>
+                <label><span data-i18n="measurement_site"></span><select id="reportLocation"></select></label>
+                <label><span data-i18n="period"></span><select id="reportDays"><option value="1" data-i18n="last_24h"></option><option value="7" data-i18n="last_7d"></option><option value="30" selected data-i18n="last_30d"></option><option value="90" data-i18n="last_90d"></option><option value="365" data-i18n="last_365d"></option></select></label>
+                <div class="two-field"><label><span data-i18n="start_optional"></span><input id="reportStart" type="datetime-local"></label><label><span data-i18n="end_optional"></span><input id="reportEnd" type="datetime-local"></label></div>
+                <button id="createReportButton" type="submit" class="button primary" data-i18n="generate_pdf"></button>
+              </form>
+            </article>
+            <article class="panel report-info"><h3 data-i18n="scientific_report_contains"></h3><ul><li data-i18n="report_item_summary"></li><li data-i18n="report_item_statistics"></li><li data-i18n="report_item_charts"></li><li data-i18n="report_item_events"></li><li data-i18n="report_item_traceability"></li><li data-i18n="report_item_checksum"></li></ul><div class="notice" data-i18n="scientific_limit_notice"></div></article>
+          </div>
+          <article class="panel"><div class="panel-heading"><h3 data-i18n="generated_reports"></h3><span id="reportCount" class="muted">0</span></div><div id="reportList" class="report-list"></div></article>
+        </section>
+
+        <section id="view-data" class="view">
+          <div class="section-header"><div><span class="eyebrow" data-i18n="storage_privacy"></span><h2 data-i18n="data_title"></h2><p data-i18n="data_hint"></p></div><a href="export/backup.zip" class="button primary" download data-i18n="download_backup"></a></div>
+          <div class="data-summary-grid">
+            <article class="metric-card"><span data-i18n="measurements"></span><strong id="dataMeasurements">–</strong><small id="dataRange">–</small></article>
+            <article class="metric-card"><span data-i18n="database_size"></span><strong id="dataDbSize">–</strong><small id="dataIntegrity">–</small></article>
+            <article class="metric-card"><span data-i18n="reports_and_exports"></span><strong id="dataFiles">–</strong><small id="dataFileSize">–</small></article>
+            <article class="metric-card"><span data-i18n="schema"></span><strong id="dataSchema">–</strong><small>SQLite WAL</small></article>
+          </div>
+          <div class="two-column">
+            <article class="panel danger-zone">
+              <h3 data-i18n="delete_local_data"></h3><p data-i18n="delete_local_hint"></p>
+              <form id="deleteDataForm" class="form-stack">
+                <label><span data-i18n="delete_scope"></span><select id="deleteAction"><option value="measurement_range" data-i18n="delete_range"></option><option value="device_history" data-i18n="delete_device_history"></option><option value="campaign" data-i18n="delete_campaign"></option><option value="all_measurements" data-i18n="delete_all_measurements"></option><option value="all_events" data-i18n="delete_all_events"></option><option value="all_reports" data-i18n="delete_all_reports"></option><option value="all_audit" data-i18n="delete_audit"></option><option value="reset_database" data-i18n="reset_database"></option></select></label>
+                <div class="two-field"><label><span data-i18n="start"></span><input id="deleteStart" type="datetime-local"></label><label><span data-i18n="end"></span><input id="deleteEnd" type="datetime-local"></label></div>
+                <label><span data-i18n="device"></span><select id="deleteDevice"></select></label>
+                <label><span data-i18n="measurement_site"></span><select id="deleteLocation"></select></label>
+                <label><span data-i18n="campaign"></span><select id="deleteCampaign"></select></label>
+                <button id="deletePreview" type="button" class="button secondary" data-i18n="preview_deletion"></button>
+                <div id="deletePreviewResult" class="notice hidden"></div>
+                <label><span data-i18n="confirmation"></span><input id="deleteConfirmation" data-i18n-placeholder="confirm_delete_word" placeholder="LÖSCHEN"></label>
+                <button type="submit" class="button danger" data-i18n="delete_now"></button>
+              </form>
+            </article>
+            <div class="stack">
+              <article class="panel">
+                <h3 data-i18n="restore_backup"></h3><p data-i18n="restore_hint"></p>
+                <form id="restoreForm" class="form-stack"><label><span data-i18n="backup_file"></span><input type="file" id="restoreFile" accept=".zip,.sqlite3,.db" required></label><label><span data-i18n="confirmation"></span><input id="restoreConfirmation" data-i18n-placeholder="confirm_restore_word" placeholder="WIEDERHERSTELLEN"></label><button class="button danger" type="submit" data-i18n="restore"></button></form>
+              </article>
+              <article class="panel">
+                <h3 data-i18n="home_assistant_history"></h3><p data-i18n="ha_purge_hint"></p><div id="haStatus" class="status-message">–</div><button id="loadHaEntities" class="button secondary" data-i18n="detect_entities"></button><div id="haEntityList" class="checkbox-list"></div><label class="inline-field"><span data-i18n="days_to_keep"></span><input id="haKeepDays" type="number" min="0" max="3650" value="0"></label><label><span data-i18n="confirmation"></span><input id="haConfirmation" data-i18n-placeholder="confirm_purge_word" placeholder="PURGE"></label><button id="purgeHaHistory" class="button danger" data-i18n="purge_selected"></button>
+              </article>
+            </div>
+          </div>
+          <article class="panel"><div class="panel-heading"><h3 data-i18n="administration_log"></h3><button id="refreshAudit" class="button secondary" data-i18n="refresh"></button></div><div class="table-wrap"><table><thead><tr><th data-i18n="time"></th><th data-i18n="action"></th><th data-i18n="target"></th><th data-i18n="user"></th><th data-i18n="details"></th></tr></thead><tbody id="auditBody"></tbody></table></div></article>
+        </section>
+
+        <section id="view-system" class="view">
+          <div class="section-header"><div><span class="eyebrow" data-i18n="hardware_communication"></span><h2 data-i18n="device_title"></h2><p data-i18n="architecture"></p></div></div>
+          <div class="two-column"><article class="panel facts-panel"><h3 data-i18n="device"></h3><dl id="deviceFacts"></dl></article><article class="panel facts-panel"><h3 data-i18n="protocol"></h3><dl id="protocolFacts"></dl></article></div>
+          <div class="two-column"><article class="panel facts-panel"><h3 data-i18n="services"></h3><dl id="serviceFacts"></dl></article><article class="panel facts-panel"><h3 data-i18n="database"></h3><dl id="databaseFacts"></dl></article></div>
+        </section>
+
+        <section id="view-settings" class="view">
+          <div class="section-header"><div><span class="eyebrow" data-i18n="configuration"></span><h2 data-i18n="settings_title"></h2><p data-i18n="settings_hint"></p></div></div>
+          <article class="panel settings-grid" id="settingsGrid"></article>
+        </section>
+
+        <section id="view-help" class="view">
+          <div class="section-header"><div><span class="eyebrow" data-i18n="documentation"></span><h2 data-i18n="help_title"></h2><p data-i18n="experimental_notice"></p></div></div>
+          <div class="help-grid">
+            <article class="help-card"><div class="help-icon">▤</div><h3 data-i18n="user_manual"></h3><p data-i18n="manual_note_v3"></p><a id="manualLink" class="button primary" href="docs/user-manual.pdf" target="_blank" data-i18n="open_manual"></a></article>
+            <article class="help-card"><div class="help-icon">⌘</div><h3 data-i18n="protocol_reference"></h3><p data-i18n="read_only_notice"></p><a id="protocolLink" class="button secondary" href="docs/protocol-reference.pdf" target="_blank" data-i18n="open_protocol"></a></article>
+            <article class="help-card"><div class="help-icon">4</div><h3 data-i18n="about"></h3><p data-i18n="architecture"></p><div class="version-line"><span data-i18n="version"></span> <strong>__VERSION__</strong></div></article>
+          </div>
+        </section>
+      </main>
+
+      <footer><span data-i18n="footer"></span><span>v__VERSION__</span></footer>
+    </div>
+  </div>
+  <button id="sidebarBackdrop" class="sidebar-backdrop" type="button" tabindex="-1" aria-hidden="true"></button>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card"><button id="modalClose" class="modal-close" data-i18n-aria-label="close" aria-label="Close">×</button><h3 id="modalTitle"></h3><div id="modalBody"></div></div></div>
+  <script>window.RADONSCAN_BOOT={locale:"__LOCALE__",translations:__TRANSLATIONS__,locales:__LOCALE_NAMES__,version:"__VERSION__",actionToken:"__ACTION_TOKEN__"};</script>
+  <script src="assets/app.js?v=__VERSION__"></script>
+</body>
+</html>

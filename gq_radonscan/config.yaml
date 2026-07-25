@@ -1,0 +1,81 @@
+name: Radon Monitoring
+version: 4.3.8
+slug: gq_radonscan
+description: >-
+  Local monitoring for GQ RadonScan devices with read-only SPIR history,
+  statistical analysis, GQ Radiation World Map upload, scientific reports and controlled data management.
+arch: [aarch64, amd64]
+startup: application
+boot: auto
+init: false
+services:
+  - mqtt:need
+homeassistant_api: true
+ingress: true
+ingress_port: 8099
+ingress_stream: true
+panel_icon: mdi:radioactive-circle
+panel_title: Radon Monitoring
+panel_admin: true
+watchdog: http://[HOST]:[PORT:8099]/health
+backup: cold
+tmpfs: true
+apparmor: true
+uart: true
+udev: true
+options:
+  device_name: GQ RadonScan
+  scan_interval: 300
+  preferred_unit: Bq/m3
+  language: auto
+  warning_threshold_bq_m3: 100
+  danger_threshold_bq_m3: 300
+  factor_bq_m3_per_cph: 1.530
+  minimum_data_coverage_percent: 95
+  backfill_history: true
+  history_retention_days: 1095
+  serial_port: ""
+  serial_timeout_seconds: 3.0
+  mqtt_topic_prefix: gq_radonscan
+  discovery_prefix: homeassistant
+  report_author: ""
+  report_organisation: ""
+  report_disclaimer: ""
+  gmcmap_enabled: false
+  gmcmap_auto_upload: false
+  gmcmap_account_id: ""
+  gmcmap_device_id: ""
+  gmcmap_upload_interval_minutes: 60
+  gmcmap_max_age_hours: 72
+  gmcmap_retry_limit: 8
+  analysis_timezone: auto
+  diagnostic_logging: false
+  log_level: info
+schema:
+  device_name: str
+  scan_interval: int(30,3600)
+  preferred_unit: list(Bq/m3|pCi/L)
+  language: list(auto|de|en|es|fr|hr|it|nl|pl)
+  warning_threshold_bq_m3: float(0,37000)
+  danger_threshold_bq_m3: float(0,37000)
+  factor_bq_m3_per_cph: float(0.001,1000)
+  minimum_data_coverage_percent: int(50,100)
+  backfill_history: bool
+  history_retention_days: int(30,3650)
+  serial_port: str
+  serial_timeout_seconds: float(0.5,15)
+  mqtt_topic_prefix: str
+  discovery_prefix: str
+  report_author: str
+  report_organisation: str
+  report_disclaimer: str
+  gmcmap_enabled: bool
+  gmcmap_auto_upload: bool
+  gmcmap_account_id: str
+  gmcmap_device_id: str
+  gmcmap_upload_interval_minutes: int(5,1440)
+  gmcmap_max_age_hours: int(1,8760)
+  gmcmap_retry_limit: int(1,20)
+  analysis_timezone: str
+  diagnostic_logging: bool
+  log_level: list(debug|info|warning|error)

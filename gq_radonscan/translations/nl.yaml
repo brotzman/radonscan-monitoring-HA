@@ -1,0 +1,72 @@
+configuration:
+  device_name:
+    name: Apparaatnaam
+    description: Weergavenaam van de RadonScan in Home Assistant en de webinterface.
+  scan_interval:
+    name: Uitleesinterval
+    description: Aantal seconden tussen alleen-lezen SPIR-uitlezingen.
+  preferred_unit:
+    name: Voorkeurseenheid
+    description: Eenheid die in Home Assistant en de webinterface wordt gebruikt.
+  language:
+    name: Taal
+    description: Taal van de ingress-interface en de gekoppelde handleiding.
+  warning_threshold_bq_m3:
+    name: Waarschuwingsdrempel
+    description: Radonwaarde in Bq/m³ waarbij de waarschuwingsstatus wordt getoond.
+  danger_threshold_bq_m3:
+    name: Gevarendrempel
+    description: Radonwaarde in Bq/m³ waarbij de gevarenstatus wordt getoond.
+  factor_bq_m3_per_cph:
+    name: CPH-omrekenfactor
+    description: Experimentele factor in Bq/m³ per count/h; wordt bij elke meting
+      opgeslagen.
+  backfill_history:
+    name: Apparaathistorie importeren
+    description: Importeert reeds opgeslagen voltooide uurwaarden na de eerste geslaagde
+      uitlezing.
+  history_retention_days:
+    name: Bewaartermijn
+    description: Verwijdert lokale metingen na dit aantal dagen uit SQLite.
+  serial_port:
+    name: Seriële poort
+    description: Leeg laten voor automatische detectie of een vast apparaatpad invoeren.
+  serial_timeout_seconds:
+    name: Seriële time-out
+    description: Maximale wachttijd in seconden op een antwoord van het apparaat.
+  mqtt_topic_prefix:
+    name: MQTT-onderwerpprefix
+    description: Basisonderwerp voor status- en beschikbaarheidsberichten.
+  discovery_prefix:
+    name: Discovery-prefix
+    description: Prefix voor Home Assistant MQTT Discovery-onderwerpen.
+  diagnostic_logging:
+    name: Uitgebreide diagnostische logging
+    description: Logt extra technische gegevens over poorten, SPIR-uitlezingen en
+      decodering.
+  log_level:
+    name: Logniveau
+    description: Hoeveelheid details in het app-logboek.
+  minimum_data_coverage_percent:
+    name: Minimum data coverage
+    description: Required percentage of available hourly values before a period average
+      is considered calculable.
+  report_author:
+    name: Report author
+    description: Optional author name for scientific PDF reports.
+  report_organisation:
+    name: Organisation
+    description: Optional organisation or institution for PDF reports.
+  report_disclaimer:
+    name: Additional report notice
+    description: Optional custom notice included in scientific PDF reports.
+  gmcmap_max_age_hours:
+    name: World Map maximum data age
+    description: Maximum age of readings queued for upload.
+  gmcmap_retry_limit:
+    name: World Map retry limit
+    description: Maximum number of upload attempts before a reading is marked failed.
+  analysis_timezone:
+    name: Analysis time zone
+    description: IANA time zone used for day, weekday and hourly profiles; auto uses
+      Home Assistant.
