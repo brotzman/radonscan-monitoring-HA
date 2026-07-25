@@ -18,5 +18,10 @@ class ConfirmationTests(unittest.TestCase):
         self.assertFalse(_destructive_confirmation_ok({"confirmation": "YES"}))
 
 
+    def test_accepts_header_and_string_boolean(self):
+        self.assertTrue(_destructive_confirmation_ok({}, "LÖSCHEN"))
+        self.assertTrue(_destructive_confirmation_ok({"confirmed": "true"}))
+        self.assertTrue(_destructive_confirmation_ok({"confirmation_text": "PURGE"}))
+
 if __name__ == "__main__":
     unittest.main()

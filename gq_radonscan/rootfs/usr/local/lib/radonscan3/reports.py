@@ -494,7 +494,7 @@ class ScientificReport:
             "minimum_bq_m3": stats.get("minimum_bq_m3"),
             "maximum_bq_m3": stats.get("maximum_bq_m3"),
             "app_version": __version__,
-            "analysis_model": "4.3.8",
+            "analysis_model": "4.3.9",
             "scientific_quality_class": stats.get("scientific_quality_class"),
             "quality_reasons": stats.get("quality_reasons"),
             "uncertainty": analysis.get("uncertainty"),

@@ -39,11 +39,15 @@ def _normalise_confirmation(value: object) -> str:
     return re.sub(r"[^A-ZÄÖÜ]", "", text)
 
 
-def _destructive_confirmation_ok(payload: dict[str, object]) -> bool:
-    if payload.get("confirmed") is True:
+def _destructive_confirmation_ok(payload: dict[str, object], header_value: object = "") -> bool:
+    confirmed = payload.get("confirmed")
+    if confirmed is True or str(confirmed or "").strip().lower() in {"1", "true", "yes", "ja"}:
         return True
-    token = _normalise_confirmation(payload.get("confirmation"))
-    return token in {"LÖSCHEN", "LOESCHEN", "DELETE", "PURGE", "PRURGE", "PRUGE"}
+    tokens = (payload.get("confirmation"), payload.get("confirmation_text"), header_value)
+    return any(
+        _normalise_confirmation(value) in {"LÖSCHEN", "LOESCHEN", "DELETE", "PURGE", "PRURGE", "PRUGE"}
+        for value in tokens
+    )
 
 class WebServer:
     def __init__(self, settings: Settings, storage: Storage) -> None:
@@ -474,7 +478,7 @@ class WebServer:
                             self.json_response({"ok": True, "preview": app.storage.preview_delete(action, payload)})
                             return
                         expected = "LÖSCHEN" if self.locale({}) == "de" else "DELETE"
-                        if not _destructive_confirmation_ok(payload):
+                        if not _destructive_confirmation_ok(payload, self.headers.get("X-Radon-Confirmation", "")):
                             raise StorageError(f"Confirmation text {expected} is required")
                         result = app.storage.delete_data(action, payload, self.user_name)
                         self.json_response({"ok": True, **result})

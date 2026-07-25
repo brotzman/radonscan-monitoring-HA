@@ -128,7 +128,7 @@ class GmcMapClient:
         try:
             request = urllib.request.Request(
                 url,
-                headers={"User-Agent": "Radon-Monitoring/4.3.8", "Accept": "text/plain,text/html;q=0.9,*/*;q=0.8"},
+                headers={"User-Agent": "Radon-Monitoring/4.3.9", "Accept": "text/plain,text/html;q=0.9,*/*;q=0.8"},
                 method="GET",
             )
             with urllib.request.urlopen(request, timeout=15) as response:
