@@ -1,5 +1,5 @@
 name: Radon Monitoring
-version: 4.4.2
+version: 4.4.3
 slug: gq_radonscan
 description: >-
   Local monitoring for GQ RadonScan devices with read-only SPIR history,
@@ -50,6 +50,7 @@ options:
   gmcmap_retry_limit: 8
   analysis_timezone: auto
   data_management_enabled: true
+  homeassistant_access_token: ""
   diagnostic_logging: false
   log_level: info
 schema:
@@ -79,5 +80,6 @@ schema:
   gmcmap_retry_limit: int(1,20)
   analysis_timezone: str
   data_management_enabled: bool
+  homeassistant_access_token: password
   diagnostic_logging: bool
   log_level: list(debug|info|warning|error)

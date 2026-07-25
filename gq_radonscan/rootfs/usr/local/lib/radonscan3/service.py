@@ -36,7 +36,7 @@ def main() -> int:
     mqtt = MqttPublisher(settings, storage.set_runtime)
     web = WebServer(settings, storage)
     gmcmap = GmcMapClient(settings, storage)
-    ha = HomeAssistantClient()
+    ha = HomeAssistantClient(settings.homeassistant_access_token)
     storage.record_factor_configuration(settings.factor_bq_m3_per_cph, source="app_configuration", note="Active conversion factor at service start")
     stop = threading.Event()
 

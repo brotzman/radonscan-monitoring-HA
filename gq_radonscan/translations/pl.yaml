@@ -19,16 +19,19 @@ configuration:
     description: Wartość radonu w Bq/m³, od której wyświetlany jest stan zagrożenia.
   factor_bq_m3_per_cph:
     name: Współczynnik przeliczeniowy CPH
-    description: Eksperymentalny współczynnik w Bq/m³ na count/h; zapisywany z każdym pomiarem.
+    description: Eksperymentalny współczynnik w Bq/m³ na count/h; zapisywany z każdym
+      pomiarem.
   backfill_history:
     name: Importuj historię urządzenia
-    description: Po pierwszym udanym odczycie importuje zapisane w urządzeniu ukończone wartości godzinowe.
+    description: Po pierwszym udanym odczycie importuje zapisane w urządzeniu ukończone
+      wartości godzinowe.
   history_retention_days:
     name: Okres przechowywania
     description: Usuwa lokalne pomiary z SQLite po podanej liczbie dni.
   serial_port:
     name: Port szeregowy
-    description: Pozostaw puste, aby wykrywać automatycznie, albo podaj stałą ścieżkę urządzenia.
+    description: Pozostaw puste, aby wykrywać automatycznie, albo podaj stałą ścieżkę
+      urządzenia.
   serial_timeout_seconds:
     name: Limit czasu portu szeregowego
     description: Maksymalny czas oczekiwania na odpowiedź urządzenia, w sekundach.
@@ -46,7 +49,8 @@ configuration:
     description: Szczegółowość dziennika aplikacji.
   minimum_data_coverage_percent:
     name: Minimum data coverage
-    description: Required percentage of available hourly values before a period average is considered calculable.
+    description: Required percentage of available hourly values before a period average
+      is considered calculable.
   report_author:
     name: Report author
     description: Optional author name for scientific PDF reports.
@@ -64,7 +68,8 @@ configuration:
     description: Maximum number of upload attempts before a reading is marked failed.
   analysis_timezone:
     name: Analysis time zone
-    description: IANA time zone used for day, weekday and hourly profiles; auto uses Home Assistant.
+    description: IANA time zone used for day, weekday and hourly profiles; auto uses
+      Home Assistant.
   gmcmap_enabled:
     name: Enable GQ World Map
     description: Enable transmission to the GQ Radiation World Map.
@@ -82,4 +87,9 @@ configuration:
     description: Minimum interval in minutes between automatic uploads.
   data_management_enabled:
     name: Enable data management
-    description: Show data management in the sidebar and enable its protected API functions.
+    description: Show data management in the sidebar and enable its protected API
+      functions.
+  homeassistant_access_token:
+    name: Token administratora Home Assistant
+    description: Opcjonalny długotrwały token dostępu administratora Home Assistant,
+      wymagany tylko do usuwania historii Recorder.

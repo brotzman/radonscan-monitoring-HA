@@ -1,4 +1,4 @@
-# Radon Monitoring 4.4.2 - Technical and Operations Documentation
+# Radon Monitoring 4.4.3 - Technical and Operations Documentation
 
 ## 1. Purpose and scope
 
@@ -180,10 +180,15 @@ Restart the app once, review migration log entries and compare database counts w
 
 ## 9. Documentation supplied with the app
 
-The Help view serves current **Radon Monitoring 4.4.2** user manuals in German and English. Other interface languages fall back to the English manual. Separate localized protocol-reference PDFs remain bundled because the read-only SPIR protocol has not changed with the application version.
+The Help view serves current **Radon Monitoring 4.4.3** user manuals in German and English. Other interface languages fall back to the English manual. Separate localized protocol-reference PDFs remain bundled because the read-only SPIR protocol has not changed with the application version.
 
 ## 10. Safety and scientific limitations
 
 Radon Monitoring is a community implementation. Removal of the Home Assistant experimental-stage label means the app is presented as a normal repository release; it does not turn the reverse-engineered device protocol into an official GQ specification.
 
 Short-term concentrations, threshold durations, correlations and generated reports must not be used as the sole basis for medical, legal, workplace or building decisions. Statutory reference values generally relate to long-term averages, not an individual hourly reading. Use an appropriate measurement duration and consult qualified authorities or professionals where required.
+
+
+### Home Assistant Recorder-Verlauf löschen
+
+Die Aktion `recorder.purge_entities` ist in aktuellen Home-Assistant-Versionen administratorgeschützt. Falls der Supervisor-Token abgewiesen wird, in Home Assistant unter **Profil → Sicherheit → Langlebige Zugriffstoken** einen Token eines Administrators erstellen und in der App-Option `homeassistant_access_token` hinterlegen. Der Token wird nicht in der Weboberfläche oder in Diagnoseausgaben angezeigt.

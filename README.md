@@ -35,3 +35,8 @@ Device access remains strictly read-only. The implementation sends GET and SPIR 
 
 
 Current release: **Radon Monitoring 4.3.7**.
+
+
+### Home Assistant Recorder-Verlauf löschen
+
+Die Aktion `recorder.purge_entities` ist in aktuellen Home-Assistant-Versionen administratorgeschützt. Falls der Supervisor-Token abgewiesen wird, in Home Assistant unter **Profil → Sicherheit → Langlebige Zugriffstoken** einen Token eines Administrators erstellen und in der App-Option `homeassistant_access_token` hinterlegen. Der Token wird nicht in der Weboberfläche oder in Diagnoseausgaben angezeigt.

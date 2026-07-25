@@ -22,7 +22,8 @@ configuration:
     description: Experimental Bq/m³ per count/h factor; stored with every measurement.
   backfill_history:
     name: Import device history
-    description: Import completed hourly values already stored in the device after the first successful read.
+    description: Import completed hourly values already stored in the device after
+      the first successful read.
   history_retention_days:
     name: Retention period
     description: Remove local measurements from SQLite after this number of days.
@@ -40,13 +41,15 @@ configuration:
     description: Prefix used for Home Assistant MQTT Discovery topics.
   diagnostic_logging:
     name: Detailed diagnostic logging
-    description: Log additional technical details about port detection, SPIR reads and decoding.
+    description: Log additional technical details about port detection, SPIR reads
+      and decoding.
   log_level:
     name: Log level
     description: Verbosity of the app log.
   minimum_data_coverage_percent:
     name: Minimum data coverage
-    description: Required percentage of available hourly values before a period average is considered calculable.
+    description: Required percentage of available hourly values before a period average
+      is considered calculable.
   report_author:
     name: Report author
     description: Optional author name for scientific PDF reports.
@@ -64,7 +67,8 @@ configuration:
     description: Maximum number of upload attempts before a reading is marked failed.
   analysis_timezone:
     name: Analysis time zone
-    description: IANA time zone used for day, weekday and hourly profiles; auto uses Home Assistant.
+    description: IANA time zone used for day, weekday and hourly profiles; auto uses
+      Home Assistant.
   gmcmap_enabled:
     name: Enable GQ World Map
     description: Enable transmission to the GQ Radiation World Map.
@@ -82,4 +86,9 @@ configuration:
     description: Minimum interval in minutes between automatic uploads.
   data_management_enabled:
     name: Enable data management
-    description: Show data management in the sidebar and enable its protected API functions.
+    description: Show data management in the sidebar and enable its protected API
+      functions.
+  homeassistant_access_token:
+    name: Home Assistant administrator token
+    description: Optional long-lived access token of a Home Assistant administrator.
+      It is used only for the administrator-protected Recorder history purge.

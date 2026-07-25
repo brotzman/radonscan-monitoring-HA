@@ -12,9 +12,12 @@ class HomeAssistantError(RuntimeError):
 
 
 class HomeAssistantClient:
-    def __init__(self) -> None:
+    def __init__(self, access_token: str = "") -> None:
         self.base_url = os.environ.get("HOME_ASSISTANT_API_URL", "http://supervisor/core/api").rstrip("/")
-        self.token = os.environ.get("SUPERVISOR_TOKEN", "")
+        # Administrator-only Recorder actions may reject the Supervisor token.
+        # An optional long-lived Home Assistant administrator token therefore takes precedence.
+        self.token_source = "homeassistant_access_token" if str(access_token).strip() else "supervisor_token"
+        self.token = str(access_token).strip() or os.environ.get("SUPERVISOR_TOKEN", "")
 
     @property
     def available(self) -> bool:
@@ -111,9 +114,40 @@ class HomeAssistantClient:
             if "." not in entity_id or any(char.isspace() for char in entity_id):
                 raise HomeAssistantError(f"Invalid entity ID: {entity_id}")
         keep_days = max(0, min(3650, int(keep_days)))
-        response = self._request(
-            "POST",
-            "services/recorder/purge_entities",
-            {"entity_id": cleaned, "keep_days": keep_days},
-        )
-        return {"requested": True, "entity_ids": cleaned, "keep_days": keep_days, "response": response}
+        # Verify that the action is visible for the current authentication context.
+        services = self._request("GET", "services")
+        recorder_services = {}
+        if isinstance(services, list):
+            for domain in services:
+                if isinstance(domain, dict) and domain.get("domain") == "recorder":
+                    recorder_services = domain.get("services") if isinstance(domain.get("services"), dict) else {}
+                    break
+        if "purge_entities" not in recorder_services:
+            if self.token_source == "supervisor_token":
+                raise HomeAssistantError(
+                    "Home Assistant exposes recorder.purge_entities only to an administrator context. "
+                    "Create a long-lived access token for an administrator and enter it in the app option "
+                    "'Home Assistant administrator token'."
+                )
+            raise HomeAssistantError("The recorder.purge_entities action is not available in this Home Assistant instance")
+        try:
+            response = self._request(
+                "POST",
+                "services/recorder/purge_entities",
+                {"entity_id": cleaned, "keep_days": keep_days},
+            )
+        except HomeAssistantError as exc:
+            message = str(exc)
+            if "Service recorder/purge_entities not found" in message and self.token_source == "supervisor_token":
+                raise HomeAssistantError(
+                    "Home Assistant rejected recorder.purge_entities for the Supervisor token. "
+                    "Configure a long-lived administrator token in the app options and restart the app."
+                ) from exc
+            raise
+        return {
+            "requested": True,
+            "entity_ids": cleaned,
+            "keep_days": keep_days,
+            "authentication": self.token_source,
+            "response": response,
+        }

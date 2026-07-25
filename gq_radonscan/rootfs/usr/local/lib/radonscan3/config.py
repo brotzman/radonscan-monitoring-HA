@@ -51,6 +51,7 @@ class Settings:
     gmcmap_max_age_hours: int
     gmcmap_retry_limit: int
     analysis_timezone: str
+    homeassistant_access_token: str
 
     @classmethod
     def load(cls, path: str | Path | None = None) -> "Settings":
@@ -115,6 +116,7 @@ class Settings:
             gmcmap_max_age_hours=max(1, min(8760, int(raw.get("gmcmap_max_age_hours", 72)))),
             gmcmap_retry_limit=max(1, min(20, int(raw.get("gmcmap_retry_limit", 8)))),
             analysis_timezone=str(raw.get("analysis_timezone", "auto")).strip() or "auto",
+            homeassistant_access_token=str(raw.get("homeassistant_access_token", "")).strip(),
         )
 
     def public_dict(self) -> dict[str, object]:
@@ -145,4 +147,5 @@ class Settings:
             "gmcmap_max_age_hours": self.gmcmap_max_age_hours,
             "gmcmap_retry_limit": self.gmcmap_retry_limit,
             "analysis_timezone": self.analysis_timezone,
+            "homeassistant_access_token_configured": bool(self.homeassistant_access_token),
         }

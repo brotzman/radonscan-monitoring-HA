@@ -19,10 +19,12 @@ configuration:
     description: Radonwaarde in Bq/m³ waarbij de gevarenstatus wordt getoond.
   factor_bq_m3_per_cph:
     name: CPH-omrekenfactor
-    description: Experimentele factor in Bq/m³ per count/h; wordt bij elke meting opgeslagen.
+    description: Experimentele factor in Bq/m³ per count/h; wordt bij elke meting
+      opgeslagen.
   backfill_history:
     name: Apparaathistorie importeren
-    description: Importeert reeds opgeslagen voltooide uurwaarden na de eerste geslaagde uitlezing.
+    description: Importeert reeds opgeslagen voltooide uurwaarden na de eerste geslaagde
+      uitlezing.
   history_retention_days:
     name: Bewaartermijn
     description: Verwijdert lokale metingen na dit aantal dagen uit SQLite.
@@ -40,13 +42,15 @@ configuration:
     description: Prefix voor Home Assistant MQTT Discovery-onderwerpen.
   diagnostic_logging:
     name: Uitgebreide diagnostische logging
-    description: Logt extra technische gegevens over poorten, SPIR-uitlezingen en decodering.
+    description: Logt extra technische gegevens over poorten, SPIR-uitlezingen en
+      decodering.
   log_level:
     name: Logniveau
     description: Hoeveelheid details in het app-logboek.
   minimum_data_coverage_percent:
     name: Minimum data coverage
-    description: Required percentage of available hourly values before a period average is considered calculable.
+    description: Required percentage of available hourly values before a period average
+      is considered calculable.
   report_author:
     name: Report author
     description: Optional author name for scientific PDF reports.
@@ -64,7 +68,8 @@ configuration:
     description: Maximum number of upload attempts before a reading is marked failed.
   analysis_timezone:
     name: Analysis time zone
-    description: IANA time zone used for day, weekday and hourly profiles; auto uses Home Assistant.
+    description: IANA time zone used for day, weekday and hourly profiles; auto uses
+      Home Assistant.
   gmcmap_enabled:
     name: Enable GQ World Map
     description: Enable transmission to the GQ Radiation World Map.
@@ -82,4 +87,9 @@ configuration:
     description: Minimum interval in minutes between automatic uploads.
   data_management_enabled:
     name: Enable data management
-    description: Show data management in the sidebar and enable its protected API functions.
+    description: Show data management in the sidebar and enable its protected API
+      functions.
+  homeassistant_access_token:
+    name: Home Assistant-beheerderstoken
+    description: Optioneel langlevend toegangstoken van een Home Assistant-beheerder,
+      alleen nodig voor het wissen van de Recorder-geschiedenis.
