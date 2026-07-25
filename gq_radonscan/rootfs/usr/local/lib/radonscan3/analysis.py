@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 import math
+import random
 import statistics
 from typing import Iterable, Sequence
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -71,6 +72,137 @@ def _theil_sen(points: Sequence[tuple[datetime, float]], max_points: int = 500) 
                 slopes.append((sample[j][1] - sample[i][1]) / days)
     return statistics.median(slopes) if slopes else None
 
+
+
+def _effective_sample_size(values: Sequence[float], max_lag: int = 168) -> dict[str, object]:
+    n = len(values)
+    if n < 4:
+        return {"available": False, "reason": "insufficient_samples", "n_effective": None, "correlation_hours": None}
+    ac = _autocorrelation(values, min(max_lag, n // 3))
+    positive = []
+    for item in ac:
+        coefficient = float(item["coefficient"])
+        if coefficient <= 0:
+            break
+        positive.append(coefficient)
+    denominator = 1.0 + 2.0 * sum(positive)
+    n_eff = max(1.0, min(float(n), n / denominator))
+    return {
+        "available": True,
+        "n_observed": n,
+        "n_effective": n_eff,
+        "correlation_hours": len(positive),
+        "method": "positive_sequence_autocorrelation",
+    }
+
+
+def _block_bootstrap_ci(values: Sequence[float], statistic, *, confidence: float = 0.95, resamples: int = 400) -> dict[str, object]:
+    n = len(values)
+    if n < 24:
+        return {"available": False, "reason": "minimum_24_samples"}
+    ess = _effective_sample_size(values)
+    correlation_hours = int(ess.get("correlation_hours") or 1)
+    block = max(2, min(24, correlation_hours + 1, n))
+    rng = random.Random(4500 + n)
+    results=[]
+    for _ in range(resamples):
+        sample=[]
+        while len(sample) < n:
+            start=rng.randrange(0, n)
+            sample.extend(values[(start+j) % n] for j in range(block))
+        results.append(float(statistic(sample[:n])))
+    results.sort()
+    alpha=(1.0-confidence)/2.0
+    return {
+        "available": True,
+        "method": "moving_block_bootstrap",
+        "confidence_percent": confidence*100.0,
+        "block_hours": block,
+        "resamples": resamples,
+        "lower": percentile(results, alpha),
+        "upper": percentile(results, 1.0-alpha),
+    }
+
+
+def _moments(values: Sequence[float]) -> dict[str, float | None]:
+    n=len(values)
+    if n < 3:
+        return {"skewness": None, "excess_kurtosis": None}
+    mean=statistics.fmean(values)
+    m2=sum((v-mean)**2 for v in values)/n
+    if m2 <= 0:
+        return {"skewness": 0.0, "excess_kurtosis": 0.0}
+    m3=sum((v-mean)**3 for v in values)/n
+    m4=sum((v-mean)**4 for v in values)/n
+    return {"skewness": m3/(m2**1.5), "excess_kurtosis": m4/(m2*m2)-3.0}
+
+
+def _trimmed_mean(values: Sequence[float], proportion: float = 0.1) -> float | None:
+    if not values:
+        return None
+    ordered=sorted(values); cut=int(len(ordered)*proportion)
+    core=ordered[cut:len(ordered)-cut] if cut and len(ordered)>2*cut else ordered
+    return statistics.fmean(core)
+
+
+def _mann_kendall(points: Sequence[tuple[datetime,float]], max_points: int = 1000) -> dict[str, object]:
+    if len(points) < 10:
+        return {"available": False, "reason": "minimum_10_samples"}
+    sample=list(points)
+    if len(sample)>max_points:
+        step=max(1,len(sample)//max_points); sample=sample[::step][:max_points]
+    vals=[v for _,v in sample]; n=len(vals); score=0
+    for i in range(n-1):
+        vi=vals[i]
+        for j in range(i+1,n):
+            score += 1 if vals[j]>vi else -1 if vals[j]<vi else 0
+    ties={v:vals.count(v) for v in set(vals)}
+    variance=(n*(n-1)*(2*n+5)-sum(t*(t-1)*(2*t+5) for t in ties.values() if t>1))/18.0
+    if variance <= 0:
+        z=0.0
+    elif score>0: z=(score-1)/math.sqrt(variance)
+    elif score<0: z=(score+1)/math.sqrt(variance)
+    else: z=0.0
+    p=math.erfc(abs(z)/math.sqrt(2.0))
+    return {"available": True, "tau": score/(n*(n-1)/2), "z": z, "p_value": p, "samples": n, "significant_05": p<0.05}
+
+
+def _moving_robust(points: Sequence[tuple[datetime,float]], window: int = 24) -> list[dict[str, object]]:
+    out=[]
+    for i,(dt,_) in enumerate(points):
+        vals=sorted(v for _,v in points[max(0,i-window+1):i+1])
+        if len(vals)<max(3,window//2):
+            continue
+        out.append({"completed_at": iso(dt), "median_bq_m3": statistics.median(vals), "p25_bq_m3": percentile(vals,.25), "p75_bq_m3": percentile(vals,.75), "samples":len(vals)})
+    return out
+
+
+def _threshold_events(points: Sequence[tuple[datetime,float]], threshold: float) -> dict[str, object]:
+    events=[]; current=[]
+    def finish():
+        nonlocal current
+        if not current: return
+        vals=[v for _,v in current]
+        excess=sum(max(0.0,v-threshold) for v in vals)
+        events.append({"start":iso(current[0][0]),"end":iso(current[-1][0]),"duration_hours":len(current),"maximum_bq_m3":max(vals),"mean_bq_m3":statistics.fmean(vals),"excess_area_bq_h_m3":excess})
+        current=[]
+    previous=None
+    for dt,value in points:
+        if previous is not None and (dt-previous).total_seconds()>5400: finish()
+        if value>=threshold: current.append((dt,value))
+        else: finish()
+        previous=dt
+    finish()
+    return {"threshold_bq_m3":threshold,"events":events,"event_count":len(events),"total_excess_area_bq_h_m3":sum(e["excess_area_bq_h_m3"] for e in events)}
+
+
+def _concentration_classes(values: Sequence[float]) -> list[dict[str, object]]:
+    bounds=[(None,100.0,"below_100"),(100.0,200.0,"100_199"),(200.0,300.0,"200_299"),(300.0,None,"at_least_300")]
+    result=[]
+    for low,high,key in bounds:
+        count=sum(1 for v in values if (low is None or v>=low) and (high is None or v<high))
+        result.append({"key":key,"minimum":low,"maximum_exclusive":high,"hours":count,"percent":count/len(values)*100.0 if values else 0.0})
+    return result
 
 
 def _poisson_uncertainty(records: Sequence[dict[str, object]], values: Sequence[float]) -> dict[str, object]:
@@ -241,7 +373,7 @@ def _threshold_runs(points: Sequence[tuple[datetime, float]], threshold: float) 
     }
 
 
-def _histogram(values: Sequence[float], bins: int = 12) -> list[dict[str, float | int]]:
+def _histogram(values: Sequence[float], bins: int | None = None) -> list[dict[str, float | int]]:
     if not values:
         return []
     low, high = min(values), max(values)
@@ -249,7 +381,11 @@ def _histogram(values: Sequence[float], bins: int = 12) -> list[dict[str, float 
         width = max(1.0, abs(low) * 0.1 or 1.0)
         low -= width / 2
         high += width / 2
-    bins = max(4, min(30, int(bins)))
+    if bins is None:
+        ordered=sorted(values); iqr=(percentile(ordered,.75) or 0)-(percentile(ordered,.25) or 0)
+        width=2*iqr/(len(values)**(1/3)) if iqr>0 and len(values)>1 else 0
+        bins=math.ceil((high-low)/width) if width>0 else round(math.sqrt(len(values)))
+    bins = max(4, min(40, int(bins)))
     step = (high - low) / bins
     counts = [0] * bins
     for value in values:
@@ -383,6 +519,16 @@ def analyse_records(
     quality_flags = _quality_flags(normalized, points)
     autocorrelation = _autocorrelation(values)
     change_point = _change_point(points)
+    effective_sample_size = _effective_sample_size(values)
+    confidence_intervals = {
+        "mean": _block_bootstrap_ci(values, statistics.fmean),
+        "median": _block_bootstrap_ci(values, statistics.median),
+    }
+    moments = _moments(values)
+    mann_kendall = _mann_kendall(points)
+    moving_robust = _moving_robust(points)
+    warning_events = _threshold_events(points, warning_threshold)
+    danger_events = _threshold_events(points, danger_threshold)
 
     stats: dict[str, object] = {
         "samples": len(values),
@@ -425,6 +571,9 @@ def analyse_records(
         "day_mean_bq_m3": statistics.fmean(daytime) if daytime else None,
         "night_mean_bq_m3": statistics.fmean(nighttime) if nighttime else None,
         "exposure_index_bq_h_m3": sum(values),
+        "trimmed_mean_10_bq_m3": _trimmed_mean(values, .10),
+        "mean_median_ratio": (statistics.fmean(values)/statistics.median(values)) if values and statistics.median(values) else None,
+        **moments,
         **trend,
     }
     return {
@@ -443,6 +592,18 @@ def analyse_records(
         "quality_control": quality_flags,
         "autocorrelation": autocorrelation,
         "change_point": change_point,
+        "effective_sample_size": effective_sample_size,
+        "confidence_intervals": confidence_intervals,
+        "mann_kendall": mann_kendall,
+        "moving_robust": moving_robust,
+        "threshold_events": {"warning": warning_events, "danger": danger_events},
+        "concentration_classes": _concentration_classes(values),
+        "sensitivity": {
+            "mean_bq_m3": statistics.fmean(values) if values else None,
+            "median_bq_m3": statistics.median(values) if values else None,
+            "trimmed_mean_10_bq_m3": _trimmed_mean(values,.10),
+            "difference_mean_vs_trimmed_percent": ((statistics.fmean(values)-_trimmed_mean(values,.10)) / statistics.fmean(values)*100.0) if values and statistics.fmean(values) else None,
+        },
         "methodology": {
             "measurement_basis": "completed_hourly_radonscan_records",
             "missing_data_imputed": False,

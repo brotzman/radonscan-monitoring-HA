@@ -118,17 +118,22 @@
             <article class="metric-card"><span data-i18n="above_danger"></span><strong id="analysisDanger">–</strong><small id="analysisDangerRun">–</small></article>
             <article class="metric-card"><span data-i18n="scientific_quality"></span><strong id="analysisScienceClass">–</strong><small id="analysisQcStatus">–</small></article>
             <article class="metric-card"><span data-i18n="measurement_uncertainty"></span><strong id="analysisUncertainty">–</strong><small id="analysisUncertaintyNote">–</small></article>
+                      <article class="metric-card"><span data-i18n="effective_sample_size"></span><strong id="analysisEffectiveN">–</strong><small id="analysisCorrelation">–</small></article>
+            <article class="metric-card"><span data-i18n="confidence_interval"></span><strong id="analysisMeanCi">–</strong><small data-i18n="block_bootstrap"></small></article>
           </div>
           <div id="analysisNotice" class="notice hidden"></div>
           <div class="two-column wide-left">
             <article class="panel"><div class="panel-heading"><h3 data-i18n="time_series"></h3><span id="analysisPeriodLabel" class="muted">–</span></div><div id="analysisChart" class="chart compact-chart"></div></article>
-            <article class="panel"><div class="panel-heading"><h3 data-i18n="distribution"></h3></div><div id="histogramChart" class="chart compact-chart"></div></article>
+            <article class="panel"><div class="panel-heading"><div><h3 data-i18n="distribution"></h3><p data-i18n="distribution_hint"></p></div></div><div id="histogramChart" class="chart compact-chart"></div></article>
           </div>
           <article class="panel"><div class="panel-heading"><div><h3 data-i18n="weekly_heatmap"></h3><p data-i18n="heatmap_hint"></p></div></div><div id="weeklyHeatmap" class="heatmap"></div></article>
           <div class="two-column">
             <article class="panel"><h3 data-i18n="time_patterns"></h3><div id="profileBars" class="profile-bars"></div></article>
             <article class="panel"><h3 data-i18n="data_quality"></h3><dl id="analysisQualityFacts" class="facts-grid"></dl></article>
             <article class="panel"><h3 data-i18n="scientific_interpretation"></h3><dl id="scientificFacts" class="facts-grid"></dl><div id="scientificNotice" class="notice info"></div></article>
+            <article class="panel"><h3 data-i18n="distribution_diagnostics"></h3><dl id="distributionFacts" class="facts-grid"></dl></article>
+            <article class="panel"><h3 data-i18n="threshold_events"></h3><dl id="thresholdEventFacts" class="facts-grid"></dl></article>
+            <article class="panel"><h3 data-i18n="sensitivity_analysis"></h3><dl id="sensitivityFacts" class="facts-grid"></dl></article>
           </div>
           <article class="panel"><div class="panel-heading"><h3 data-i18n="daily_statistics"></h3><button id="analysisCsvButton" class="button secondary" data-i18n="export_csv"></button></div><div class="table-wrap"><table><thead><tr><th data-i18n="date"></th><th data-i18n="samples"></th><th data-i18n="coverage"></th><th data-i18n="minimum"></th><th data-i18n="median"></th><th data-i18n="maximum"></th><th data-i18n="mean"></th></tr></thead><tbody id="dailyBody"></tbody></table></div></article>
         </section>

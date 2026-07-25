@@ -1,6 +1,12 @@
-# 4.4.7
+# 4.5.0
 
-## 4.4.7
+- Added effective sample size, block-bootstrap confidence intervals, Mann–Kendall trend diagnostics, Sen slope, distribution moments, trimmed-mean sensitivity analysis and continuous threshold-event metrics.
+- Expanded analysis interface with fully responsive cards and localized labels in all eight interface languages.
+- Hardened spacing, wrapping and mobile layouts down to 320 px.
+
+# 4.5.0
+
+## 4.5.0
 
 - Fixed the Home Assistant recorder purge endpoint crashing with an internal server error due to a wrong method name (`radonscan_entities` instead of `radon_entities`).
 - Kept the complete RadonScan history purge workflow and in-app navigation unchanged.
