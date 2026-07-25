@@ -1348,6 +1348,46 @@ class Storage:
         self.audit("data_delete", action, details, user_name)
         return details
 
+    def reset_all_data(self) -> dict[str, object]:
+        """Remove all locally managed Radon Monitoring data while retaining the empty schema."""
+        report_files: list[str] = []
+        deleted_measurements = 0
+        tables = (
+            "campaign_protocols", "calibrations", "factor_history", "worldmap_queue",
+            "worldmap_uploads", "audit_log", "reports", "events", "sessions",
+            "locations", "maps", "measurements", "campaigns", "devices", "runtime",
+        )
+        with self._lock:
+            con = sqlite3.connect(self.path, timeout=20)
+            try:
+                con.execute("PRAGMA foreign_keys=OFF")
+                row = con.execute("SELECT COUNT(*) FROM measurements").fetchone()
+                deleted_measurements = int(row[0] if row else 0)
+                report_files = [str(row[0]) for row in con.execute("SELECT filename FROM reports")]
+                con.execute("BEGIN IMMEDIATE")
+                for table in tables:
+                    con.execute(f"DELETE FROM {table}")
+                con.execute("DELETE FROM sqlite_sequence")
+                con.execute(
+                    "INSERT INTO runtime(key,value_json,updated_at) VALUES(?,?,?)",
+                    ("skip_history_backfill_once", "true", iso(utc_now())),
+                )
+                con.commit()
+                con.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+                con.execute("VACUUM")
+            except Exception:
+                con.rollback()
+                raise
+            finally:
+                con.close()
+        for filename in report_files:
+            (self.reports_dir / filename).unlink(missing_ok=True)
+        for directory in (self.maps_dir,):
+            for path in directory.glob("*"):
+                if path.is_file():
+                    path.unlink(missing_ok=True)
+        return {"deleted_measurements": deleted_measurements, "database_reset": True}
+
     def _sqlite_backup_to(self, destination: Path) -> None:
         destination.parent.mkdir(parents=True, exist_ok=True)
         with self._lock:

@@ -271,15 +271,15 @@
   function options(items,valueKey,labelFn,allLabel) {return `${allLabel!==undefined?`<option value="">${escapeHtml(allLabel)}</option>`:''}${items.map(item=>`<option value="${escapeHtml(item[valueKey])}">${escapeHtml(labelFn(item))}</option>`).join('')}`;}
   function renderCatalog() {
     const locOpts=options(catalog.locations,'id',l=>[l.building,l.floor,l.name].filter(Boolean).join(' · '),tr('all_sites'));
-    ['analysisLocation','historyLocation','reportLocation','deleteLocation','eventLocation'].forEach(id=>{const old=$(id).value;$(id).innerHTML=locOpts;$(id).value=old;});
+    ['analysisLocation','historyLocation','reportLocation','eventLocation'].forEach(id=>{const old=$(id).value;$(id).innerHTML=locOpts;$(id).value=old;});
     ['assignLocation'].forEach(id=>{const old=$(id).value;$(id).innerHTML=options(catalog.locations,'id',l=>[l.building,l.floor,l.name].filter(Boolean).join(' · '));$(id).value=old;});
     const deviceLabel=d=>[d.model,d.serial_number||d.device_id].filter(Boolean).join(' · ');
     const allDeviceOpts=options(catalog.devices,'device_id',deviceLabel,tr('all_devices_combined'));
-    ['analysisDevice','historyDevice','deleteDevice'].forEach(id=>{const old=$(id).value;$(id).innerHTML=allDeviceOpts;if(old&&catalog.devices.some(d=>String(d.device_id)===old))$(id).value=old;else if(!catalogInitialised&&catalog.devices.length)$(id).value=String(catalog.devices[0].device_id);});
+    ['analysisDevice','historyDevice'].forEach(id=>{const old=$(id).value;$(id).innerHTML=allDeviceOpts;if(old&&catalog.devices.some(d=>String(d.device_id)===old))$(id).value=old;else if(!catalogInitialised&&catalog.devices.length)$(id).value=String(catalog.devices[0].device_id);});
     const singleDeviceOpts=options(catalog.devices,'device_id',deviceLabel);
     ['assignDevice','reportDevice'].forEach(id=>{const old=$(id).value;$(id).innerHTML=singleDeviceOpts;if(old&&catalog.devices.some(d=>String(d.device_id)===old))$(id).value=old;else if(catalog.devices.length)$(id).value=String(catalog.devices[0].device_id);});
     const campOpts=options(catalog.campaigns,'id',c=>`#${c.id} · ${fmtDate(c.started_at)} · ${c.sample_count} ${tr('samples')}`,tr('all_campaigns'));
-    ['analysisCampaign','historyCampaign','deleteCampaign'].forEach(id=>{const old=$(id).value;$(id).innerHTML=campOpts;$(id).value=old;});
+    ['analysisCampaign','historyCampaign'].forEach(id=>{const old=$(id).value;$(id).innerHTML=campOpts;$(id).value=old;});
     catalogInitialised=true;
     renderLocations();renderEvents();renderReports();
   }
@@ -303,14 +303,49 @@
   async function loadDataSummary() {try{dataSummary=await api('api/data/summary');renderDataSummary();}catch(err){toast(err.message,true);}}
   function renderDataSummary() {if(!dataSummary)return;$('dataMeasurements').textContent=fmtInteger(dataSummary.measurements);$('dataRange').textContent=`${fmtDate(dataSummary.first_measurement)} – ${fmtDate(dataSummary.last_measurement)}`;$('dataDbSize').textContent=fmtBytes(dataSummary.database_size_bytes);$('dataIntegrity').textContent=`${tr('integrity')}: ${dataSummary.integrity}`;$('dataFiles').textContent=fmtInteger(dataSummary.reports);$('dataFileSize').textContent=fmtBytes(Number(dataSummary.report_size_bytes||0));$('dataSchema').textContent=`v${dataSummary.schema_version}`;}
 
-  function deletePayload(preview=false, confirmation='') {return {action:$('deleteAction').value,preview,start:toIso($('deleteStart').value),end:toIso($('deleteEnd').value),device_id:$('deleteDevice').value||null,location_id:$('deleteLocation').value||null,campaign_id:$('deleteCampaign').value||null,confirmation:preview?'':confirmation,confirmation_text:preview?'':confirmation,confirmed:!preview};}
-  async function previewDeletion() {try{const result=await api('api/data/delete',{method:'POST',body:deletePayload(true)});const p=result.preview;const box=$('deletePreviewResult');box.className=`notice ${Number(p.count||p.measurements||0)>0?'warning':''}`;box.textContent=`${tr('affected_records')}: ${fmtInteger(p.count??p.measurements??0)}${p.first_at?` · ${fmtDate(p.first_at)} – ${fmtDate(p.last_at)}`:''}`;}catch(err){toast(err.message,true);}}
-  async function deleteData(event) {event.preventDefault();const confirmation=($('deleteConfirmation').value||'').trim().toUpperCase().replace(/\s+/g,'');if(!['LÖSCHEN','LOESCHEN','DELETE','PURGE','PRURGE','PRUGE'].includes(confirmation)){toast(tr('confirmation_invalid'),true);$('deleteConfirmation').focus();return;}if(!confirm(tr('confirm_destructive_action')))return;try{const result=await api('api/data/delete',{method:'POST',body:deletePayload(false,confirmation),confirmation});toast(`${tr('deleted')}: ${fmtInteger(result.deleted||0)} · ${tr('backup')}: ${result.backup}`);$('deleteConfirmation').value='';await loadAll();loadDataSummary();loadAudit();}catch(err){toast(err.message,true);}}
+  async function deleteData(event) {
+    event.preventDefault();
+    const confirmation=($('deleteConfirmation').value||'').trim().toUpperCase().replace(/\s+/g,'');
+    if(!['LÖSCHEN','LOESCHEN','DELETE'].includes(confirmation)){
+      toast(tr('confirmation_delete_database_invalid'),true);$('deleteConfirmation').focus();return;
+    }
+    if(!confirm(tr('confirm_delete_entire_database')))return;
+    const button=$('deleteDatabaseNow'); button.disabled=true;
+    try{
+      const result=await api('api/data/reset',{method:'POST',body:{confirmed:true},confirmation});
+      $('deleteConfirmation').value='';
+      records=[]; catalog={locations:[],sessions:[],campaigns:[],devices:[],events:[],reports:[]}; analysisData=null; dataSummary=null; catalogInitialised=false;
+      setView('overview');
+      await loadAll();
+      toast(`${tr('database_deleted')}: ${fmtInteger(result.deleted_measurements||0)} ${tr('measurements')}`);
+    }catch(err){toast(err.message,true);}finally{button.disabled=false;}
+  }
 
   async function loadAudit() {try{const payload=await api('api/audit?limit=200');const body=$('auditBody'),items=payload.items||[];body.innerHTML=items.length?items.map(item=>`<tr><td>${fmtDate(item.created_at)}</td><td>${escapeHtml(item.action)}</td><td>${escapeHtml(item.target||'–')}</td><td>${escapeHtml(item.user_name||'–')}</td><td><code>${escapeHtml(JSON.stringify(item.details||{}))}</code></td></tr>`).join(''):`<tr><td colspan="5" class="empty-cell">${tr('no_data')}</td></tr>`;}catch(err){toast(err.message,true);}}
 
-  async function loadHaEntities() {const button=$('loadHaEntities');button.disabled=true;try{const payload=await api('api/homeassistant/entities');const items=payload.items||[];$('haEntityList').innerHTML=items.length?items.map(item=>`<label class="checkbox-item"><input type="checkbox" value="${escapeHtml(item.entity_id)}" ${item.recommended?'checked':''}><span>${escapeHtml(item.friendly_name)}<small>${escapeHtml(item.entity_id)} · ${escapeHtml(item.state??'–')} ${escapeHtml(item.unit||'')}</small></span></label>`).join(''):`<div class="notice">${tr('no_ha_entities')}</div>`;$('haStatus').textContent=`${items.length} ${tr('entities_detected')}`;}catch(err){$('haStatus').textContent=err.message;toast(err.message,true);}finally{button.disabled=false;}}
-  async function purgeHa() {const ids=$$('#haEntityList input:checked').map(x=>x.value);if(!ids.length){toast(tr('select_entities'),true);return;}const confirmation=($('haConfirmation').value||'').trim().toUpperCase().replace(/\s+/g,'');if(!['PURGE','LÖSCHEN','LOESCHEN','DELETE','PRURGE','PRUGE'].includes(confirmation)){toast(tr('confirmation_invalid'),true);$('haConfirmation').focus();return;}if(!confirm(tr('confirm_ha_purge')))return;try{const result=await api('api/homeassistant/purge',{method:'POST',body:{entity_ids:ids,keep_days:Number($('haKeepDays').value||0),confirmation,confirmation_text:confirmation,confirmed:true},confirmation});toast(`${tr('purge_requested')}: ${result.entity_ids.length}`);$('haConfirmation').value='';loadAudit();}catch(err){toast(err.message,true);}}
+  async function loadHaEntities() {
+    const button=$('loadHaEntities');button.disabled=true;
+    try{
+      const payload=await api('api/homeassistant/entities');const items=payload.items||[];
+      $('haEntityList').innerHTML=items.length?items.map(item=>`<div class="checkbox-item readonly"><span><strong>${escapeHtml(item.friendly_name)}</strong><small>${escapeHtml(item.entity_id)} · ${escapeHtml(item.state??'–')} ${escapeHtml(item.unit||'')}</small></span></div>`).join(''):`<div class="notice">${tr('no_ha_entities')}</div>`;
+      $('haStatus').textContent=`${items.length} ${tr('radonscan_entities_detected')}`;
+    }catch(err){$('haStatus').textContent=err.message;toast(err.message,true);}finally{button.disabled=false;}
+  }
+  async function purgeHa(event) {
+    if(event) event.preventDefault();
+    const confirmation=($('haConfirmation').value||'').trim().toUpperCase().replace(/\s+/g,'');
+    if(!['PURGE','LÖSCHEN','LOESCHEN','DELETE'].includes(confirmation)){toast(tr('confirmation_invalid'),true);$('haConfirmation').focus();return;}
+    if(!confirm(tr('confirm_purge_all_radonscan')))return;
+    const button=$('purgeHaHistory');button.disabled=true;
+    try{
+      const result=await api('api/homeassistant/purge-all',{method:'POST',body:{confirmed:true},confirmation});
+      $('haConfirmation').value='';
+      setView('overview');
+      await loadAll();
+      toast(`${tr('purge_requested')}: ${fmtInteger(result.entity_ids?.length||0)} ${tr('entities')}`);
+    }catch(err){toast(err.message,true);}finally{button.disabled=false;}
+  }
+
 
   async function loadGmcmap() {
     try {
@@ -355,7 +390,7 @@
     $('gmcmapUploadButton').addEventListener('click',uploadGmcmap);$('gmcmapRetryButton').addEventListener('click',retryGmcmap);$('refreshGmcmap').addEventListener('click',loadGmcmap);
     $('historyApply').addEventListener('click',loadHistoryFiltered);
     $('reportForm').addEventListener('submit',async event=>{event.preventDefault();const button=$('createReportButton');button.disabled=true;button.textContent=tr('generating');try{const result=await api('api/reports',{method:'POST',body:{title:$('reportTitle').value,profile:$('reportProfile').value,locale:$('reportLocale').value,device_id:$('reportDevice').value,location_id:$('reportLocation').value||null,days:Number($('reportDays').value),start:toIso($('reportStart').value),end:toIso($('reportEnd').value)}});toast(tr('report_created'));await reloadCatalog();window.open(`reports/${encodeURIComponent(result.item.report_id)}`,'_blank');}catch(err){toast(err.message,true);}finally{button.disabled=false;button.textContent=tr('generate_pdf');}});
-    $('deletePreview').addEventListener('click',previewDeletion);$('deleteDataForm').addEventListener('submit',deleteData);
+    $('deleteDataForm').addEventListener('submit',deleteData);
     $('restoreForm').addEventListener('submit',async event=>{event.preventDefault();if(!confirm(tr('confirm_restore')))return;const formElement=event.currentTarget;const form=new FormData(formElement);form.set('file',$('restoreFile').files[0]);form.set('confirmation',$('restoreConfirmation').value);try{await api('api/data/restore',{method:'POST',body:form});toast(tr('restored'));formElement.reset();await loadAll();}catch(err){toast(err.message,true);}});
     $('loadHaEntities').addEventListener('click',loadHaEntities);$('purgeHaHistory').addEventListener('click',purgeHa);$('refreshAudit').addEventListener('click',loadAudit);
     $('modalClose').addEventListener('click',()=> $('modal').classList.add('hidden'));

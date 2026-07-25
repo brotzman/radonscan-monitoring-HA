@@ -241,15 +241,9 @@
             <article class="panel danger-zone">
               <h3 data-i18n="delete_local_data"></h3><p data-i18n="delete_local_hint"></p>
               <form id="deleteDataForm" class="form-stack">
-                <label><span data-i18n="delete_scope"></span><select id="deleteAction"><option value="measurement_range" data-i18n="delete_range"></option><option value="device_history" data-i18n="delete_device_history"></option><option value="campaign" data-i18n="delete_campaign"></option><option value="all_measurements" data-i18n="delete_all_measurements"></option><option value="all_events" data-i18n="delete_all_events"></option><option value="all_reports" data-i18n="delete_all_reports"></option><option value="all_audit" data-i18n="delete_audit"></option><option value="reset_database" data-i18n="reset_database"></option></select></label>
-                <div class="two-field"><label><span data-i18n="start"></span><input id="deleteStart" type="datetime-local"></label><label><span data-i18n="end"></span><input id="deleteEnd" type="datetime-local"></label></div>
-                <label><span data-i18n="device"></span><select id="deleteDevice"></select></label>
-                <label><span data-i18n="measurement_site"></span><select id="deleteLocation"></select></label>
-                <label><span data-i18n="campaign"></span><select id="deleteCampaign"></select></label>
-                <button id="deletePreview" type="button" class="button secondary" data-i18n="preview_deletion"></button>
-                <div id="deletePreviewResult" class="notice hidden"></div>
-                <label><span data-i18n="confirmation"></span><input id="deleteConfirmation" data-i18n-placeholder="confirm_delete_word" placeholder="LÖSCHEN"></label>
-                <button type="submit" class="button danger" data-i18n="delete_now"></button>
+                <div id="deletePreviewResult" class="notice warning" data-i18n="delete_database_complete_hint"></div>
+                <label><span data-i18n="confirmation"></span><input id="deleteConfirmation" autocomplete="off" data-i18n-placeholder="confirm_delete_word" placeholder="LÖSCHEN"></label>
+                <button id="deleteDatabaseNow" type="submit" class="button danger" data-i18n="delete_entire_database"></button>
               </form>
             </article>
             <div class="stack">
@@ -258,7 +252,7 @@
                 <form id="restoreForm" class="form-stack"><label><span data-i18n="backup_file"></span><input type="file" id="restoreFile" accept=".zip,.sqlite3,.db" required></label><label><span data-i18n="confirmation"></span><input id="restoreConfirmation" data-i18n-placeholder="confirm_restore_word" placeholder="WIEDERHERSTELLEN"></label><button class="button danger" type="submit" data-i18n="restore"></button></form>
               </article>
               <article class="panel">
-                <h3 data-i18n="home_assistant_history"></h3><p data-i18n="ha_purge_hint"></p><div id="haStatus" class="status-message">–</div><button id="loadHaEntities" class="button secondary" data-i18n="detect_entities"></button><div id="haEntityList" class="checkbox-list"></div><label class="inline-field"><span data-i18n="days_to_keep"></span><input id="haKeepDays" type="number" min="0" max="3650" value="0"></label><label><span data-i18n="confirmation"></span><input id="haConfirmation" data-i18n-placeholder="confirm_purge_word" placeholder="PURGE"></label><button id="purgeHaHistory" class="button danger" data-i18n="purge_selected"></button>
+                <h3 data-i18n="home_assistant_history"></h3><p data-i18n="ha_purge_all_hint"></p><div id="haStatus" class="status-message">–</div><div id="haEntityList" class="checkbox-list readonly-list"></div><button id="loadHaEntities" type="button" class="button secondary" data-i18n="detect_radonscan_entities"></button><label><span data-i18n="confirmation"></span><input id="haConfirmation" autocomplete="off" data-i18n-placeholder="confirm_purge_word" placeholder="PURGE"></label><button id="purgeHaHistory" type="button" class="button danger" data-i18n="purge_all_radonscan_history"></button>
               </article>
             </div>
           </div>

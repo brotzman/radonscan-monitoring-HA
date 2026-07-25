@@ -479,20 +479,15 @@ class WebServer:
                         self.json_response({"ok": True, "item": item}, 201)
                         return
 
-                    if path == "/api/data/delete":
+                    if path == "/api/data/reset":
                         self.require_data_management()
-                        payload = self.read_json()
-                        action = str(payload.get("action") or "")
-                        if payload.get("preview", False):
-                            self.json_response({"ok": True, "preview": app.storage.preview_delete(action, payload)})
-                            return
-                        # The write-action token has already been validated by require_write_token().
-                        # Text confirmation is enforced in the UI, but is deliberately not repeated
-                        # server-side because Home Assistant Ingress/proxies may strip or cache request
-                        # fields and previously caused valid deletion requests to fail repeatedly.
-                        result = app.storage.delete_data(action, payload, self.user_name)
+                        result = app.storage.reset_all_data()
                         self.json_response({"ok": True, **result})
                         return
+
+                    if path == "/api/data/delete":
+                        self.require_data_management()
+                        raise StorageError("Selective deletion is no longer available. Use complete database deletion.")
 
                     if path == "/api/data/restore":
                         self.require_data_management()
@@ -506,18 +501,18 @@ class WebServer:
                         self.json_response({"ok": True, **result})
                         return
 
-                    if path == "/api/homeassistant/purge":
+                    if path == "/api/homeassistant/purge-all":
                         self.require_data_management()
-                        payload = self.read_json()
-                        # require_write_token() already authenticates this destructive request.
-                        # The browser still requires an explicit text entry and confirmation dialog.
-                        entity_ids = payload.get("entity_ids")
-                        if not isinstance(entity_ids, list):
-                            raise StorageError("entity_ids must be a list")
-                        result = app.ha.purge_entities([str(value) for value in entity_ids], int(payload.get("keep_days") or 0))
-                        app.storage.audit("homeassistant_purge", "recorder", result, self.user_name)
+                        entities = app.ha.radonscan_entities()
+                        entity_ids = [str(item.get("entity_id") or "") for item in entities]
+                        result = app.ha.purge_entities(entity_ids, 0)
+                        app.storage.audit("homeassistant_purge_all", "recorder", result, self.user_name)
                         self.json_response({"ok": True, **result})
                         return
+
+                    if path == "/api/homeassistant/purge":
+                        self.require_data_management()
+                        raise StorageError("Selective recorder deletion is no longer available. Use complete RadonScan history deletion.")
 
                     self.send_bytes(b"Not found", "text/plain; charset=utf-8", 404)
                 except (StorageError, HomeAssistantError, GmcMapError, ValueError, KeyError) as exc:

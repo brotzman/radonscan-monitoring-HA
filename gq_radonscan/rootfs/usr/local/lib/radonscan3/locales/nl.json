@@ -389,5 +389,16 @@
   "change_amount": "Estimated change",
   "scientific_notice": "Uncertainty covers counting statistics only. It does not include calibration or other systematic effects. Change points are exploratory indications, not proof of causation.",
   "not_calculable": "Not yet meaningfully calculable",
-  "confirmation_invalid": "Enter DELETE or PURGE exactly."
+  "confirmation_invalid": "Enter DELETE or PURGE exactly.",
+  "delete_database_complete_hint": "This permanently removes all local measurements, devices, campaigns, sites, events, reports, calibration data, factor history, World Map queues and administration records. The empty database schema remains available.",
+  "delete_entire_database": "Delete entire local database",
+  "confirmation_delete_database_invalid": "Enter DELETE or LÖSCHEN exactly.",
+  "confirm_delete_entire_database": "Permanently delete the complete local Radon Monitoring database? This cannot be undone.",
+  "database_deleted": "Local database deleted",
+  "ha_purge_all_hint": "Deletes the complete Home Assistant Recorder history of all detected RadonScan and Radon Monitoring entities. Local app data remains unchanged.",
+  "detect_radonscan_entities": "Detect RadonScan entities",
+  "radonscan_entities_detected": "RadonScan entities detected",
+  "purge_all_radonscan_history": "Delete all RadonScan history",
+  "confirm_purge_all_radonscan": "Permanently delete all Home Assistant history for every detected RadonScan entity?",
+  "entities": "entities"
 }

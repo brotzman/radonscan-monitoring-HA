@@ -19,19 +19,16 @@ configuration:
     description: Radonwert in Bq/m³, ab dem die Anzeige den Gefahrstatus verwendet.
   factor_bq_m3_per_cph:
     name: CPH-Umrechnungsfaktor
-    description: Experimenteller Faktor in Bq/m³ je count/h; wird mit jedem Messwert
-      gespeichert.
+    description: Experimenteller Faktor in Bq/m³ je count/h; wird mit jedem Messwert gespeichert.
   backfill_history:
     name: Gerätehistorie importieren
-    description: Bereits gespeicherte Stundenwerte beim ersten erfolgreichen Lesen
-      übernehmen.
+    description: Bereits gespeicherte Stundenwerte beim ersten erfolgreichen Lesen übernehmen.
   history_retention_days:
     name: Aufbewahrungsdauer
     description: Lokale Messwerte nach dieser Anzahl von Tagen aus SQLite entfernen.
   serial_port:
     name: Serieller Anschluss
-    description: Leer lassen für automatische Erkennung oder einen festen Gerätepfad
-      angeben.
+    description: Leer lassen für automatische Erkennung oder einen festen Gerätepfad angeben.
   serial_timeout_seconds:
     name: Serielles Zeitlimit
     description: Maximale Wartezeit in Sekunden für eine Geräteantwort.
@@ -43,15 +40,13 @@ configuration:
     description: Präfix der Home-Assistant-MQTT-Discovery-Themen.
   diagnostic_logging:
     name: Ausführliche Diagnoseprotokolle
-    description: Zusätzliche technische Details zu Portsuche, SPIR-Lesen und Dekodierung
-      protokollieren.
+    description: Zusätzliche technische Details zu Portsuche, SPIR-Lesen und Dekodierung protokollieren.
   log_level:
     name: Protokollstufe
     description: Ausführlichkeit des App-Protokolls.
   minimum_data_coverage_percent:
     name: Mindest-Datenabdeckung
-    description: Erforderlicher Anteil vorhandener Stundenwerte, bevor ein Zeitraumsmittel
-      als berechenbar gilt.
+    description: Erforderlicher Anteil vorhandener Stundenwerte, bevor ein Zeitraumsmittel als berechenbar gilt.
   report_author:
     name: Berichtsautor
     description: Optionaler Name des Autors für wissenschaftliche PDF-Berichte.
@@ -60,16 +55,31 @@ configuration:
     description: Optionale Organisation oder Einrichtung für PDF-Berichte.
   report_disclaimer:
     name: Zusätzlicher Berichtshinweis
-    description: Optionaler eigener Hinweis, der in wissenschaftliche PDF-Berichte
-      aufgenommen wird.
+    description: Optionaler eigener Hinweis, der in wissenschaftliche PDF-Berichte aufgenommen wird.
   gmcmap_max_age_hours:
     name: Maximales Datenalter für World Map
     description: Maximales Alter der zur Übertragung vorgemerkten Messwerte.
   gmcmap_retry_limit:
     name: World-Map-Wiederholungsgrenze
-    description: Maximale Anzahl von Uploadversuchen, bevor ein Messwert als fehlgeschlagen
-      gilt.
+    description: Maximale Anzahl von Uploadversuchen, bevor ein Messwert als fehlgeschlagen gilt.
   analysis_timezone:
     name: Analysezeitzone
-    description: IANA-Zeitzone für Tages-, Wochentags- und Stundenprofile; auto verwendet
-      Home Assistant.
+    description: IANA-Zeitzone für Tages-, Wochentags- und Stundenprofile; auto verwendet Home Assistant.
+  gmcmap_enabled:
+    name: GQ World Map aktivieren
+    description: Übertragung an die GQ Radiation World Map aktivieren.
+  gmcmap_auto_upload:
+    name: Automatischer World-Map-Upload
+    description: Abgeschlossene Stundenwerte automatisch für den Upload vormerken.
+  gmcmap_account_id:
+    name: GQ-World-Map-Konto-ID
+    description: Konto-ID für den Upload an die GQ Radiation World Map.
+  gmcmap_device_id:
+    name: GQ-World-Map-Geräte-ID
+    description: Geräte-ID für den Upload an die GQ Radiation World Map.
+  gmcmap_upload_interval_minutes:
+    name: World-Map-Uploadintervall
+    description: Mindestabstand in Minuten zwischen automatischen Uploads.
+  data_management_enabled:
+    name: Datenverwaltung aktivieren
+    description: Datenverwaltung in der Seitenleiste anzeigen und geschützte Funktionen freigeben.

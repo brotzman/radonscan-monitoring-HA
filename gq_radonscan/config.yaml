@@ -1,5 +1,5 @@
 name: Radon Monitoring
-version: 4.4.1
+version: 4.4.2
 slug: gq_radonscan
 description: >-
   Local monitoring for GQ RadonScan devices with read-only SPIR history,

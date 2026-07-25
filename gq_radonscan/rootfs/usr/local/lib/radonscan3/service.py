@@ -64,12 +64,15 @@ def main() -> int:
                     port=result.port,
                     seen_at=result.detected_at,
                 )
+                skip_backfill_once = bool(storage.get_runtime("skip_history_backfill_once", False))
                 imported = storage.import_snapshot(
                     device_id=result.device_id,
                     snapshot=result.snapshot,
                     detected_at=result.detected_at,
-                    backfill=settings.backfill_history,
+                    backfill=settings.backfill_history and not skip_backfill_once,
                 )
+                if skip_backfill_once:
+                    storage.set_runtime("skip_history_backfill_once", False)
                 storage.set_runtime(
                     "connection",
                     {

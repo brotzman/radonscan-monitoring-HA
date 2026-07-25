@@ -389,5 +389,16 @@
   "change_amount": "Geschätzte Änderung",
   "scientific_notice": "Die Unsicherheit umfasst nur die Zählstatistik. Kalibrierunsicherheit und andere systematische Einflüsse sind nicht enthalten. Strukturbrüche sind explorative Hinweise und kein Kausalitätsnachweis.",
   "not_calculable": "Noch nicht sinnvoll berechenbar",
-  "confirmation_invalid": "Bitte exakt LÖSCHEN oder PURGE eingeben."
+  "confirmation_invalid": "Bitte exakt LÖSCHEN oder PURGE eingeben.",
+  "delete_database_complete_hint": "Dadurch werden alle lokalen Messwerte, Geräte, Kampagnen, Messorte, Ereignisse, Berichte, Kalibrierungen, Faktorverläufe, World-Map-Warteschlangen und Verwaltungsprotokolle dauerhaft entfernt. Das leere Datenbankschema bleibt erhalten.",
+  "delete_entire_database": "Gesamte lokale Datenbank löschen",
+  "confirmation_delete_database_invalid": "Bitte exakt LÖSCHEN oder DELETE eingeben.",
+  "confirm_delete_entire_database": "Die vollständige lokale Radon-Monitoring-Datenbank dauerhaft löschen? Dieser Vorgang kann nicht rückgängig gemacht werden.",
+  "database_deleted": "Lokale Datenbank gelöscht",
+  "ha_purge_all_hint": "Löscht den vollständigen Home-Assistant-Recorder-Verlauf aller erkannten RadonScan- und Radon-Monitoring-Entitäten. Die lokalen App-Daten bleiben unverändert.",
+  "detect_radonscan_entities": "RadonScan-Entitäten erkennen",
+  "radonscan_entities_detected": "RadonScan-Entitäten erkannt",
+  "purge_all_radonscan_history": "Gesamten RadonScan-Verlauf löschen",
+  "confirm_purge_all_radonscan": "Den gesamten Home-Assistant-Verlauf aller erkannten RadonScan-Entitäten dauerhaft löschen?",
+  "entities": "Entitäten"
 }
