@@ -109,6 +109,7 @@
               <button id="analysisApply" class="button primary align-end" data-i18n="apply"></button>
             </div>
           </article>
+          <div class="analysis-level-heading"><h3 data-i18n="basic_statistics"></h3><p data-i18n="basic_statistics_hint"></p></div>
           <div class="analysis-metrics">
             <article class="metric-card"><span data-i18n="mean"></span><strong id="analysisMean">–</strong><small id="analysisCoverage">–</small></article>
             <article class="metric-card"><span data-i18n="median"></span><strong id="analysisMedian">–</strong><small id="analysisSamples">–</small></article>
@@ -127,6 +128,7 @@
             <article class="panel"><div class="panel-heading"><div><h3 data-i18n="distribution"></h3><p data-i18n="distribution_hint"></p></div></div><div id="histogramChart" class="chart compact-chart"></div></article>
           </div>
           <article class="panel"><div class="panel-heading"><div><h3 data-i18n="weekly_heatmap"></h3><p data-i18n="heatmap_hint"></p></div></div><div id="weeklyHeatmap" class="heatmap"></div></article>
+          <div class="analysis-level-heading advanced"><h3 data-i18n="advanced_statistics"></h3><p data-i18n="advanced_statistics_hint"></p></div>
           <div class="two-column">
             <article class="panel"><h3 data-i18n="time_patterns"></h3><div id="profileBars" class="profile-bars"></div></article>
             <article class="panel"><h3 data-i18n="data_quality"></h3><dl id="analysisQualityFacts" class="facts-grid"></dl></article>
@@ -292,6 +294,7 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <div id="modal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card"><button id="modalClose" class="modal-close" data-i18n-aria-label="close" aria-label="Close">×</button><h3 id="modalTitle"></h3><div id="modalBody"></div></div></div>
   <script>window.RADONSCAN_BOOT={locale:"__LOCALE__",translations:__TRANSLATIONS__,locales:__LOCALE_NAMES__,version:"__VERSION__",actionToken:"__ACTION_TOKEN__"};</script>
+  <script src="assets/core.js?v=__VERSION__"></script>
   <script src="assets/app.js?v=__VERSION__"></script>
 </body>
 </html>

@@ -257,7 +257,7 @@
   "local_data": "Local measurement data",
   "longest": "Longest run",
   "longest_gap": "Longest data gap",
-  "manual_note_v3": "The bundled manuals describe the stable SPIR data path of version 3. The new version 4 interface and management functions are additionally explained directly in the app.",
+  "manual_note_v3": "Le manuel utilisateur correspond à la version 4.6.0. La référence séparée du protocole SPIR reste en version 3.0.0, car elle décrit le protocole de l’appareil et non la version de l’application.",
   "map_click_hint": "Click the floor plan to set the measurement-site position.",
   "map_hint": "Upload a local floor plan, place measurement sites and assign measurement periods. Files never leave the system.",
   "map_sites": "Map & measurement sites",
@@ -424,5 +424,10 @@
   "danger_events": "Épisodes au-dessus du seuil de danger",
   "danger_excess_area": "Dépassement cumulé du seuil de danger",
   "trimmed_mean_10": "Moyenne tronquée à 10 %",
-  "mean_trimmed_difference": "Écart moyenne/moyenne tronquée"
+  "mean_trimmed_difference": "Écart moyenne/moyenne tronquée",
+  "basic_statistics": "Statistiques principales",
+  "basic_statistics_hint": "Indicateurs clés pour une évaluation technique rapide de la période sélectionnée.",
+  "advanced_statistics": "Statistiques avancées",
+  "advanced_statistics_hint": "Profils temporels, qualité des données, diagnostics de distribution et analyses de sensibilité.",
+  "unknown_error": "Erreur inconnue"
 }

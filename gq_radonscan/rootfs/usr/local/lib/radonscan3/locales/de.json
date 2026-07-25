@@ -194,7 +194,7 @@
   "longest": "Längste Folge",
   "longest_gap": "Längste Datenlücke",
   "manual": "Manuell",
-  "manual_note_v3": "Die mitgelieferten Handbücher beschreiben den stabilen SPIR-Datenpfad der Version 3. Die neue Oberfläche und Verwaltungsfunktionen von Version 4 sind zusätzlich direkt in der App erläutert.",
+  "manual_note_v3": "Das Benutzerhandbuch entspricht Version 4.6.0. Die separate SPIR-Protokollreferenz trägt weiterhin Version 3.0.0, da sie das Geräteprotokoll und nicht die App-Version beschreibt.",
   "manual_upload": "Manueller Upload",
   "manual_upload_hint": "Es wird ausschließlich der letzte abgeschlossene lokale Stundenwert hochgeladen. Historische Zeitstempel können über das veröffentlichte Protokoll nicht übertragen werden.",
   "map_click_hint": "Klicken Sie auf den Grundriss, um die Position des Messortes festzulegen.",
@@ -424,5 +424,10 @@
   "danger_events": "Ereignisse über Gefahrenschwelle",
   "danger_excess_area": "Kumulierte Überschreitung Gefahrenschwelle",
   "trimmed_mean_10": "10-%-getrimmtes Mittel",
-  "mean_trimmed_difference": "Abweichung Mittelwert/getrimmtes Mittel"
+  "mean_trimmed_difference": "Abweichung Mittelwert/getrimmtes Mittel",
+  "basic_statistics": "Grundauswertung",
+  "basic_statistics_hint": "Zentrale Kennwerte für die schnelle fachliche Einordnung des gewählten Zeitraums.",
+  "advanced_statistics": "Erweiterte Statistik",
+  "advanced_statistics_hint": "Zeitmuster, Datenqualität, Verteilungsdiagnostik und Sensitivitätsanalysen für vertiefte Auswertungen.",
+  "unknown_error": "Unbekannter Fehler"
 }

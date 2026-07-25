@@ -292,3 +292,10 @@ code,pre{overflow-wrap:anywhere;word-break:break-word}
 @media(max-width:980px){#view-analysis .analysis-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){#view-analysis .filter-grid{grid-template-columns:1fr}#view-analysis .analysis-metrics{grid-template-columns:1fr 1fr}#view-analysis .facts-grid div{grid-template-columns:1fr;gap:3px}#view-analysis .facts-grid dd{text-align:left}}
 @media(max-width:400px){#view-analysis .analysis-metrics{grid-template-columns:1fr}#view-analysis .metric-card{padding:16px}#view-analysis .chart{min-height:230px}#view-analysis .panel{padding:16px}}
+
+/* Analysis hierarchy and consolidation release (4.6.0) */
+.analysis-level-heading{margin:1.4rem 0 .7rem;display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.analysis-level-heading h3{margin:0;font-size:1.05rem;line-height:1.25}
+.analysis-level-heading p{margin:0;max-width:58rem;color:var(--muted);line-height:1.5}
+.analysis-level-heading.advanced{margin-top:1.8rem;padding-top:1.15rem;border-top:1px solid var(--line)}
+@media(max-width:640px){.analysis-level-heading{display:block;margin-top:1.1rem}.analysis-level-heading p{margin-top:.35rem}.analysis-level-heading.advanced{margin-top:1.35rem}}

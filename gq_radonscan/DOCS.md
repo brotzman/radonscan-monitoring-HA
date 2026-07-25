@@ -1,194 +1,105 @@
-# Radon Monitoring 4.5.0 - Technical and Operations Documentation
+# Radon Monitoring 4.6.0 - Technical and Operations Documentation
 
 ## 1. Purpose and scope
 
-Radon Monitoring reads completed hourly measurements from the read-only SPIR history of compatible GQ RadonScan devices. It stores the measurements locally in SQLite, publishes Home Assistant entities through MQTT Discovery and provides analysis, scientific reporting, GQ Radiation World Map upload and controlled data administration.
+Radon Monitoring reads completed hourly values from compatible GQ RadonScan devices without sending write commands to the device. It stores the values locally, exposes Home Assistant entities, provides statistical analysis and produces reproducible reports.
 
-The app does not modify device memory, settings or calibration. It does not reconstruct minute-by-minute readings and does not replace an approved long-term measurement procedure or professional assessment.
+## 2. Installation and upgrade
 
-## 2. Requirements
+1. Install the app on a supported `amd64` or `aarch64` Home Assistant system.
+2. Connect the RadonScan by USB and ensure no other program holds the serial port.
+3. Provide the MQTT service and start the app.
+4. Open the Ingress panel and verify device, MQTT and database status.
+5. Before upgrades or destructive actions, create and download a backup.
 
-- Home Assistant OS or another installation with App/Supervisor support
-- supported CPU architecture: `amd64` or `aarch64`
-- MQTT service available to apps
-- GQ RadonScan connected by USB
-- administrator access for the ingress panel
-- sufficient free space for SQLite data, reports and backups
+The database remains at `/data/radonscan_v3.sqlite3`. The app slug and MQTT identities are preserved to avoid duplicate entities.
 
-The app has been developed against the `RadonScan Re2.02` firmware family. Other compatible firmware may work but should be verified with the Expert view and logs.
-
-## 3. Installation and upgrade
-
-1. Install **Radon Monitoring** from the repository or copy the `gq_radonscan` directory into the local apps directory.
-2. Connect the device by USB.
-3. Ensure no other application has the serial port open.
-4. Provide the MQTT service.
-5. Start the app and open the **Radon Monitoring** panel.
-6. Confirm that the device, database and MQTT states are healthy.
-
-Leave `serial_port` empty for automatic detection. For a fixed path, prefer a persistent `/dev/serial/by-id/...` device name.
-
-An existing database at `/data/radonscan_v3.sqlite3` is migrated in place. Before schema-changing or destructive operations, create or retain a current backup. The slug `gq_radonscan`, database path, MQTT topic prefix and entity unique IDs are intentionally retained to avoid duplicate entities.
-
-## 4. Views and workflow
+## 3. Interface levels
 
 ### Overview
 
-The Overview is intended for routine monitoring. It shows the latest completed hour, connection state, data age, selected device or site, database state, data quality and the 24-hour, 7-day and 30-day values.
-
-A period value is shown only when:
-
-- the full time span has elapsed; and
-- the configured minimum data coverage has been reached.
-
-Otherwise the tile displays a plain-language reason instead of a misleading number.
+Shows the latest completed hour, device and MQTT state, data age, database size, data coverage and the main rolling averages. A value is replaced by an explanation when the required period or minimum data coverage is not yet available.
 
 ### Analysis
 
-Analysis provides selectable periods and filters for device, measurement site and campaign. It includes arithmetic and geometric means, median, standard deviation, percentiles, interquartile range, median absolute deviation, Theil-Sen trend, threshold durations, event markers, histogram, daily statistics, hourly and weekday profiles, weekly heatmap, exposure index and data-gap metrics.
+The analysis view is divided into:
 
-Time-related profiles use `analysis_timezone`; raw storage remains in UTC.
+- **Core statistics:** mean, median, percentiles, trend, threshold duration, scientific quality, uncertainty estimate, effective sample size and confidence interval.
+- **Advanced statistics:** time profiles, data quality, distribution diagnostics, threshold events, sensitivity analysis and daily tables.
+
+All date/time profiles use the configured analysis time zone; storage remains UTC.
 
 ### Expert view
 
-The Expert view exposes decoder details, raw CPH values, offsets, SPIR block checksums, firmware information, campaign/import state, conversion-factor history, database integrity and runtime diagnostics. It is intended for troubleshooting and validation rather than daily use.
+Shows raw CPH, decoder and SPIR diagnostics, firmware, campaign state, database integrity, configured conversion factor and the factor stored with historical values.
 
-### History
+## 4. Statistical methods
 
-History provides tabular measurements and exports. Missing hours remain missing and are not interpolated. Device filters should be used when more than one detector is stored in the database.
+The app can calculate arithmetic and geometric means, median, standard deviation, variance, quantiles, IQR, MAD, skewness, excess kurtosis, trimmed mean, Theil-Sen/Sen slope, Mann-Kendall diagnostics, autocorrelation, effective sample size, moving-block-bootstrap confidence intervals, rolling median/IQR, threshold events and concentration-class shares.
 
-### Measurement sites, sessions and events
+Methods are only shown when their minimum data requirements are met. Missing hours are not imputed and statistical outliers are not silently removed.
 
-Sites are local metadata; no floor-plan upload is included. A site can be assigned to device-specific measurement sessions. Events such as ventilation, window changes, construction work, moves and outages can be annotated and displayed in analyses and reports.
+The count-based uncertainty estimate covers statistical counting variation only. It does not include calibration uncertainty, systematic device error, placement effects or environmental representativeness.
 
-### GQ Radiation World Map
+## 5. Conversion factor and traceability
 
-World Map upload is optional and disabled by default. Account ID and device ID are configured in the app options. A persistent queue prevents duplicate uploads, retries temporary failures and respects the configured maximum age and retry limit.
+`Bq/m³ = raw CPH × factor_bq_m3_per_cph`
 
-The app sends the radon measurement through the supported GQ upload protocol. It does not send GPS coordinates. Public location information is controlled in the user's GQ device profile. Enabling the feature causes measurement data and identifiers to leave the local Home Assistant system.
+The current configured factor is shown separately from the factor stored with each measurement. Historical values therefore remain reproducible after configuration changes. Calibration records can document laboratory, certificate, factor, uncertainty and due date.
 
-### Reports
+## 6. Reports
 
-Compact and detailed PDF reports are generated locally. Depending on the selected profile, a report contains:
+Compact and scientific reports include the selected period, metadata, data coverage, descriptive/robust statistics, threshold metrics, charts, method notes, software version, schema version and SHA-256 checksum of the canonical selected data.
 
-- device, period, site and session information
-- result summary and data coverage
-- descriptive and robust statistics
-- threshold and data-gap information
-- charts, profiles and documented events
-- firmware, conversion factor and software version
-- method, limitations and interpretation notes
-- SHA-256 checksum of the selected canonical measurement data
+Reports are documentation aids, not official certificates.
 
-Generated reports are scientific documentation aids, not official certificates.
+## 7. GQ Radiation World Map
 
-### Data management
+World Map upload is optional and disabled by default. A persistent queue prevents duplicate uploads and retries temporary failures. The app sends the measurement and configured GQ identifiers; it does not send GPS coordinates. Public location information remains controlled through the user’s GQ profile.
 
-The interface can:
+## 8. Data management
 
-- create a complete backup ZIP with database, reports and manifest
-- download CSV and diagnostics JSON
-- preview deletion targets
-- delete a time range, device history, campaign, events, reports or audit entries
-- perform a full local reset
-- integrity-check and restore a supported SQLite database or app backup
+When enabled, Data management provides:
 
-An automatic local backup is created before destructive operations. The physical detector history is never erased by the app.
+- complete backup ZIP
+- CSV and diagnostics export
+- database integrity information
+- complete local database reset
+- complete Home Assistant Recorder purge for RadonScan/Radon Monitoring entities
+- supported restore workflow
 
-### Home Assistant Recorder history
+The app never erases the physical history stored in the detector.
 
-With `homeassistant_api: true`, the app can find likely Radon Monitoring entities and invoke `recorder.purge_entities` for explicitly selected entities. This affects Home Assistant Recorder only; it does not delete the local SQLite data or device history.
+Home Assistant Recorder purge is administrator-only. A long-lived administrator token may be required in `homeassistant_access_token` when the Supervisor token is insufficient.
 
-## 5. Measurement and calculation model
+## 9. Main configuration
 
-Confirmed read areas:
+| Option | Purpose |
+|---|---|
+| `scan_interval` | Read-only polling interval |
+| `serial_port` | Automatic or fixed serial device path |
+| `factor_bq_m3_per_cph` | Current conversion factor |
+| `minimum_data_coverage_percent` | Required coverage for rolling-period values |
+| `analysis_timezone` | Time zone for daily/weekly analysis |
+| `history_retention_days` | Local retention period |
+| `gmcmap_*` | Optional World Map queue and retry settings |
+| `data_management_enabled` | Show and enable destructive data tools |
+| `homeassistant_access_token` | Optional administrator token for Recorder purge |
+| `diagnostic_logging` | Additional diagnostic logging |
 
-- `0x1FC000`: completed raw hourly CPH values
-- `0x1FD000`: diagnostic or administrative data; not published as the normal measurement
-- `0x1FE000`: hour records, 14 bytes each: `AA 55 + seconds (BE32) + 8 payload bytes`
+## 10. Troubleshooting
 
-Conversion:
+- **No device:** check USB permissions, fixed port and competing processes.
+- **No new value:** only completed hours are imported; check the latest timestamp and Expert view.
+- **Average unavailable:** the full period or required coverage is not present.
+- **Refresh mismatch:** restart the app and reopen the Ingress panel; the frontend version must match the backend version.
+- **Recorder purge fails:** verify the administrator token and Home Assistant Recorder availability.
+- **World Map upload fails:** verify IDs, network, queue age and retry state.
 
-```text
-Bq/m³ = raw CPH × factor_bq_m3_per_cph
-```
+## 11. Documentation versioning
 
-The default factor is `1.530`. It is configurable and is stored with each measurement so historic data retains the factor used at import time. Factor changes are logged in the factor history.
+The user manuals are versioned with the app (`4.6.0`). The separate protocol reference remains version `3.0.0` because it documents the read-only device protocol, not the app release.
 
-## 6. Main configuration options
+## 12. Scientific and safety limitations
 
-| Option | Default | Purpose |
-|---|---:|---|
-| `scan_interval` | 300 s | Interval between read-only polls |
-| `serial_port` | empty | Automatic detection or fixed device path |
-| `serial_timeout_seconds` | 3.0 s | Serial response timeout |
-| `factor_bq_m3_per_cph` | 1.530 | Conversion factor stored per measurement |
-| `minimum_data_coverage_percent` | 95 | Coverage required for period values |
-| `backfill_history` | true | Import completed history from the detector |
-| `history_retention_days` | 1095 | Local measurement retention |
-| `preferred_unit` | Bq/m3 | Display and MQTT unit |
-| `analysis_timezone` | auto | Time zone for daily and weekly analyses |
-| `language` | auto | Interface and manual language |
-| `report_author` | empty | Optional report author |
-| `report_organisation` | empty | Optional organisation in reports |
-| `report_disclaimer` | empty | Optional additional report notice |
-| `gmcmap_enabled` | false | Enable World Map functions |
-| `gmcmap_auto_upload` | false | Upload queued values automatically |
-| `gmcmap_upload_interval_minutes` | 60 | Automatic upload interval |
-| `gmcmap_max_age_hours` | 72 | Maximum age for queued automatic uploads |
-| `gmcmap_retry_limit` | 8 | Maximum upload attempts |
-| `diagnostic_logging` | false | Additional diagnostic messages |
-| `log_level` | info | Application log level |
-
-## 7. Backup and restore procedure
-
-Before a major update or extensive deletion:
-
-1. Stop unnecessary writes and confirm sufficient free space.
-2. Create a complete backup ZIP from Data management.
-3. Download the backup outside Home Assistant.
-4. Keep the SHA-256 value or backup manifest with the file.
-5. After an update, verify database integrity, latest timestamp and device count.
-
-Restore validates the uploaded SQLite database before replacement and creates a pre-restore backup. If a restore fails, retain the original backup and inspect the app log before retrying.
-
-## 8. Troubleshooting
-
-### Device not found
-
-Check USB connection, host permissions, `serial_port`, and whether another process has opened the port. Prefer a persistent by-id path if automatic device order changes.
-
-### No new measurement
-
-The app publishes only completed hours. Check the timestamp of the last stored value, the detector clock/index state, the Expert view and the service log.
-
-### Period average unavailable
-
-The required time span or minimum coverage has not yet been reached. Review missing hours and the longest data gap in Analysis.
-
-### World Map upload fails
-
-Verify account ID, device ID, internet access, queue state, last server response, maximum-age setting and retry limit. Avoid repeatedly changing identifiers while queued items exist.
-
-### Report generation fails
-
-Check free space, database integrity, the selected period and whether a valid PDF can be created for a smaller range.
-
-### Upgrade issue
-
-Restart the app once, review migration log entries and compare database counts with the pre-upgrade backup. Do not delete the backup until several new hours have been stored successfully.
-
-## 9. Documentation supplied with the app
-
-The Help view serves current **Radon Monitoring 4.5.0** user manuals in German and English. Other interface languages fall back to the English manual. Separate localized protocol-reference PDFs remain bundled because the read-only SPIR protocol has not changed with the application version.
-
-## 10. Safety and scientific limitations
-
-Radon Monitoring is a community implementation. Removal of the Home Assistant experimental-stage label means the app is presented as a normal repository release; it does not turn the reverse-engineered device protocol into an official GQ specification.
-
-Short-term concentrations, threshold durations, correlations and generated reports must not be used as the sole basis for medical, legal, workplace or building decisions. Statutory reference values generally relate to long-term averages, not an individual hourly reading. Use an appropriate measurement duration and consult qualified authorities or professionals where required.
-
-
-### Home Assistant Recorder-Verlauf löschen
-
-Die Aktion `recorder.purge_entities` ist in aktuellen Home-Assistant-Versionen administratorgeschützt. Falls der Supervisor-Token abgewiesen wird, in Home Assistant unter **Profil → Sicherheit → Langlebige Zugriffstoken** einen Token eines Administrators erstellen und in der App-Option `homeassistant_access_token` hinterlegen. Der Token wird nicht in der Weboberfläche oder in Diagnoseausgaben angezeigt.
+Short-term values and statistical relationships must not be treated as proof of causation or as a substitute for a suitable long-term measurement. Legal and health decisions require the applicable national rules and, where appropriate, qualified laboratories or authorities.

@@ -257,7 +257,7 @@
   "local_data": "Local measurement data",
   "longest": "Longest run",
   "longest_gap": "Longest data gap",
-  "manual_note_v3": "The bundled manuals describe the stable SPIR data path of version 3. The new version 4 interface and management functions are additionally explained directly in the app.",
+  "manual_note_v3": "De gebruikershandleiding hoort bij versie 4.6.0. De afzonderlijke SPIR-protocolreferentie blijft versie 3.0.0, omdat die het apparaatprotocol beschrijft en niet de appversie.",
   "map_click_hint": "Click the floor plan to set the measurement-site position.",
   "map_hint": "Upload a local floor plan, place measurement sites and assign measurement periods. Files never leave the system.",
   "map_sites": "Map & measurement sites",
@@ -424,5 +424,10 @@
   "danger_events": "Gebeurtenissen boven gevarendrempel",
   "danger_excess_area": "Cumulatieve overschrijding gevarendrempel",
   "trimmed_mean_10": "10% getrimd gemiddelde",
-  "mean_trimmed_difference": "Verschil gemiddelde/getrimd gemiddelde"
+  "mean_trimmed_difference": "Verschil gemiddelde/getrimd gemiddelde",
+  "basic_statistics": "Kernstatistieken",
+  "basic_statistics_hint": "Belangrijkste kengetallen voor een snelle technische beoordeling van de geselecteerde periode.",
+  "advanced_statistics": "Geavanceerde statistiek",
+  "advanced_statistics_hint": "Tijdpatronen, gegevenskwaliteit, verdelingsdiagnostiek en gevoeligheidsanalyses.",
+  "unknown_error": "Onbekende fout"
 }

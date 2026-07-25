@@ -257,7 +257,7 @@
   "local_data": "Local measurement data",
   "longest": "Longest run",
   "longest_gap": "Longest data gap",
-  "manual_note_v3": "The bundled manuals describe the stable SPIR data path of version 3. The new version 4 interface and management functions are additionally explained directly in the app.",
+  "manual_note_v3": "Korisnički priručnik odgovara verziji 4.6.0. Zasebna referenca SPIR protokola ostaje verzija 3.0.0 jer opisuje protokol uređaja, a ne izdanje aplikacije.",
   "map_click_hint": "Click the floor plan to set the measurement-site position.",
   "map_hint": "Upload a local floor plan, place measurement sites and assign measurement periods. Files never leave the system.",
   "map_sites": "Map & measurement sites",
@@ -424,5 +424,10 @@
   "danger_events": "Događaji iznad praga opasnosti",
   "danger_excess_area": "Kumulativno prekoračenje praga opasnosti",
   "trimmed_mean_10": "10 %-tna podrezana sredina",
-  "mean_trimmed_difference": "Razlika sredine i podrezane sredine"
+  "mean_trimmed_difference": "Razlika sredine i podrezane sredine",
+  "basic_statistics": "Osnovna statistika",
+  "basic_statistics_hint": "Ključni pokazatelji za brzu stručnu procjenu odabranog razdoblja.",
+  "advanced_statistics": "Napredna statistika",
+  "advanced_statistics_hint": "Vremenski obrasci, kvaliteta podataka, dijagnostika distribucije i analize osjetljivosti.",
+  "unknown_error": "Nepoznata pogreška"
 }

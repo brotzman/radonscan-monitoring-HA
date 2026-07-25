@@ -1,40 +1,32 @@
-# Radon Monitoring 4.5.0
+# Radon Monitoring 4.6.0
 
-A local Home Assistant App for completed hourly measurements from compatible GQ RadonScan devices.
+Radon Monitoring is a local Home Assistant app for read-only monitoring of GQ RadonScan devices. It imports completed hourly values, stores raw and converted measurements in SQLite, publishes Home Assistant entities through MQTT, provides statistical analysis, generates scientific PDF reports and can optionally upload to the GQ Radiation World Map.
 
-## Highlights
+## Main capabilities
 
-- read-only USB access at 115200 baud, 8N1
-- completed hourly CPH history from `0x1FC000`
-- hour-index records from `0x1FE000`
-- configurable conversion factor stored with every measurement
-- migration-compatible SQLite database with campaign/reset detection
-- MQTT Discovery using the established version-3 topics and unique IDs
-- responsive Overview, Analysis and Expert views
-- explicit multi-device filters for histories, sessions, analysis and reports
-- true 24-hour, 7-day and 30-day windows with transparent coverage checks
-- robust statistics, local-time profiles, trends, thresholds and data-gap analysis
-- optional manual and automatic GQ Radiation World Map upload with queue, retries and duplicate protection
-- measurement sites, sessions and event annotations without floor-plan uploads
-- compact and detailed scientific PDF reports with SHA-256 checksums
-- CSV, diagnostics JSON and complete ZIP backups
-- controlled deletion, database restore, audit logging and selective Home Assistant Recorder purge
+- read-only SPIR device communication
+- completed hourly values with raw CPH and stored conversion factor
+- Overview, Analysis and Expert views
+- real 24-hour, 7-day and 30-day windows with completeness checks
+- robust descriptive and time-series statistics
+- moving-block-bootstrap confidence intervals and effective sample size
+- measurement sites, sessions, events and calibration history
+- scientific PDF reports with method metadata and data checksum
+- optional GQ Radiation World Map queue with retry and duplicate protection
+- local backup, restore and complete database reset
+- optional complete Home Assistant Recorder purge for RadonScan entities
+- German, English, Spanish, French, Croatian, Italian, Dutch and Polish interface files
 
-The app publishes a normal measurement only after the device has stored a completed hour. It does not invent minute-level values or fill missing hours.
+## 4.6.0 focus
 
-The internal slug, database filename, MQTT topics and entity identifiers remain unchanged so existing installations can update in place.
+Version 4.6.0 is a consolidation release. It updates the manuals, cleans the changelog, separates reusable frontend infrastructure, improves the statistical information hierarchy and adds release-integrity and migration regression tests. The database schema is unchanged from 4.5.0.
 
-## Documentation
+## Upgrade notes
 
-- `DOCS.md`: installation, configuration, operation and maintenance reference
-- built-in German and English user manuals: available from **Help** in the web interface
-- localized protocol references: technical documentation of the confirmed read-only SPIR path
+The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Existing 4.x data is migrated or opened in place. Create a backup before upgrading and verify the displayed version after reopening the Home Assistant Ingress panel.
 
-## Version 4.5.0
+## Important limitations
 
-Version 4.5.0 updates the user documentation to the current application, adds new German and English PDF manuals, corrects obsolete version references and removes the Home Assistant experimental-stage marker. The app remains a community implementation and the device protocol is still not an official GQ specification.
+This is a community implementation. The bundled SPIR protocol reference is not an official GQ specification. Statistical analysis cannot replace documented calibration, suitable placement, adequate measurement duration or qualified legal/medical interpretation.
 
-
-### Home Assistant Recorder-Verlauf löschen
-
-Die Aktion `recorder.purge_entities` ist in aktuellen Home-Assistant-Versionen administratorgeschützt. Falls der Supervisor-Token abgewiesen wird, in Home Assistant unter **Profil → Sicherheit → Langlebige Zugriffstoken** einen Token eines Administrators erstellen und in der App-Option `homeassistant_access_token` hinterlegen. Der Token wird nicht in der Weboberfläche oder in Diagnoseausgaben angezeigt.
+See `DOCS.md`, the built-in user manual and `CHANGELOG.md` for details.
