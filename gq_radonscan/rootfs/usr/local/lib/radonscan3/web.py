@@ -503,7 +503,7 @@ class WebServer:
 
                     if path == "/api/homeassistant/purge-all":
                         self.require_data_management()
-                        entities = app.ha.radonscan_entities()
+                        entities = app.ha.radon_entities()
                         entity_ids = [str(item.get("entity_id") or "") for item in entities]
                         entity_globs = [
                             "sensor.gq_radonscan_*",

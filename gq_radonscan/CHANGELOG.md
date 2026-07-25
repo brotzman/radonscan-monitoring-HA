@@ -1,4 +1,10 @@
-# 4.4.6
+# 4.4.7
+
+## 4.4.7
+
+- Fixed the Home Assistant recorder purge endpoint crashing with an internal server error due to a wrong method name (`radonscan_entities` instead of `radon_entities`).
+- Kept the complete RadonScan history purge workflow and in-app navigation unchanged.
+- Added regression coverage for the purge endpoint method call.
 
 - Fixed the refresh error `can't access property "value", $(...) is null` by making catalogue and filter rendering tolerant of missing or cached interface elements.
 - A secondary catalogue/history rendering failure no longer changes a successfully received device status to “Not connected”.
