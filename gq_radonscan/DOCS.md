@@ -1,4 +1,4 @@
-# Radon Monitoring 4.3.9 - Technical and Operations Documentation
+# Radon Monitoring 4.4.0 - Technical and Operations Documentation
 
 ## 1. Purpose and scope
 
@@ -180,7 +180,7 @@ Restart the app once, review migration log entries and compare database counts w
 
 ## 9. Documentation supplied with the app
 
-The Help view serves current **Radon Monitoring 4.3.9** user manuals in German and English. Other interface languages fall back to the English manual. Separate localized protocol-reference PDFs remain bundled because the read-only SPIR protocol has not changed with the application version.
+The Help view serves current **Radon Monitoring 4.4.0** user manuals in German and English. Other interface languages fall back to the English manual. Separate localized protocol-reference PDFs remain bundled because the read-only SPIR protocol has not changed with the application version.
 
 ## 10. Safety and scientific limitations
 

@@ -1,22 +1,27 @@
-# 4.3.9
+# 4.4.0
+
+- Optionaler Schalter `data_management_enabled` blendet die Datenverwaltung in der Seitenleiste und Oberfläche aus.
+- Datenverwaltungs-, Backup- und Recorder-Löschendpunkte sind bei deaktivierter Funktion serverseitig gesperrt.
+
+# 4.4.0
 
 - Fixed destructive deletion confirmation transport by sending the typed token in both JSON and a dedicated request header.
 - Backend now accepts canonical confirmation from multiple fields and robust boolean representations, preventing false “confirmation required” errors.
 - Added regression tests for header and string-boolean confirmation handling.
 
-# 4.3.9
+# 4.4.0
 
 - Fixed destructive-action confirmation end to end: the browser now sends a canonical server confirmation after local validation, while the backend also accepts an explicit confirmed flag and Unicode-normalised tokens. This resolves persistent “confirmation required” errors caused by character composition, copied whitespace, or mismatched client/server token handling.
 
-# 4.3.9
+# 4.4.0
 
 - improved destructive-action confirmation handling; both LÖSCHEN and PURGE are accepted, including common PURGE typing errors, with clear inline validation
 
-# 4.3.9
+# 4.4.0
 
 - German label “Systemzustand” now contains a discretionary hyphenation point, so it wraps correctly as “System-” / “zustand” on narrow cards without showing an unnecessary hyphen on wider layouts.
 
-# 4.3.9
+# 4.4.0
 
 - Comprehensive responsive layout and spacing audit across all views.
 - Prevented card-title, badge, action-button, fact-row and form-field collisions.
@@ -25,13 +30,13 @@
 - Improved wrapping for long translations, identifiers, responses and scientific labels.
 - Improved modal, report, event, site, table-control and help-card behaviour.
 
-# 4.3.9
+# 4.4.0
 
 - Fixed saving measurement sites in the web interface.
 - Async form handlers now retain a stable form reference before awaiting API requests, preventing `event.currentTarget` from becoming `null`.
 - Applied the same fix to measurement-site assignment and event forms.
 
-## 4.3.9
+## 4.4.0
 
 - Überschneidungen im Bereich GQ Radiation World Map behoben.
 - Kopfzeile, Verbindungsstatus, Messwertvorschau, Aktionsschaltflächen und Faktendarstellung responsiv abgesichert.
@@ -40,7 +45,7 @@
 
 # Changelog
 
-## 4.3.9
+## 4.4.0
 
 - Poisson-basierte, klar begrenzte Schätzung der zählstatistischen Unsicherheit
 - wissenschaftliche Qualitätsklassen A–D
@@ -58,7 +63,7 @@
 - updated the built-in manual endpoint and obsolete version references
 - clarified that stable repository presentation does not make the community SPIR decoder an official GQ specification
 
-# 4.3.9
+# 4.4.0
 
 - Added queue-based GQ Radiation World Map uploads with duplicate protection, exponential retry backoff, configurable maximum data age and manual retry of terminal failures.
 - Added Home Assistant events for new campaigns and World Map upload success or failure.

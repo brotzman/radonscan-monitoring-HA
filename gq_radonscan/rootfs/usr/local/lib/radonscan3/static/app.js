@@ -73,7 +73,20 @@
 
   function closeSidebar() { setSidebar(false); }
 
+  function dataManagementEnabled() { return state?.settings?.data_management_enabled !== false; }
+
+  function applyFeatureVisibility() {
+    const enabled=dataManagementEnabled();
+    const nav=$('dataManagementNav'); if(nav) nav.hidden=!enabled;
+    const view=$('view-data'); if(view) view.hidden=!enabled;
+    if(!enabled && (location.hash==='#data' || localStorage.getItem('radonMonitoringView')==='data')) {
+      localStorage.setItem('radonMonitoringView','overview');
+      if(location.hash==='#data') history.replaceState(null,'','#overview');
+    }
+  }
+
   function setView(name) {
+    if(name==='data' && !dataManagementEnabled()) name='overview';
     $$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
     $$('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${name}`));
     history.replaceState(null,'',`#${name}`);
@@ -114,6 +127,7 @@
 
   function renderState() {
     if(!state) return;
+    applyFeatureVisibility();
     const connected=!!state.connection?.connected; setConnection(connected);
     const m=state.measurement||{};
     $('currentValue').textContent=m.available?fmtNumber(unit()==='pCi/L'?m.pci_l:m.bq_m3,unit()==='pCi/L'?3:1):'–';
@@ -150,7 +164,7 @@
 
   function renderSettings() {
     const s=state.settings||{};
-    const rows=[[tr('scan_interval'),`${s.scan_interval} ${tr('seconds')}`],[tr('preferred_unit'),s.preferred_unit],[tr('language'),s.language==='auto'?tr('automatic'):s.language],[tr('conversion_factor'),`${s.factor_bq_m3_per_cph} ${tr('factor_unit')}`],[tr('warning_threshold'),`${s.warning_threshold_bq_m3} Bq/m³`],[tr('danger_threshold'),`${s.danger_threshold_bq_m3} Bq/m³`],[tr('minimum_coverage'),`${s.minimum_data_coverage_percent} %`],[tr('backfill'),bool(s.backfill_history)],[tr('retention'),`${s.history_retention_days} ${tr('days')}`],[tr('serial_port'),s.serial_port],[tr('diagnostic_logging'),bool(s.diagnostic_logging)],[tr('report_author'),s.report_author||tr('not_set')],[tr('report_organisation'),s.report_organisation||tr('not_set')]];
+    const rows=[[tr('scan_interval'),`${s.scan_interval} ${tr('seconds')}`],[tr('preferred_unit'),s.preferred_unit],[tr('language'),s.language==='auto'?tr('automatic'):s.language],[tr('conversion_factor'),`${s.factor_bq_m3_per_cph} ${tr('factor_unit')}`],[tr('warning_threshold'),`${s.warning_threshold_bq_m3} Bq/m³`],[tr('danger_threshold'),`${s.danger_threshold_bq_m3} Bq/m³`],[tr('minimum_coverage'),`${s.minimum_data_coverage_percent} %`],[tr('backfill'),bool(s.backfill_history)],[tr('retention'),`${s.history_retention_days} ${tr('days')}`],[tr('serial_port'),s.serial_port],[tr('data_management'),bool(s.data_management_enabled)],[tr('diagnostic_logging'),bool(s.diagnostic_logging)],[tr('report_author'),s.report_author||tr('not_set')],[tr('report_organisation'),s.report_organisation||tr('not_set')]];
     $('settingsGrid').innerHTML=rows.map(([a,b])=>`<div class="setting-row"><span>${escapeHtml(a)}</span><strong>${escapeHtml(b)}</strong></div>`).join('');
   }
 

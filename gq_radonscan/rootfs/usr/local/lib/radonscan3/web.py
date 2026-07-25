@@ -86,6 +86,10 @@ class WebServer:
             def user_name(self) -> str | None:
                 return self.headers.get("X-Remote-User-Display-Name") or self.headers.get("X-Remote-User-Name")
 
+            def require_data_management(self) -> None:
+                if not app.settings.data_management_enabled:
+                    raise StorageError("Data management is disabled in the app configuration")
+
             def send_bytes(
                 self,
                 data: bytes,
@@ -330,15 +334,18 @@ class WebServer:
                         self.json_response({"items": app.storage.campaign_protocols()})
                         return
                     if path == "/api/data/summary":
+                        self.require_data_management()
                         self.json_response(app.storage.data_summary())
                         return
                     if path == "/api/audit":
+                        self.require_data_management()
                         self.json_response({"items": app.storage.audit_entries(self.query_int(query, "limit", 200) or 200)})
                         return
                     if path == "/api/homeassistant/status":
                         self.json_response(app.ha.status())
                         return
                     if path == "/api/homeassistant/entities":
+                        self.require_data_management()
                         self.json_response({"items": app.ha.radon_entities()})
                         return
 
@@ -379,6 +386,7 @@ class WebServer:
                         return
 
                     if path == "/export/backup.zip":
+                        self.require_data_management()
                         self.send_bytes(
                             app.storage.backup_zip_bytes(),
                             "application/zip",
@@ -472,6 +480,7 @@ class WebServer:
                         return
 
                     if path == "/api/data/delete":
+                        self.require_data_management()
                         payload = self.read_json()
                         action = str(payload.get("action") or "")
                         if payload.get("preview", False):
@@ -485,6 +494,7 @@ class WebServer:
                         return
 
                     if path == "/api/data/restore":
+                        self.require_data_management()
                         fields, files = self.read_multipart(251 * 1024 * 1024)
                         if fields.get("confirmation", "").strip().upper() not in {"RESTORE", "WIEDERHERSTELLEN"}:
                             raise StorageError("Restore confirmation is required")
@@ -496,6 +506,7 @@ class WebServer:
                         return
 
                     if path == "/api/homeassistant/purge":
+                        self.require_data_management()
                         payload = self.read_json()
                         if not _destructive_confirmation_ok(payload):
                             raise StorageError("Purge confirmation is required")

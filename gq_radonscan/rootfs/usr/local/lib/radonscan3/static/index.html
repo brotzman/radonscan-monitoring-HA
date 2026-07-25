@@ -23,7 +23,7 @@
         <button class="nav-item" data-view="map"><span class="nav-icon">◎</span><span data-i18n="gmcmap_nav"></span></button>
         <button class="nav-item" data-view="history"><span class="nav-icon">≋</span><span data-i18n="history"></span></button>
         <button class="nav-item" data-view="reports"><span class="nav-icon">▤</span><span data-i18n="reports"></span></button>
-        <button class="nav-item" data-view="data"><span class="nav-icon">◫</span><span data-i18n="data_management"></span></button>
+        <button id="dataManagementNav" class="nav-item" data-view="data"><span class="nav-icon">◫</span><span data-i18n="data_management"></span></button>
         <div class="nav-separator"></div>
         <button class="nav-item" data-view="system"><span class="nav-icon">◉</span><span data-i18n="device_system"></span></button>
         <button class="nav-item" data-view="settings"><span class="nav-icon">⚙</span><span data-i18n="settings"></span></button>
@@ -229,7 +229,7 @@
           <article class="panel"><div class="panel-heading"><h3 data-i18n="generated_reports"></h3><span id="reportCount" class="muted">0</span></div><div id="reportList" class="report-list"></div></article>
         </section>
 
-        <section id="view-data" class="view">
+        <section id="view-data" class="view" data-feature="data-management">
           <div class="section-header"><div><span class="eyebrow" data-i18n="storage_privacy"></span><h2 data-i18n="data_title"></h2><p data-i18n="data_hint"></p></div><a href="export/backup.zip" class="button primary" download data-i18n="download_backup"></a></div>
           <div class="data-summary-grid">
             <article class="metric-card"><span data-i18n="measurements"></span><strong id="dataMeasurements">–</strong><small id="dataRange">–</small></article>

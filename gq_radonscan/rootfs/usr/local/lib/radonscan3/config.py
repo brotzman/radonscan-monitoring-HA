@@ -36,6 +36,7 @@ class Settings:
     serial_timeout_seconds: float
     mqtt_topic_prefix: str
     discovery_prefix: str
+    data_management_enabled: bool
     diagnostic_logging: bool
     log_level: str
     minimum_data_coverage_percent: float
@@ -99,6 +100,7 @@ class Settings:
             serial_timeout_seconds=max(0.5, min(15.0, float(raw.get("serial_timeout_seconds", 3.0)))),
             mqtt_topic_prefix=str(raw.get("mqtt_topic_prefix", "gq_radonscan")).strip(" /") or "gq_radonscan",
             discovery_prefix=str(raw.get("discovery_prefix", "homeassistant")).strip(" /") or "homeassistant",
+            data_management_enabled=_as_bool(raw.get("data_management_enabled"), True),
             diagnostic_logging=_as_bool(raw.get("diagnostic_logging"), False),
             log_level=str(raw.get("log_level", "info")).upper(),
             minimum_data_coverage_percent=minimum_coverage,
@@ -129,6 +131,7 @@ class Settings:
             "serial_port": self.serial_port or "auto",
             "serial_timeout_seconds": self.serial_timeout_seconds,
             "mqtt_topic_prefix": self.mqtt_topic_prefix,
+            "data_management_enabled": self.data_management_enabled,
             "diagnostic_logging": self.diagnostic_logging,
             "minimum_data_coverage_percent": self.minimum_data_coverage_percent,
             "report_author": self.report_author,
