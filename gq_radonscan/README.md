@@ -1,4 +1,4 @@
-# Radon Monitoring 4.4.3
+# Radon Monitoring 4.4.4
 
 A local Home Assistant App for completed hourly measurements from compatible GQ RadonScan devices.
 
@@ -30,9 +30,9 @@ The internal slug, database filename, MQTT topics and entity identifiers remain 
 - built-in German and English user manuals: available from **Help** in the web interface
 - localized protocol references: technical documentation of the confirmed read-only SPIR path
 
-## Version 4.4.3
+## Version 4.4.4
 
-Version 4.4.3 updates the user documentation to the current application, adds new German and English PDF manuals, corrects obsolete version references and removes the Home Assistant experimental-stage marker. The app remains a community implementation and the device protocol is still not an official GQ specification.
+Version 4.4.4 updates the user documentation to the current application, adds new German and English PDF manuals, corrects obsolete version references and removes the Home Assistant experimental-stage marker. The app remains a community implementation and the device protocol is still not an official GQ specification.
 
 
 ### Home Assistant Recorder-Verlauf löschen

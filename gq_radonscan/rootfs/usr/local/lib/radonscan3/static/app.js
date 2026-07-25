@@ -9,6 +9,8 @@
   let dataSummary = null;
   let chartDays = 7;
   let catalogInitialised = false;
+  let loadInProgress = false;
+  let initialLoadComplete = false;
 
   const $ = id => document.getElementById(id);
   const $$ = selector => Array.from(document.querySelectorAll(selector));
@@ -363,14 +365,47 @@
 
   async function reloadCatalog() {catalog=await api('api/catalog');renderCatalog();}
   async function loadAll() {
+    if(loadInProgress) return;
+    loadInProgress=true;
     $('refreshButton').disabled=true;
     try {
-      const [s,c]=await Promise.all([api('api/state'),api('api/catalog')]);state=s;catalog=c;renderState();renderCatalog();
-      const h=await api(`api/history?${historyQuery()}`);records=h.items||[];renderHistory();renderOverviewChart();
-      const exportParams=historyQuery();exportParams.delete('limit');$('historyCsv').href=`export/history.csv?${exportParams}`;
-      const ha=state.homeassistant||{};$('haStatus').textContent=ha.connected?`${tr('connected')} · ${ha.location_name||''} · ${ha.version||''}`:(ha.error||tr('offline'));
-      if(!analysisData) await loadAnalysis();
-    } catch(err) {setConnection(false);toast(err.message,true);console.error(err);} finally {$('refreshButton').disabled=false;}
+      // Load and render the compact state first. Slow history, catalogue or analysis
+      // requests must never keep the complete dashboard in its loading state.
+      const s=await api('api/state');
+      state=s;
+      renderState();
+      const ha=state.homeassistant||{};
+      $('haStatus').textContent=ha.connected?`${tr('connected')} · ${ha.location_name||''} · ${ha.version||''}`:(ha.error||tr('offline'));
+      initialLoadComplete=true;
+
+      // If an Ingress iframe survived an add-on update, reload once so HTML,
+      // JavaScript and backend use the same release.
+      if(state.app?.version && boot.version && state.app.version!==boot.version && !sessionStorage.getItem('radonVersionReloaded')) {
+        sessionStorage.setItem('radonVersionReloaded','1');
+        location.reload();
+        return;
+      }
+
+      const results=await Promise.allSettled([
+        api('api/catalog'),
+        api(`api/history?${historyQuery()}`),
+      ]);
+      if(results[0].status==='fulfilled') {catalog=results[0].value;renderCatalog();}
+      else console.warn('Catalogue refresh failed',results[0].reason);
+      if(results[1].status==='fulfilled') {
+        records=results[1].value.items||[];
+        renderHistory();
+        renderOverviewChart();
+        const exportParams=historyQuery();exportParams.delete('limit');$('historyCsv').href=`export/history.csv?${exportParams}`;
+      } else console.warn('History refresh failed',results[1].reason);
+    } catch(err) {
+      setConnection(false);
+      toast(err.message,true);
+      console.error(err);
+    } finally {
+      loadInProgress=false;
+      $('refreshButton').disabled=false;
+    }
   }
 
   function bindEvents() {
@@ -404,5 +439,8 @@
   applyTranslations();bindEvents();initializeDefaults();
   const requested=(location.hash||'').slice(1)||localStorage.getItem('radonMonitoringView')||'overview';setView($(`view-${requested}`)?requested:'overview');
   loadAll().then(initializeDefaults);
-  setInterval(()=>{if(!document.hidden)loadAll();},60000);
+  // Retry quickly during startup; after the first successful state response use a
+  // shorter regular refresh so newly imported USB measurements appear promptly.
+  setInterval(()=>{if(!document.hidden)loadAll();},30000);
+  const startupRetry=setInterval(()=>{if(initialLoadComplete){clearInterval(startupRetry);}else if(!document.hidden){loadAll();}},3000);
 })();

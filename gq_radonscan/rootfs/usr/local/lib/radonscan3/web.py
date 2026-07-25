@@ -240,7 +240,7 @@ class WebServer:
                             ".js": "application/javascript; charset=utf-8",
                             ".png": "image/png",
                         }.get(file_path.suffix, "application/octet-stream")
-                        self.send_bytes(file_path.read_bytes(), content_type, cache="public, max-age=3600")
+                        self.send_bytes(file_path.read_bytes(), content_type, cache="no-store")
                         return
 
                     if path == "/api/state":
