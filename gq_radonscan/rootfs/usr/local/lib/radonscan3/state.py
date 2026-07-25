@@ -49,7 +49,7 @@ def build_state(storage: Storage, settings: Settings) -> dict[str, Any]:
         "app": {
             "name": "Radon Monitoring",
             "version": __version__,
-            "experimental": True,
+            "experimental": False,
             "read_only_device": True,
             "subtitle": "Local monitoring for GQ RadonScan devices",
         },
@@ -74,7 +74,11 @@ def build_state(storage: Storage, settings: Settings) -> dict[str, Any]:
             "raw_cph": int(latest["raw_cph"]) if latest else None,
             "bq_m3": current_bq,
             "pci_l": _pci(current_bq),
-            "factor_bq_m3_per_cph": float(latest["factor"]) if latest else settings.factor_bq_m3_per_cph,
+            # Always expose the currently configured factor as the active factor.
+            # The factor stored with the latest historical measurement remains available
+            # separately for traceability and reproducibility.
+            "factor_bq_m3_per_cph": settings.factor_bq_m3_per_cph,
+            "measurement_factor_bq_m3_per_cph": float(latest["factor"]) if latest else None,
             "source": latest.get("source") if latest else "spir_hourly_history",
             "status": _status(current_bq, settings),
             "location_id": latest.get("location_id") if latest else None,

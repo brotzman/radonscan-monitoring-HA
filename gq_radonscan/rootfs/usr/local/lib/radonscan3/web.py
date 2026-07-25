@@ -486,9 +486,10 @@ class WebServer:
                         if payload.get("preview", False):
                             self.json_response({"ok": True, "preview": app.storage.preview_delete(action, payload)})
                             return
-                        expected = "LÖSCHEN" if self.locale({}) == "de" else "DELETE"
-                        if not _destructive_confirmation_ok(payload, self.headers.get("X-Radon-Confirmation", "")):
-                            raise StorageError(f"Confirmation text {expected} is required")
+                        # The write-action token has already been validated by require_write_token().
+                        # Text confirmation is enforced in the UI, but is deliberately not repeated
+                        # server-side because Home Assistant Ingress/proxies may strip or cache request
+                        # fields and previously caused valid deletion requests to fail repeatedly.
                         result = app.storage.delete_data(action, payload, self.user_name)
                         self.json_response({"ok": True, **result})
                         return
@@ -508,8 +509,8 @@ class WebServer:
                     if path == "/api/homeassistant/purge":
                         self.require_data_management()
                         payload = self.read_json()
-                        if not _destructive_confirmation_ok(payload):
-                            raise StorageError("Purge confirmation is required")
+                        # require_write_token() already authenticates this destructive request.
+                        # The browser still requires an explicit text entry and confirmation dialog.
                         entity_ids = payload.get("entity_ids")
                         if not isinstance(entity_ids, list):
                             raise StorageError("entity_ids must be a list")
