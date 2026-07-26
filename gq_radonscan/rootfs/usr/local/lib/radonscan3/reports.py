@@ -30,6 +30,7 @@ from .analysis import parse_dt
 from .config import Settings
 from .report_utils import peak_preserving_downsample
 from .storage import Storage, StorageError, iso, utc_now
+from .homeassistant import HomeAssistantClient
 
 ORANGE = colors.HexColor("#F47B20")
 DARK = colors.HexColor("#172033")
@@ -45,7 +46,7 @@ TEXT = {
     "de": {
         "report": "Wissenschaftlicher Radon-Messbericht",
         "compact": "Radon-Kurzbericht",
-        "measurement_site": "Messort",
+        "measurement_site": "Raum",
         "period": "Messzeitraum",
         "created": "Erstellt",
         "summary": "Ergebnisübersicht",
@@ -70,7 +71,7 @@ TEXT = {
         "hourly": "Tageszeitprofil",
         "heatmap": "Wochen-Heatmap",
         "events": "Ereignisse und Maßnahmen",
-        "traceability": "Messort, Gerät und Nachvollziehbarkeit",
+        "traceability": "Raum, Standort, Gerät und Nachvollziehbarkeit",
         "method": "Methode und Einschränkungen",
         "method_text": "Ausgewertet wurden ausschließlich abgeschlossene, lokal gespeicherte Stundenwerte des GQ RadonScan. Die Zeitstempel der rückwirkend ausgelesenen Gerätehistorie werden aus dem erkannten Stundenindex rekonstruiert. Statistische Zusammenhänge beweisen keine Ursache-Wirkungs-Beziehung.",
         "disclaimer": "Orientierungshilfe; keine medizinische, behördliche oder fachliche Gebäudebewertung.",
@@ -93,7 +94,9 @@ TEXT = {
         "type": "Typ",
         "title": "Titel",
         "notes": "Notizen",
-        "building_floor": "Gebäude / Etage",
+        "building_floor": "Home-Assistant-Gebäude",
+        "site_address": "Home-Assistant-Standort",
+        "measurement_height": "Messhöhe",
         "map": "Karte / Grundriss",
         "author": "Autor",
         "organisation": "Organisation",
@@ -106,7 +109,7 @@ TEXT = {
     "en": {
         "report": "Scientific radon measurement report",
         "compact": "Radon summary report",
-        "measurement_site": "Measurement site",
+        "measurement_site": "Room",
         "period": "Measurement period",
         "created": "Created",
         "summary": "Results overview",
@@ -131,7 +134,7 @@ TEXT = {
         "hourly": "Time-of-day profile",
         "heatmap": "Weekly heatmap",
         "events": "Events and interventions",
-        "traceability": "Site, device and traceability",
+        "traceability": "Room, location, device and traceability",
         "method": "Method and limitations",
         "method_text": "The analysis uses only completed hourly values stored locally by the GQ RadonScan. Timestamps of retrospectively read device history are reconstructed from the detected hour index. Statistical associations do not prove cause and effect.",
         "disclaimer": "Guidance only; not medical, regulatory or professional building advice.",
@@ -154,7 +157,9 @@ TEXT = {
         "type": "Type",
         "title": "Title",
         "notes": "Notes",
-        "building_floor": "Building / floor",
+        "building_floor": "Home Assistant building",
+        "site_address": "Home Assistant location",
+        "measurement_height": "Measurement height",
         "map": "Map / floor plan",
         "author": "Author",
         "organisation": "Organisation",
@@ -273,9 +278,10 @@ def _heatmap(cells: list[list[dict[str, object]]], settings: Settings, width: fl
 
 
 class ScientificReport:
-    def __init__(self, storage: Storage, settings: Settings) -> None:
+    def __init__(self, storage: Storage, settings: Settings, homeassistant: HomeAssistantClient | None = None) -> None:
         self.storage = storage
         self.settings = settings
+        self.homeassistant = homeassistant
 
     def create(self, payload: dict[str, object]) -> dict[str, object]:
         locale = str(payload.get("locale") or "de")
@@ -323,6 +329,7 @@ class ScientificReport:
             json.dumps(digest_records, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
         ).hexdigest()
         location = self.storage.location(location_id) if location_id else None
+        ha_location = self.homeassistant.status() if self.homeassistant is not None else {}
         device = self.storage.device(device_id) or {}
         report_id = "RM-" + utc_now().strftime("%Y%m%d-%H%M%S-%f")[:20]
         title = str(payload.get("title") or (tx["compact"] if profile == "compact" else tx["report"]))
@@ -449,7 +456,9 @@ class ScientificReport:
         story.append(Paragraph(tx["traceability"], styles["RMH1"]))
         trace = [
             [tx["measurement_site"], site_name],
-            [tx["building_floor"], f"{(location or {}).get('building') or '–'} / {(location or {}).get('floor') or '–'}"],
+            [tx["building_floor"], ha_location.get("building_name") or ha_location.get("location_name") or "–"],
+            [tx["site_address"], ha_location.get("place_address") or ha_location.get("address") or ha_location.get("location_name") or "–"],
+            [tx["measurement_height"], f"{_fmt((location or {}).get('measurement_height_m'))} m" if (location or {}).get("measurement_height_m") is not None else "–"],
             [tx["device"], device.get("model") or "GQ RadonScan"],
             [tx["firmware"], device.get("firmware") or "–"],
             [tx["serial"], device.get("serial_number") or "–"],
@@ -504,7 +513,11 @@ class ScientificReport:
             "minimum_bq_m3": stats.get("minimum_bq_m3"),
             "maximum_bq_m3": stats.get("maximum_bq_m3"),
             "app_version": __version__,
-            "analysis_model": "5.2.0",
+            "analysis_model": "5.3.0",
+            "homeassistant_location_name": ha_location.get("location_name"),
+            "homeassistant_building_name": ha_location.get("building_name"),
+            "homeassistant_address": ha_location.get("address"),
+            "homeassistant_place_address": ha_location.get("place_address"),
             "chart_points": len(plot_records),
             "chart_downsampled": len(plot_records) < len(analysis["records"]),
             "scientific_quality_class": stats.get("scientific_quality_class"),

@@ -83,5 +83,19 @@ def test_real_http_server_serves_all_frontend_modules_and_secure_diagnostics(tmp
             {"confirmed": True},
         )
         assert status == 200 and verify["verified"] is True
+
+        # Room metadata remains writable even if Home Assistant Core is
+        # temporarily unavailable. No place or building value is copied into
+        # the local room record.
+        status, saved = _post(
+            f"{base}/api/locations",
+            web.csrf_token,
+            {"room": "Keller", "measurement_height_m": 1.2},
+        )
+        assert status == 201
+        assert saved["item"]["room"] == "Keller"
+        assert saved["item"]["measurement_height_m"] == 1.2
+        assert saved["item"]["building"] == ""
+        assert saved["item"]["homeassistant_location"]["connected"] is False
     finally:
         web.stop()

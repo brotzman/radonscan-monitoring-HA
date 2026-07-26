@@ -13,7 +13,7 @@ VISIBLE_VIEWS = ("overview", "analysis", "sites", "history", "reports", "data", 
 
 def _state(language="de"):
     return {
-        "app": {"version": "5.2.0"},
+        "app": {"version": "5.3.0"},
         "settings": {
             "preferred_unit": "Bq/m3",
             "factor_bq_m3_per_cph": 1.54,
@@ -51,6 +51,7 @@ def _state(language="de"):
             "device_id": "dev-1",
             "location_id": 1,
             "location_name": "Keller",
+            "measurement_height_m": 1.1,
             "campaign_id": 7,
             "status": "normal",
             "bq_m3": 87.3,
@@ -81,7 +82,9 @@ def _state(language="de"):
         "homeassistant": {
             "connected": True,
             "location_name": "Home",
+            "building_name": "Home",
             "address": "Linnenkamp 22, 44536 Lünen",
+            "place_address": "Linnenkamp 22, 44536 Lünen",
             "latitude": 51.60176,
             "longitude": 7.45410,
             "elevation": 58,
@@ -108,7 +111,8 @@ def _state(language="de"):
 def _catalog():
     return {
         "devices": [{"device_id": "dev-1", "model": "GQ RadonScan", "serial_number": "RS-1"}],
-        "locations": [{"id": 1, "name": "Keller", "building": "Haus", "floor": "UG", "room_type": "Keller", "latest_bq_m3": 87.3, "latest_at": "2026-07-25T16:00:00+00:00", "sample_count": 24}],
+        "locations": [{"id": 1, "name": "Keller", "room": "Keller", "building": "", "measurement_height_m": 1.1, "latest_bq_m3": 87.3, "latest_at": "2026-07-25T16:00:00+00:00", "sample_count": 24}],
+        "homeassistant_location": {"connected": True, "location_name": "Home", "building_name": "Home", "address": "Linnenkamp 22, 44536 Lünen", "place_address": "Linnenkamp 22, 44536 Lünen"},
         "campaigns": [{"id": 7, "device_id": "dev-1", "active": 1, "started_at": "2026-07-24T16:00:00+00:00", "sample_count": 24}],
         "sessions": [{"id": 11, "device_id": "dev-1", "campaign_id": 7, "location_id": 1, "started_at": "2026-07-24T16:00:00+00:00"}],
         "events": [{"id": 1, "session_id": 11, "location_id": 1, "event_type": "ventilation", "occurred_at": "2026-07-25T15:00:00+00:00", "title": "Stoßlüftung", "notes": "Fenster vollständig geöffnet", "location_name": "Keller"}],
@@ -130,10 +134,10 @@ def _fixture_html(locale="de") -> str:
     tr = json.loads((LOCALES / f"{locale}.json").read_text())
     locale_names = {code: code.upper() for code in LOCALE_CODES}
     html = (STATIC / "index.html").read_text()
-    html = html.replace("__LOCALE__", locale).replace("__TRANSLATIONS__", json.dumps(tr)).replace("__LOCALE_NAMES__", json.dumps(locale_names)).replace("__VERSION__", "5.2.0").replace("__ACTION_TOKEN__", "test-token")
-    html = html.replace('<link rel="stylesheet" href="assets/app.css?v=5.2.0">', "<style>" + (STATIC / "app.css").read_text() + "</style>")
+    html = html.replace("__LOCALE__", locale).replace("__TRANSLATIONS__", json.dumps(tr)).replace("__LOCALE_NAMES__", json.dumps(locale_names)).replace("__VERSION__", "5.3.0").replace("__ACTION_TOKEN__", "test-token")
+    html = html.replace('<link rel="stylesheet" href="assets/app.css?v=5.3.0">', "<style>" + (STATIC / "app.css").read_text() + "</style>")
     for script in ("core.js", "accessibility.js", "data-management.js", "app.js"):
-        html = html.replace(f'<script src="assets/{script}?v=5.2.0"></script>', "<script>" + (STATIC / script).read_text() + "</script>")
+        html = html.replace(f'<script src="assets/{script}?v=5.3.0"></script>', "<script>" + (STATIC / script).read_text() + "</script>")
     return html
 
 
@@ -319,7 +323,8 @@ def test_radon_traffic_light_falls_back_to_provisional_hourly_value(shared_brows
 def test_overview_context_is_persistent_filter_and_peak_replaces_overall_average(shared_browser):
     page, errors = _new_page(shared_browser, 390, 844, "de")
     assert page.locator("#overviewDevice").input_value() == "dev-1"
-    assert page.locator("#overviewLocation").input_value() == "1"
+    assert page.locator("#overviewLocation").count() == 0
+    assert page.locator("#homeAssistantRoom").inner_text() == "Raum: Keller · Messhöhe: 1,1 m"
     assert page.locator("#overviewCampaign").input_value() == "7"
     assert page.locator("#peak24").inner_text() == "112,0 Bq/m³"
     assert "25.07.2026" in page.locator("#peak24Time").inner_text()
@@ -329,7 +334,7 @@ def test_overview_context_is_persistent_filter_and_peak_replaces_overall_average
     page.locator("#overviewApply").click()
     page.wait_for_timeout(250)
     calls = page.evaluate("window.__TEST_CALLS__.map(call=>call.url)")
-    assert any("api/state?scope=selection" in url and "device_id=dev-1" in url and "location_id=1" in url and "campaign_id=7" in url for url in calls)
+    assert any("api/state?scope=selection" in url and "device_id=dev-1" in url and "location_id=1" not in url and "campaign_id=7" in url for url in calls)
     assert any("api/history?" in url and "device_id=dev-1" in url and "location_id=1" in url and "campaign_id=7" in url for url in calls)
     assert not errors
     page.close()
@@ -341,6 +346,10 @@ def test_sites_and_events_are_separate_from_optional_world_map_and_marked_in_cha
     assert page.locator("#view-map").is_hidden()
     assert page.locator("#view-sites #locationForm").count() == 1
     assert page.locator("#view-sites #eventForm").count() == 1
+    assert page.locator("#locationRoom").count() == 1
+    assert page.locator("#locationName").count() == 0
+    assert page.locator("#haRoomBuilding").inner_text() == "Home"
+    assert page.locator("#haRoomPlace").inner_text() == "Linnenkamp 22, 44536 Lünen"
     assert page.locator("#view-map #locationForm").count() == 0
     assert page.locator("#chart .event-marker").count() == 1
     assert page.locator("#chart .event-marker-dot title").text_content().endswith("Stoßlüftung · Keller · Fenster vollständig geöffnet")
@@ -349,6 +358,21 @@ def test_sites_and_events_are_separate_from_optional_world_map_and_marked_in_cha
     assert not errors
     page.close()
 
+
+def test_room_form_submits_only_room_and_measurement_height(shared_browser):
+    page, errors = _new_page(shared_browser, 390, 844, "de")
+    page.locator('[data-view="sites"]').evaluate("el=>el.click()")
+    page.evaluate("window.__TEST_CALLS__=[]")
+    page.locator("#locationRoom").fill("Arbeitszimmer")
+    page.locator("#locationHeight").fill("1.2")
+    page.locator("#locationForm button[type=submit]").click()
+    page.wait_for_timeout(250)
+    calls = page.evaluate("window.__TEST_CALLS__.filter(call=>call.url.includes('api/locations') && call.method==='POST')")
+    assert len(calls) == 1
+    body = json.loads(calls[0]["body"])
+    assert body == {"id": None, "room": "Arbeitszimmer", "measurement_height_m": "1.2"}
+    assert not errors
+    page.close()
 
 def test_analysis_starts_with_summary_and_collapsed_scientific_details(shared_browser):
     page, errors = _new_page(shared_browser, 390, 844, "de")

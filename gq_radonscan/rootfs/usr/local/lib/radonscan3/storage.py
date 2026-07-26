@@ -558,7 +558,8 @@ class Storage:
         return """
             SELECT m.*, d.model, d.firmware, d.serial_number, d.last_port,
                    l.name AS location_name, l.building AS location_building,
-                   l.floor AS location_floor, s.title AS session_title
+                   l.floor AS location_floor, l.measurement_height_m AS location_measurement_height_m,
+                   s.title AS session_title
             FROM measurements m
             JOIN devices d ON d.device_id=m.device_id
             LEFT JOIN locations l ON l.id=m.location_id
@@ -613,6 +614,7 @@ class Storage:
         device_id: str | None = None,
         location_id: int | None = None,
         campaign_id: int | None = None,
+        resolve_latest_location: bool = False,
     ) -> dict[str, object]:
         """Return one coherent, filter-aware dataset for the Overview view.
 
@@ -621,9 +623,20 @@ class Storage:
         values from appearing together after the user changes the overview
         context.
         """
+        resolved_location_id = location_id
+        if resolve_latest_location and resolved_location_id is None:
+            latest_context = self.history(
+                limit=1,
+                campaign_id=campaign_id,
+                device_id=device_id,
+                ascending=False,
+            )
+            if latest_context and latest_context[0].get("location_id") is not None:
+                resolved_location_id = int(latest_context[0]["location_id"])
+
         records = self.history(
             limit=100000,
-            location_id=location_id,
+            location_id=resolved_location_id,
             campaign_id=campaign_id,
             device_id=device_id,
             ascending=True,
@@ -687,7 +700,7 @@ class Storage:
             "sample_count": len(records),
             "selection": {
                 "device_id": device_id,
-                "location_id": location_id,
+                "location_id": resolved_location_id,
                 "campaign_id": campaign_id,
             },
         }
@@ -970,16 +983,24 @@ class Storage:
     def save_location(self, payload: dict[str, object]) -> dict[str, object]:
         now = iso(utc_now())
         location_id = payload.get("id")
+        room = str(payload.get("room") or payload.get("name") or "").strip()
+        if not room:
+            raise StorageError("A room name is required")
+        measurement_height = None
+        if payload.get("measurement_height_m") not in (None, ""):
+            measurement_height = float(payload["measurement_height_m"])
+            if not 0.0 <= measurement_height <= 10.0:
+                raise StorageError("Measurement height must be between 0 and 10 metres")
         values = (
-            str(payload.get("name") or "Measurement site").strip(),
-            str(payload.get("building") or "").strip(),
-            str(payload.get("floor") or "").strip(),
-            str(payload.get("room_type") or "").strip(),
-            int(payload["map_id"]) if payload.get("map_id") not in (None, "") else None,
-            max(0.0, min(100.0, float(payload["x_percent"]))) if payload.get("x_percent") not in (None, "") else None,
-            max(0.0, min(100.0, float(payload["y_percent"]))) if payload.get("y_percent") not in (None, "") else None,
-            float(payload["measurement_height_m"]) if payload.get("measurement_height_m") not in (None, "") else None,
-            str(payload.get("notes") or "").strip(),
+            room,
+            "",  # Place/building are read live from Home Assistant, never duplicated locally.
+            "",
+            "",
+            None,
+            None,
+            None,
+            measurement_height,
+            "",
             1 if payload.get("active", True) else 0,
         )
         with self._connection() as con:
@@ -1002,7 +1023,11 @@ class Storage:
                     (*values, now, now),
                 )
                 saved_id = int(cur.lastrowid)
-        self.audit("location_save", f"location:{saved_id}", payload)
+        self.audit(
+            "location_save",
+            f"location:{saved_id}",
+            {"room": room, "measurement_height_m": measurement_height, "active": bool(payload.get("active", True))},
+        )
         return self.location(saved_id) or {}
 
     def location(self, location_id: int) -> dict[str, object] | None:
@@ -1018,7 +1043,11 @@ class Storage:
                 """,
                 (int(location_id),),
             ).fetchone()
-        return dict(row) if row else None
+        if not row:
+            return None
+        item = dict(row)
+        item["room"] = item.get("name")
+        return item
 
     def locations(self) -> list[dict[str, object]]:
         with self._connection() as con:
@@ -1031,10 +1060,13 @@ class Storage:
                        (SELECT m2.completed_at FROM measurements m2 WHERE m2.location_id=l.id ORDER BY m2.completed_at DESC LIMIT 1) AS latest_at
                 FROM locations l LEFT JOIN maps mp ON mp.id=l.map_id
                 LEFT JOIN measurements m ON m.location_id=l.id
-                GROUP BY l.id ORDER BY l.active DESC,l.building,l.floor,l.name
+                GROUP BY l.id ORDER BY l.active DESC,l.name
                 """
             ).fetchall()
-        return [dict(row) for row in rows]
+        items = [dict(row) for row in rows]
+        for item in items:
+            item["room"] = item.get("name")
+        return items
 
     def delete_location(self, location_id: int, *, user_name: str | None = None) -> int:
         with self._connection() as con:
@@ -1066,7 +1098,7 @@ class Storage:
             raise StorageError("Session end must be after start")
         with self._connection() as con:
             if con.execute("SELECT 1 FROM locations WHERE id=?", (int(location_id),)).fetchone() is None:
-                raise StorageError("The selected measurement site does not exist")
+                raise StorageError("The selected room does not exist")
             if device_id is None:
                 device = con.execute("SELECT device_id FROM devices ORDER BY last_seen DESC LIMIT 1").fetchone()
                 device_id = str(device["device_id"]) if device else None

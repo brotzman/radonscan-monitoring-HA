@@ -61,7 +61,7 @@ class WebServer:
         if not self.docs_dir.is_dir():
             self.docs_dir = Path(__file__).resolve().parents[2] / "share" / "radonscan3" / "docs"
         self.ha = HomeAssistantClient(settings.homeassistant_access_token)
-        self.reporter = ScientificReport(storage, settings)
+        self.reporter = ScientificReport(storage, settings, self.ha)
         self.gmcmap = GmcMapClient(settings, storage)
         self.operations = DataManagementOperations(storage, self.ha)
         self.csrf_token = secrets.token_urlsafe(24)
@@ -300,6 +300,7 @@ class WebServer:
                     if path == "/api/catalog":
                         self.json_response({
                             "locations": app.storage.locations(),
+                            "homeassistant_location": app.ha.status(),
                             "sessions": app.storage.sessions(),
                             "campaigns": app.storage.campaigns(),
                             "devices": app.storage.devices(),
@@ -362,6 +363,7 @@ class WebServer:
                             "data": app.storage.data_summary(),
                             "campaigns": app.storage.campaigns(),
                             "locations": app.storage.locations(),
+                            "homeassistant_location": app.ha.status(),
                         }
                         payload = redact_sensitive(
                             payload,
@@ -427,7 +429,7 @@ class WebServer:
 
                     if path in {"/docs/user-manual.pdf", "/docs/protocol-reference.pdf"}:
                         locale = self.locale(query)
-                        prefix = "Radon_Monitoring_User_Manual_5.2.0" if "user-manual" in path else "GQ_RadonScan_Protocol_Reference_3.0.0"
+                        prefix = "Radon_Monitoring_User_Manual_5.3.0" if "user-manual" in path else "GQ_RadonScan_Protocol_Reference_3.0.0"
                         candidates = [app.docs_dir / f"{prefix}_{locale}.pdf", app.docs_dir / f"{prefix}_en.pdf"]
                         manual = next((candidate for candidate in candidates if candidate.is_file()), None)
                         if manual is None:
@@ -466,7 +468,20 @@ class WebServer:
                         return
 
                     if path == "/api/locations":
-                        item = app.storage.save_location(self.read_json())
+                        payload = self.read_json()
+                        # Home Assistant remains the authoritative source for place/address
+                        # and building details. Room data therefore stays writable even when
+                        # Core is temporarily unavailable and no HA location value is copied
+                        # into the local room record.
+                        ha_location = app.ha.status()
+                        item = app.storage.save_location({
+                            "id": payload.get("id"),
+                            "room": payload.get("room") or payload.get("name"),
+                            "measurement_height_m": payload.get("measurement_height_m"),
+                            "building": "",
+                            "active": True,
+                        })
+                        item["homeassistant_location"] = ha_location
                         self.json_response({"ok": True, "item": item}, 201)
                         return
 

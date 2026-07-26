@@ -1,4 +1,4 @@
-# Radon Monitoring 5.2.0 - App documentation
+# Radon Monitoring 5.3.0 - App documentation
 
 ## Purpose
 
@@ -20,19 +20,19 @@ Only completed hours are imported. A newly connected device may therefore remain
 
 ### Overview
 
-The context bar selects a **device**, **measurement site** and **campaign**. The selection is retained locally in the browser. Applying it reloads the latest measurement, 24-hour, 7-day and 30-day summaries, selected sample count, 24-hour peak and chart from the same filtered record set. This avoids combining values from different devices or rooms.
+The context bar selects a **device** and **campaign**. The most recently or currently assigned room is resolved automatically from the time-based room assignment; there is no separate room or measurement-site selector on the Overview. Applying the context reloads the latest measurement, 24-hour, 7-day and 30-day summaries, selected sample count, 24-hour peak and chart from one coherent device/campaign/room record set.
 
 The Radon traffic light uses the 24-hour mean when the period has sufficient duration and coverage. Before that condition is met, it uses the latest completed hourly value and labels the result as provisional. The exact assessment basis, data coverage and configured warning/danger thresholds are shown with the signal.
 
 The fourth overview metric is the maximum observed value in the latest 24-hour window, with measurement time and coverage. Documented events are drawn as vertical markers in the chart. Gaps longer than 90 minutes split the line so missing data is not visually interpolated.
 
-The Home Assistant location card reads only local Core configuration values. In full mode it shows the address, or the configured location name when no address is available, plus coordinates, elevation, country and time zone. Coordinates include degrees and cardinal directions, for example `51,60176° N, 7,45410° E`. No reverse geocoding is performed and no location values are sent to an external geocoding service.
+The Home Assistant location card reads only local Core configuration values. In full mode it shows the locally supplied address, or the configured location name when no address is exposed, plus coordinates, elevation, country and time zone. Coordinates include degrees and cardinal directions, for example `51,60176° N, 7,45410° E`. Directly below the location information, the card shows only the automatically resolved **room** and optional **measurement height**. No reverse geocoding is performed and no location values are sent to an external geocoding service.
 
 `location_display_mode` controls disclosure:
 
 - `full`: address/location name and precise coordinates
 - `reduced`: location name and coordinates rounded to two decimals
-- `hidden`: card omitted from the Overview
+- `hidden`: card, including room and measurement height, omitted from the Overview
 
 ### Analysis
 
@@ -40,9 +40,11 @@ Analysis starts with a plain-language summary of trend direction, warning-thresh
 
 The analysis time series includes documented events and visible gaps. Missing values are not imputed and flagged observations are not silently deleted. Statistical significance does not establish causality; event notes and measurement conditions still require professional interpretation.
 
-### Measurement sites & events
+### Rooms & events
 
-This dedicated view contains sites, device-to-site assignments/sessions and event documentation. It can record room, building, floor, placement height, ventilation, interventions, building work, outages and device changes without altering the original measurement values.
+This dedicated Local metadata view manages rooms, measurement campaigns, time-based device-to-room assignments and event documentation. Place/address and building/location name are shown as read-only values obtained directly from Home Assistant's general settings. They are not entered or stored a second time in the form.
+
+Only **room** and **measurement height** are added manually. Ventilation, interventions, construction work, outages and device moves can be documented without altering original measurement values. Existing database identifiers and assignment records remain compatible with older releases.
 
 ### Devices & System
 
@@ -50,7 +52,7 @@ Shows device, protocol, service and database status in one consolidated view. Co
 
 ### GQ Radiation World Map
 
-Uploads are optional and disabled by default. When `gmcmap_enabled` is false, the view is also hidden from the sidebar. When enabled, the view contains only external upload status, queue and history functions; local sites and events remain in their own view.
+Uploads are optional and disabled by default. When `gmcmap_enabled` is false, the view is also hidden from the sidebar. When enabled, the view contains only external upload status, queue and history functions; local rooms, assignments and events remain in their own view.
 
 The persistent queue retries temporary failures and prevents duplicate publication. The app sends the radon value and GQ identifiers required by the configured protocol. Public location settings are managed in the GQ account; the app does not transmit its Home Assistant coordinates through this feature.
 
@@ -127,7 +129,7 @@ Use a dedicated long-lived Home Assistant token and remove it when Recorder main
 
 ### Overview shows unexpected values
 
-Check the selected device, site and campaign in the Overview context bar, then press Apply. The selected count is shown before the total database count. History has separate filters and does not change the Overview selection.
+Check the selected device and campaign in the Overview context bar, then press Apply. The room is taken automatically from the applicable time-based assignment and is shown below the Home Assistant location card. If no room appears, create a room with its measurement height under Rooms & events and assign the device for the required time range. History has separate filters and does not change the Overview context.
 
 ### Radon traffic light is marked provisional
 
@@ -173,6 +175,6 @@ From the repository root:
 python3 -m pytest
 ```
 
-Version 5.2.0 includes tests for filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, separation of local sites from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
+Version 5.3.0 includes tests for filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, automatic room resolution, read-only Home Assistant place/building data and separation of local rooms from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
 
 Real-device and real-Home-Assistant field testing remains necessary for USB hardware variations, Home Assistant upgrades and Recorder backends.

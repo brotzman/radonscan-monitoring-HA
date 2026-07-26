@@ -69,3 +69,50 @@ def test_overview_selection_uses_one_coherent_device_site_and_campaign(tmp_path)
     assert period["observed_maximum_bq_m3"] == 250.0
     assert period["observed_maximum_at"] == _iso(start + timedelta(hours=12))
     assert result["statistics"]["all"]["maximum_bq_m3"] == 250.0
+
+
+def test_overview_selection_automatically_uses_latest_assigned_room(tmp_path):
+    storage = Storage(tmp_path / "radon.sqlite3")
+    start = datetime(2026, 7, 24, 0, 0, tzinfo=timezone.utc)
+
+    with storage._connection() as con:
+        con.execute(
+            "INSERT INTO devices(device_id,model,firmware,serial_number,last_port,first_seen,last_seen) VALUES(?,?,?,?,?,?,?)",
+            ("device-a", "GQ RadonScan", "2.02", "A", "/dev/ttyUSB0", _iso(start), _iso(start + timedelta(hours=30))),
+        )
+        room_old = con.execute(
+            "INSERT INTO locations(name,building,measurement_height_m,active,created_at,updated_at) VALUES(?,?,?,1,?,?)",
+            ("Wohnzimmer", "Home", 1.0, _iso(start), _iso(start)),
+        ).lastrowid
+        room_current = con.execute(
+            "INSERT INTO locations(name,building,measurement_height_m,active,created_at,updated_at) VALUES(?,?,?,1,?,?)",
+            ("Keller", "Home", 1.2, _iso(start), _iso(start)),
+        ).lastrowid
+        campaign = con.execute(
+            "INSERT INTO campaigns(device_id,started_at,reason,active) VALUES(?,?,?,1)",
+            ("device-a", _iso(start), "test"),
+        ).lastrowid
+        for hour, (room_id, value) in enumerate([
+            (room_old, 400.0),
+            (room_old, 450.0),
+            (room_current, 60.0),
+            (room_current, 70.0),
+        ]):
+            completed = _iso(start + timedelta(hours=hour))
+            con.execute(
+                "INSERT INTO measurements(device_id,campaign_id,hour_index,completed_at,raw_cph,bq_m3,factor,source,inserted_at,location_id) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                ("device-a", campaign, hour + 1, completed, int(value / 1.54), value, 1.54, "test", completed, room_id),
+            )
+
+    result = storage.overview_selection(
+        minimum_coverage_percent=95,
+        device_id="device-a",
+        campaign_id=int(campaign),
+        resolve_latest_location=True,
+    )
+
+    assert result["selection"]["location_id"] == room_current
+    assert result["sample_count"] == 2
+    assert result["latest"]["location_name"] == "Keller"
+    assert result["latest"]["location_measurement_height_m"] == 1.2
+    assert result["statistics"]["all"]["maximum_bq_m3"] == 70.0

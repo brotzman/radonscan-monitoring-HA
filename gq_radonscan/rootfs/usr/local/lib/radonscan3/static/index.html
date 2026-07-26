@@ -56,9 +56,8 @@
             <div class="panel-heading compact">
               <div><span class="eyebrow" data-i18n="overview_context"></span><h2 id="overviewContextTitle" data-i18n="overview_selection"></h2><p id="overviewSelectionSummary" data-i18n="overview_selection_hint"></p></div>
             </div>
-            <div class="filter-grid overview-filter-grid">
+            <div class="filter-grid overview-filter-grid overview-filter-grid-compact">
               <label><span data-i18n="device"></span><select id="overviewDevice"></select></label>
-              <label><span data-i18n="measurement_site"></span><select id="overviewLocation"></select></label>
               <label><span data-i18n="campaign"></span><select id="overviewCampaign"></select></label>
               <button id="overviewApply" class="button primary align-end" data-i18n="apply_selection"></button>
             </div>
@@ -68,8 +67,7 @@
               <div class="card-kicker"><span data-i18n="hourly_value"></span><span id="currentStatus" class="badge neutral" data-i18n="unknown"></span></div>
               <div class="radon-reading"><span id="currentValue">–</span><span id="currentUnit">Bq/m³</span></div>
               <div class="reading-meta"><span id="currentTime">–</span><span id="currentAge">–</span></div>
-              <div class="micro-grid">
-                <div><span data-i18n="measurement_site"></span><strong id="currentLocation">–</strong></div>
+              <div class="micro-grid micro-grid-two">
                 <div><span data-i18n="raw_cph"></span><strong id="currentRaw">–</strong></div>
                 <div><span data-i18n="sample_count"></span><strong id="sampleCount">0</strong></div>
               </div>
@@ -94,6 +92,7 @@
                   <h2 id="homeAssistantLocationTitle" data-i18n="ha_location_title"></h2>
                   <p id="homeAssistantLocationAddress" class="ha-location-address">–</p>
                   <p id="homeAssistantLocationDetails" class="ha-location-details">–</p>
+                  <p id="homeAssistantRoom" class="ha-location-room"><span data-i18n="room"></span>: <strong>–</strong></p>
                   <p class="ha-location-privacy"><span data-i18n="ha_location_privacy"></span> <span id="homeAssistantLocationPrivacyMode" class="privacy-mode-label"></span></p>
                 </div>
               </div>
@@ -193,15 +192,21 @@
 
         <section id="view-sites" class="view">
           <div class="section-header"><div><span class="eyebrow" data-i18n="local_metadata"></span><h2 data-i18n="sites_events_title"></h2><p data-i18n="sites_events_hint"></p></div></div>
+          <article class="panel ha-source-panel" aria-labelledby="haRoomSourceTitle">
+            <div class="panel-heading compact"><div><span class="eyebrow" data-i18n="automatic_from_ha"></span><h3 id="haRoomSourceTitle" data-i18n="ha_room_source_title"></h3><p data-i18n="ha_room_source_hint"></p></div><span id="haRoomSourceStatus" class="badge neutral">–</span></div>
+            <dl class="ha-source-facts">
+              <div><dt data-i18n="building"></dt><dd id="haRoomBuilding">–</dd></div>
+              <div><dt data-i18n="place_address"></dt><dd id="haRoomPlace">–</dd></div>
+            </dl>
+          </article>
           <div class="two-column">
             <article class="panel">
-              <h3 data-i18n="measurement_site"></h3>
+              <h3 data-i18n="room"></h3>
+              <p class="field-help" data-i18n="room_form_hint"></p>
               <form id="locationForm" class="form-stack">
                 <input type="hidden" id="locationId">
-                <label><span data-i18n="name"></span><input id="locationName" required></label>
-                <div class="two-field"><label><span data-i18n="building"></span><input id="locationBuilding"></label><label><span data-i18n="floor"></span><input id="locationFloor"></label></div>
-                <div class="two-field"><label><span data-i18n="room_type"></span><input id="locationRoomType"></label><label><span data-i18n="measurement_height"></span><input id="locationHeight" type="number" min="0" max="10" step="0.1"></label></div>
-                <label><span data-i18n="notes"></span><textarea id="locationNotes" rows="3"></textarea></label>
+                <label><span data-i18n="room"></span><input id="locationRoom" required autocomplete="off"></label>
+                <label><span data-i18n="measurement_height"></span><input id="locationHeight" type="number" min="0" max="10" step="0.1" inputmode="decimal"></label>
                 <button class="button primary" type="submit" data-i18n="save_site"></button>
               </form>
             </article>
@@ -209,7 +214,7 @@
               <h3 data-i18n="assign_measurements"></h3>
               <form id="assignForm" class="form-stack">
                 <label><span data-i18n="device"></span><select id="assignDevice" required></select></label>
-                <label><span data-i18n="measurement_site"></span><select id="assignLocation" required></select></label>
+                <label><span data-i18n="room"></span><select id="assignLocation" required></select></label>
                 <label><span data-i18n="session_title"></span><input id="assignTitle" required></label>
                 <div class="two-field"><label><span data-i18n="start"></span><input id="assignStart" type="datetime-local" required></label><label><span data-i18n="end_optional"></span><input id="assignEnd" type="datetime-local"></label></div>
                 <label><span data-i18n="purpose"></span><input id="assignPurpose"></label>
@@ -219,7 +224,7 @@
             </article>
           </div>
           <article class="panel"><div class="panel-heading"><h3 data-i18n="measurement_sites"></h3><span id="locationCount" class="muted">0</span></div><div id="locationCards" class="location-grid"></div></article>
-          <div class="two-column"><article class="panel"><h3 data-i18n="add_event"></h3><form id="eventForm" class="form-stack"><div class="two-field"><label><span data-i18n="event_type"></span><select id="eventType"><option value="ventilation" data-i18n="ventilation"></option><option value="window" data-i18n="window"></option><option value="construction" data-i18n="construction"></option><option value="device_move" data-i18n="device_move"></option><option value="outage" data-i18n="outage"></option><option value="note" data-i18n="note"></option></select></label><label><span data-i18n="time"></span><input id="eventTime" type="datetime-local" required></label></div><label><span data-i18n="measurement_site"></span><select id="eventLocation"></select></label><label><span data-i18n="title"></span><input id="eventTitle" required></label><label><span data-i18n="notes"></span><textarea id="eventNotes" rows="2"></textarea></label><button type="submit" class="button primary" data-i18n="save_event"></button></form></article><article class="panel"><div class="panel-heading"><h3 data-i18n="events"></h3><span id="eventCount" class="muted">0</span></div><div id="eventList" class="event-list"></div></article></div>
+          <div class="two-column"><article class="panel"><h3 data-i18n="add_event"></h3><form id="eventForm" class="form-stack"><div class="two-field"><label><span data-i18n="event_type"></span><select id="eventType"><option value="ventilation" data-i18n="ventilation"></option><option value="window" data-i18n="window"></option><option value="construction" data-i18n="construction"></option><option value="device_move" data-i18n="device_move"></option><option value="outage" data-i18n="outage"></option><option value="note" data-i18n="note"></option></select></label><label><span data-i18n="time"></span><input id="eventTime" type="datetime-local" required></label></div><label><span data-i18n="room"></span><select id="eventLocation"></select></label><label><span data-i18n="title"></span><input id="eventTitle" required></label><label><span data-i18n="notes"></span><textarea id="eventNotes" rows="2"></textarea></label><button type="submit" class="button primary" data-i18n="save_event"></button></form></article><article class="panel"><div class="panel-heading"><h3 data-i18n="events"></h3><span id="eventCount" class="muted">0</span></div><div id="eventList" class="event-list"></div></article></div>
         </section>
 
         <section id="view-map" class="view gmcmap-view">

@@ -9,21 +9,21 @@ LOCALES = LIB / 'locales'
 
 
 def test_release_versions_are_consistent():
-    assert 'version: 5.2.0' in (ROOT / 'config.yaml').read_text(encoding='utf-8')
-    assert 'BUILD_VERSION="5.2.0"' in (ROOT / 'Dockerfile').read_text(encoding='utf-8')
-    assert '__version__ = "5.2.0"' in (LIB / '__init__.py').read_text(encoding='utf-8')
-    assert 'Radon Monitoring 5.2.0' in (ROOT / 'README.md').read_text(encoding='utf-8')
+    assert 'version: 5.3.0' in (ROOT / 'config.yaml').read_text(encoding='utf-8')
+    assert 'BUILD_VERSION="5.3.0"' in (ROOT / 'Dockerfile').read_text(encoding='utf-8')
+    assert '__version__ = "5.3.0"' in (LIB / '__init__.py').read_text(encoding='utf-8')
+    assert 'Radon Monitoring 5.3.0' in (ROOT / 'README.md').read_text(encoding='utf-8')
 
 
 def test_current_manuals_exist_and_obsolete_manuals_are_removed():
     docs = ROOT / 'rootfs/usr/local/share/radonscan3/docs'
     for lang in ('de', 'en'):
-        path = docs / f'Radon_Monitoring_User_Manual_5.2.0_{lang}.pdf'
+        path = docs / f'Radon_Monitoring_User_Manual_5.3.0_{lang}.pdf'
         assert path.is_file() and path.stat().st_size > 10_000
     assert not list(docs.glob('Radon_Monitoring_User_Manual_4.2.1_*.pdf'))
     assert not list(docs.glob('Radon_Monitoring_User_Manual_4.9.0_*.pdf'))
     assert not list(docs.glob('Radon_Monitoring_User_Manual_5.1.0_*.pdf'))
-    assert 'Radon_Monitoring_User_Manual_5.2.0' in (LIB / 'web.py').read_text(encoding='utf-8')
+    assert 'Radon_Monitoring_User_Manual_5.3.0' in (LIB / 'web.py').read_text(encoding='utf-8')
 
 
 def test_frontend_assets_and_ids_are_consistent():
@@ -36,9 +36,11 @@ def test_frontend_assets_and_ids_are_consistent():
     for removed_id in ('copyHashes', 'hashes', 'runtimeSummary', 'view-expert', 'expertDeviceFacts', 'expertProtocolFacts', 'expertDataFacts'):
         assert f'id="{removed_id}"' not in html
     assert 'data-view="expert"' not in html
-    for required_id in ('homeAssistantLocationCard', 'homeAssistantLocationPrivacyMode', 'radonTrafficCard', 'radonTrafficSignal', 'radonTrafficStatus', 'radonTrafficBasis', 'overviewDevice', 'overviewLocation', 'overviewCampaign', 'metricPeak24', 'analysisSummaryText', 'analysisAdvanced', 'view-sites', 'gmcmapNav'):
+    for required_id in ('homeAssistantLocationCard', 'homeAssistantLocationPrivacyMode', 'homeAssistantRoom', 'radonTrafficCard', 'radonTrafficSignal', 'radonTrafficStatus', 'radonTrafficBasis', 'overviewDevice', 'overviewCampaign', 'metricPeak24', 'analysisSummaryText', 'analysisAdvanced', 'view-sites', 'locationRoom', 'haRoomBuilding', 'haRoomPlace', 'gmcmapNav'):
         assert f'id="{required_id}"' in html
     assert 'data-view="sites"' in html
+    assert 'id="overviewLocation"' not in html
+    assert 'id="currentLocation"' not in html
     assert 'data-view="map"' in html
     sites_section = html.split('id="view-sites"', 1)[1].split('id="view-map"', 1)[0]
     map_section = html.split('id="view-map"', 1)[1].split('id="view-history"', 1)[0]
@@ -56,6 +58,8 @@ def test_frontend_assets_and_ids_are_consistent():
     assert "basis_24h_average" in app_js
     assert "event-marker" in app_js
     assert "scope','selection" in app_js
+    assert "overviewLocation" not in app_js
+    assert "measurement_height_m" in app_js
     for asset in ('core.js', 'accessibility.js', 'data-management.js', 'app.js', 'app.css', 'icon.png'):
         assert (STATIC / asset).is_file()
 

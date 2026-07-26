@@ -38,6 +38,7 @@ def build_state(
             device_id=device_id,
             location_id=location_id,
             campaign_id=campaign_id,
+            resolve_latest_location=True,
         )
         latest = overview.get("latest")
         stats = overview.get("statistics") or {}
@@ -105,6 +106,7 @@ def build_state(
             "status": _status(current_bq, settings),
             "location_id": latest.get("location_id") if latest else None,
             "location_name": latest.get("location_name") if latest else None,
+            "measurement_height_m": latest.get("location_measurement_height_m") if latest else None,
             "session_id": latest.get("session_id") if latest else None,
             "session_title": latest.get("session_title") if latest else None,
             "campaign_id": latest.get("campaign_id") if latest else campaign_id,
@@ -133,9 +135,9 @@ def build_state(
         "settings": settings.public_dict(),
         "selection": {
             "explicit": selection_explicit,
-            "device_id": device_id,
-            "location_id": location_id,
-            "campaign_id": campaign_id,
+            "device_id": (overview.get("selection") or {}).get("device_id") if selection_explicit else device_id,
+            "location_id": (overview.get("selection") or {}).get("location_id") if selection_explicit else location_id,
+            "campaign_id": (overview.get("selection") or {}).get("campaign_id") if selection_explicit else campaign_id,
         },
     }
     for period, values in stats.items():

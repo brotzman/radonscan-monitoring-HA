@@ -96,6 +96,15 @@ class HomeAssistantClient:
         combined = ", ".join(part for part in (street, locality) if part)
         return combined or None
 
+    @staticmethod
+    def _building_name(config: dict[str, object]) -> str | None:
+        """Return a building or site name exactly as supplied by Home Assistant."""
+        for key in ("building", "building_name", "site_name", "location_name"):
+            value = config.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+        return None
+
     def status(self) -> dict[str, object]:
         if not self.available:
             return {"available": False, "connected": False, "error": "token_missing"}
@@ -103,12 +112,17 @@ class HomeAssistantClient:
             config = self._request("GET", "config")
             if not isinstance(config, dict):
                 config = {}
+            address = self._location_address(config)
+            building_name = self._building_name(config)
+            location_name = config.get("location_name")
             return {
                 "available": True,
                 "connected": True,
                 "version": config.get("version"),
-                "location_name": config.get("location_name"),
-                "address": self._location_address(config),
+                "location_name": location_name,
+                "building_name": building_name,
+                "address": address,
+                "place_address": address or location_name,
                 "latitude": config.get("latitude"),
                 "longitude": config.get("longitude"),
                 "elevation": config.get("elevation"),

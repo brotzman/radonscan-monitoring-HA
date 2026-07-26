@@ -4,7 +4,7 @@
   let state = null;
   let overviewRecords = [];
   let historyRecords = [];
-  let catalog = {locations:[],sessions:[],campaigns:[],devices:[],events:[],reports:[]};
+  let catalog = {locations:[],sessions:[],campaigns:[],devices:[],events:[],reports:[],homeassistant_location:{}};
   let analysisData = null;
   let dataManagement = null;
   let chartDays = 7;
@@ -18,7 +18,7 @@
   const bool = value => value ? tr('yes') : tr('no');
   const statusText = value => tr(value || 'unknown');
   const overviewStorageKeys = {
-    device:'radonOverviewDevice', location:'radonOverviewLocation', campaign:'radonOverviewCampaign',
+    device:'radonOverviewDevice', campaign:'radonOverviewCampaign',
   };
   const selectedValue = id => $(id)?.value || '';
   const coordinateText = (value, positive, negative, digits) => {
@@ -28,20 +28,19 @@
     return `${fmtNumber(Math.abs(number),digits)}° ${direction}`;
   };
 
-  function overviewQuery({history=false}={}) {
+  function overviewQuery({history=false,locationId=null}={}) {
     const params=new URLSearchParams();
     if(!history) params.set('scope','selection');
-    const device=selectedValue('overviewDevice'), locationId=selectedValue('overviewLocation'), campaign=selectedValue('overviewCampaign');
+    const device=selectedValue('overviewDevice'), campaign=selectedValue('overviewCampaign');
     if(device) params.set('device_id',device);
-    if(locationId) params.set('location_id',locationId);
     if(campaign) params.set('campaign_id',campaign);
+    if(locationId!==null&&locationId!==undefined&&String(locationId)!=='') params.set('location_id',String(locationId));
     if(history) {params.set('limit','10000');params.set('order','asc');}
     return params;
   }
 
   function persistOverviewSelection() {
     storageSet('local',overviewStorageKeys.device,selectedValue('overviewDevice'));
-    storageSet('local',overviewStorageKeys.location,selectedValue('overviewLocation'));
     storageSet('local',overviewStorageKeys.campaign,selectedValue('overviewCampaign'));
   }
 
@@ -146,7 +145,7 @@
     const reduced=mode==='reduced';
     const address=reduced
       ? (hasValue(ha.location_name)?String(ha.location_name).trim():tr('ha_location_unavailable'))
-      : (hasValue(ha.address)?String(ha.address).trim():(hasValue(ha.location_name)?String(ha.location_name).trim():tr('ha_location_unavailable')));
+      : (hasValue(ha.place_address)?String(ha.place_address).trim():(hasValue(ha.address)?String(ha.address).trim():(hasValue(ha.location_name)?String(ha.location_name).trim():tr('ha_location_unavailable'))));
     $('homeAssistantLocationAddress').textContent=address;
 
     const details=[];
@@ -158,8 +157,29 @@
     if(hasValue(ha.country)) details.push(`${tr('ha_location_country')}: ${String(ha.country).trim().toUpperCase()}`);
     if(hasValue(ha.time_zone)) details.push(`${tr('ha_location_timezone')}: ${String(ha.time_zone).trim()}`);
     $('homeAssistantLocationDetails').textContent=details.length?details.join(' · '):tr('ha_location_unavailable');
+    const roomLine=$('homeAssistantRoom');
+    if(roomLine) {
+      const room=state?.measurement?.location_name||tr('not_assigned');
+      const height=state?.measurement?.measurement_height_m;
+      const strong=roomLine.querySelector('strong');
+      if(strong) strong.textContent=height!==null&&height!==undefined&&Number.isFinite(Number(height))
+        ? `${room} · ${tr('measurement_height')}: ${fmtNumber(Number(height),1)} m`
+        : room;
+    }
     $('homeAssistantLocationPrivacyMode').textContent=`· ${tr(`location_display_${mode}`)}`;
     card.classList.toggle('unavailable',!ha.connected||details.length===0);
+  }
+
+  function renderHomeAssistantRoomSource() {
+    const ha=state?.homeassistant||catalog.homeassistant_location||{};
+    const badge=$('haRoomSourceStatus');
+    if(badge) {
+      badge.className=`badge ${ha.connected?'normal':'neutral'}`;
+      badge.textContent=ha.connected?tr('connected'):tr('not_available');
+    }
+    const building=$('haRoomBuilding'), place=$('haRoomPlace');
+    if(building) building.textContent=ha.building_name||ha.location_name||tr('not_available');
+    if(place) place.textContent=ha.place_address||ha.address||ha.location_name||tr('not_available');
   }
 
   function renderRadonTraffic() {
@@ -210,7 +230,7 @@
     const target=$('overviewSelectionSummary');
     if(!target) return;
     const label=id=>{const el=$(id);return el?.selectedOptions?.[0]?.textContent?.trim()||tr('not_available');};
-    target.textContent=`${label('overviewDevice')} · ${label('overviewLocation')} · ${label('overviewCampaign')}`;
+    target.textContent=`${label('overviewDevice')} · ${label('overviewCampaign')}`;
   }
 
   function renderState() {
@@ -222,7 +242,6 @@
     $('currentUnit').textContent=unit(); $('currentTime').textContent=fmtDate(m.completed_at);
     $('currentAge').textContent=m.age_hours===null||m.age_hours===undefined?'':`${tr('data_age')}: ${fmtNumber(m.age_hours,1)} h`;
     $('currentRaw').textContent=m.raw_cph??'–'; $('sampleCount').textContent=fmtInteger(state.database?.sample_count||0);
-    $('currentLocation').textContent=m.location_name||tr('not_assigned');
     const badge=$('currentStatus'); badge.className=`badge ${m.status||'neutral'}`; badge.textContent=statusText(m.status);
     renderAverage('metric24','avg24','coverage24','24h');
     renderAverage('metric7d','avg7d','coverage7d','7d');
@@ -240,7 +259,7 @@
     const q=state.statistics?.['30d']?.quality||state.statistics?.all?.quality||'insufficient';
     const qBadge=$('qualityBadge');qBadge.className=`badge ${q}`;qBadge.textContent=tr(`quality_${q}`);
     $('overviewCoverage').textContent=`${fmtNumber(state.statistics?.['30d']?.coverage_percent||0,0)} %`;
-    renderHomeAssistantLocation(); renderRadonTraffic(); renderOverviewSelectionSummary(); renderFacts(); renderSettings(); renderOverviewChart();
+    renderHomeAssistantLocation(); renderHomeAssistantRoomSource(); renderRadonTraffic(); renderOverviewSelectionSummary(); renderFacts(); renderSettings(); renderOverviewChart();
     $('manualLink').href=`docs/user-manual.pdf?lang=${boot.locale}`; $('protocolLink').href=`docs/protocol-reference.pdf?lang=${boot.locale}`;
   }
 
@@ -267,12 +286,12 @@
   }
 
   function eventsForOverview() {
-    const locationId=selectedValue('overviewLocation');
+    const locationId=state?.selection?.location_id;
     const deviceId=selectedValue('overviewDevice');
     const campaignId=selectedValue('overviewCampaign');
     const sessions=new Map((catalog.sessions||[]).map(session=>[String(session.id),session]));
     return (catalog.events||[]).filter(event=>{
-      if(locationId && String(event.location_id||'')!==locationId) return false;
+      if(locationId!==null&&locationId!==undefined&&String(event.location_id||'')!==String(locationId)) return false;
       const session=event.session_id!==null&&event.session_id!==undefined?sessions.get(String(event.session_id)):null;
       if(deviceId && session?.device_id && String(session.device_id)!==deviceId) return false;
       if(campaignId && session?.campaign_id && String(session.campaign_id)!==campaignId) return false;
@@ -418,7 +437,7 @@
       if(restoreValue&&valid(old)) element.value=old;
       else if(valid(preferredValue)) element.value=String(preferredValue);
     };
-    const locationLabel=l=>[l.building,l.floor,l.name].filter(Boolean).join(' · ');
+    const locationLabel=l=>String(l.room||l.name||tr('not_available'));
     const locOpts=options(catalog.locations,'id',locationLabel,tr('all_sites'));
     ['analysisLocation','historyLocation','reportLocation','eventLocation'].forEach(id=>updateSelect(id,locOpts));
     ['assignLocation'].forEach(id=>updateSelect(id,options(catalog.locations,'id',locationLabel)));
@@ -441,7 +460,6 @@
     ['analysisCampaign','historyCampaign'].forEach(id=>updateSelect(id,campOpts));
 
     const overviewDevice=$('overviewDevice');
-    const overviewLocation=$('overviewLocation');
     if(overviewDevice) {
       overviewDevice.innerHTML=allDeviceOpts;
       const stored=storageGet('local',overviewStorageKeys.device);
@@ -449,19 +467,13 @@
       const preferred=stored!==null?stored:fallback;
       if(Array.from(overviewDevice.options).some(option=>option.value===String(preferred))) overviewDevice.value=String(preferred);
     }
-    if(overviewLocation) {
-      overviewLocation.innerHTML=locOpts;
-      const stored=storageGet('local',overviewStorageKeys.location);
-      const fallback=state?.measurement?.location_id??'';
-      const preferred=stored!==null?stored:fallback;
-      if(Array.from(overviewLocation.options).some(option=>option.value===String(preferred))) overviewLocation.value=String(preferred);
-    }
     const storedCampaign=storageGet('local',overviewStorageKeys.campaign);
     const campaignFallback=state?.measurement?.campaign_id??null;
     renderOverviewCampaignOptions(storedCampaign!==null?storedCampaign:campaignFallback);
 
     catalogInitialised=true;
     renderOverviewSelectionSummary();
+    renderHomeAssistantRoomSource();
     if($('locationCards')) renderLocations();
     if($('eventList')) renderEvents();
     if($('reportList')) renderReports();
@@ -469,13 +481,17 @@
 
   function renderLocations() {
     $('locationCount').textContent=catalog.locations.length;const wrap=$('locationCards');if(!catalog.locations.length){wrap.innerHTML=`<div class="empty">${tr('no_sites')}</div>`;return;}
-    wrap.innerHTML=catalog.locations.map(l=>`<article class="location-card"><h4>${escapeHtml(l.name)}</h4><p>${escapeHtml([l.building,l.floor,l.room_type].filter(Boolean).join(' · ')||tr('not_available'))}</p><div class="location-value">${l.latest_bq_m3===null||l.latest_bq_m3===undefined?'–':radon(l.latest_bq_m3)}</div><p>${fmtInteger(l.sample_count||0)} ${tr('samples')} · ${fmtDate(l.latest_at)}</p><div class="location-actions"><button class="mini-button" data-action="edit-location" data-id="${l.id}">${tr('edit')}</button><button class="mini-button" data-action="delete-location" data-id="${l.id}">${tr('delete')}</button></div></article>`).join('');
+    const ha=state?.homeassistant||catalog.homeassistant_location||{};
+    const building=ha.building_name||ha.location_name||'';
+    const place=ha.place_address||ha.address||'';
+    const inherited=[building,place].filter((value,index,items)=>value&&items.indexOf(value)===index).join(' · ')||tr('ha_location_unavailable');
+    wrap.innerHTML=catalog.locations.map(l=>{const height=l.measurement_height_m===null||l.measurement_height_m===undefined?tr('not_set'):`${fmtNumber(Number(l.measurement_height_m),1)} m`;return `<article class="location-card"><h4>${escapeHtml(l.room||l.name)}</h4><p>${escapeHtml(inherited)}</p><p><strong>${escapeHtml(tr('measurement_height'))}:</strong> ${escapeHtml(height)}</p><div class="location-value">${l.latest_bq_m3===null||l.latest_bq_m3===undefined?'–':radon(l.latest_bq_m3)}</div><p>${fmtInteger(l.sample_count||0)} ${tr('samples')} · ${fmtDate(l.latest_at)}</p><div class="location-actions"><button class="mini-button" data-action="edit-location" data-id="${l.id}">${tr('edit')}</button><button class="mini-button" data-action="delete-location" data-id="${l.id}">${tr('delete')}</button></div></article>`;}).join('');
     wrap.querySelectorAll('[data-action]').forEach(button=>button.addEventListener('click',async()=>{const id=Number(button.dataset.id);if(button.dataset.action==='edit-location')editLocation(id);if(button.dataset.action==='delete-location'){if(!confirm(tr('confirm_delete_site')))return;try{await api(`api/locations/${id}`,{method:'DELETE'});toast(tr('deleted'));await reloadCatalog();}catch(err){toast(err.message,true);}}}));
   }
 
-  function editLocation(id) {const l=catalog.locations.find(x=>Number(x.id)===Number(id));if(!l)return;$('locationId').value=l.id;$('locationName').value=l.name||'';$('locationBuilding').value=l.building||'';$('locationFloor').value=l.floor||'';$('locationRoomType').value=l.room_type||'';$('locationHeight').value=l.measurement_height_m??'';$('locationNotes').value=l.notes||'';$('locationName').focus();}
+  function editLocation(id) {const l=catalog.locations.find(x=>Number(x.id)===Number(id));if(!l)return;$('locationId').value=l.id;$('locationRoom').value=l.room||l.name||'';$('locationHeight').value=l.measurement_height_m??'';$('locationRoom').focus();}
 
-  function renderEvents() {$('eventCount').textContent=catalog.events.length;const wrap=$('eventList');if(!catalog.events.length){wrap.innerHTML=`<div class="empty">${tr('no_events')}</div>`;return;}wrap.innerHTML=catalog.events.slice(0,100).map(e=>`<div class="event-item"><small>${fmtDate(e.occurred_at)}</small><strong>${escapeHtml(tr(`event_${e.event_type}`)||e.event_type)}</strong><div><strong>${escapeHtml(e.title)}</strong><small>${escapeHtml([e.location_name,e.notes].filter(Boolean).join(' · '))}</small></div><button class="mini-button" data-delete-event="${e.id}">${tr('delete')}</button></div>`).join('');wrap.querySelectorAll('[data-delete-event]').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm(tr('confirm_delete_event')))return;try{await api(`api/events/${btn.dataset.deleteEvent}`,{method:'DELETE'});toast(tr('deleted'));await reloadCatalog();}catch(err){toast(err.message,true);}}));}
+  function renderEvents() {$('eventCount').textContent=catalog.events.length;const wrap=$('eventList');if(!catalog.events.length){wrap.innerHTML=`<div class="empty">${tr('no_events')}</div>`;return;}wrap.innerHTML=catalog.events.slice(0,100).map(e=>`<div class="event-item"><small>${fmtDate(e.occurred_at)}</small><div><strong>${escapeHtml(tr(`event_${e.event_type}`)||e.event_type)} · ${escapeHtml(e.title)}</strong><small>${escapeHtml([e.location_name,e.notes].filter(Boolean).join(' · '))}</small></div><button class="mini-button" data-delete-event="${e.id}">${tr('delete')}</button></div>`).join('');wrap.querySelectorAll('[data-delete-event]').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm(tr('confirm_delete_event')))return;try{await api(`api/events/${btn.dataset.deleteEvent}`,{method:'DELETE'});toast(tr('deleted'));await reloadCatalog();}catch(err){toast(err.message,true);}}));}
 
   function renderReports() {$('reportCount').textContent=catalog.reports.length;const wrap=$('reportList');if(!catalog.reports.length){wrap.innerHTML=`<div class="empty">${tr('no_reports')}</div>`;return;}wrap.innerHTML=catalog.reports.map(r=>`<div class="report-item"><small>${fmtDate(r.created_at)}</small><div><strong>${escapeHtml(r.title)}</strong><small>${escapeHtml(r.location_name||tr('all_sites'))} · ${escapeHtml(r.device_model||r.device_id||tr('not_available'))} · ${escapeHtml(r.profile)}</small></div><div><strong>${r.mean_bq_m3===null||r.mean_bq_m3===undefined?'–':radon(r.mean_bq_m3)}</strong><small>${fmtInteger(r.samples)} ${tr('samples')} · ${fmtNumber(r.coverage_percent,0)} %</small></div><div class="report-actions"><a class="mini-button" href="reports/${encodeURIComponent(r.report_id)}" target="_blank">PDF</a><button class="mini-button" data-delete-report="${escapeHtml(r.report_id)}">${tr('delete')}</button></div></div>`).join('');wrap.querySelectorAll('[data-delete-report]').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm(tr('confirm_delete_report')))return;try{await api(`api/reports/${encodeURIComponent(btn.dataset.deleteReport)}`,{method:'DELETE'});toast(tr('deleted'));await reloadCatalog();}catch(err){toast(err.message,true);}}));}
 
@@ -484,11 +500,10 @@
     const button=$('overviewApply'); if(button) button.disabled=true;
     try {
       persistOverviewSelection();
-      const [statePayload,historyPayload]=await Promise.all([
-        api(`api/state?${overviewQuery()}`),
-        api(`api/history?${overviewQuery({history:true})}`),
-      ]);
+      const statePayload=await api(`api/state?${overviewQuery()}`);
       state=statePayload;
+      const resolvedRoomId=statePayload?.selection?.location_id;
+      const historyPayload=await api(`api/history?${overviewQuery({history:true,locationId:resolvedRoomId})}`);
       overviewRecords=historyPayload.items||[];
       renderState();
       const ha=state.homeassistant||{};const haStatus=$('haStatus');
@@ -566,11 +581,10 @@
     $$('#rangeSwitch button').forEach(button=>button.addEventListener('click',()=>{chartDays=Number(button.dataset.days);$$('#rangeSwitch button').forEach(x=>x.classList.toggle('active',x===button));renderOverviewChart();}));
     $('overviewApply')?.addEventListener('click',()=>loadOverviewSelection(true));
     $('overviewDevice')?.addEventListener('change',()=>{renderOverviewCampaignOptions();renderOverviewSelectionSummary();});
-    $('overviewLocation')?.addEventListener('change',renderOverviewSelectionSummary);
     $('overviewCampaign')?.addEventListener('change',renderOverviewSelectionSummary);
     $('analysisApply')?.addEventListener('click',loadAnalysis);$('analysisPreset')?.addEventListener('change',()=>{const custom=$('analysisPreset')?.value==='custom';if($('analysisStart'))$('analysisStart').disabled=!custom;if($('analysisEnd'))$('analysisEnd').disabled=!custom;});
     $('analysisCsvButton').addEventListener('click',()=>{const params=analysisQuery();location.href=`export/history.csv?${params}`;});
-    $('locationForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;const payload={id:$('locationId').value||null,name:$('locationName').value,building:$('locationBuilding').value,floor:$('locationFloor').value,room_type:$('locationRoomType').value,map_id:null,x_percent:null,y_percent:null,measurement_height_m:$('locationHeight').value||null,notes:$('locationNotes').value,active:true};try{await api('api/locations',{method:'POST',body:payload});toast(tr('saved'));form.reset();$('locationId').value='';await reloadCatalog();}catch(err){toast(err.message,true);}});
+    $('locationForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;const payload={id:$('locationId').value||null,room:$('locationRoom').value,measurement_height_m:$('locationHeight').value||null};try{await api('api/locations',{method:'POST',body:payload});toast(tr('saved'));form.reset();$('locationId').value='';await reloadCatalog();await loadOverviewSelection(false);}catch(err){toast(err.message,true);}});
     $('assignForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;try{const result=await api('api/locations/assign',{method:'POST',body:{device_id:$('assignDevice').value,location_id:$('assignLocation').value,title:$('assignTitle').value,start:toIso($('assignStart').value),end:toIso($('assignEnd').value),purpose:$('assignPurpose').value,notes:$('assignNotes').value}});toast(`${tr('assigned')}: ${result.assigned}`);form.reset();await loadAll();}catch(err){toast(err.message,true);}});
     $('eventForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;try{await api('api/events',{method:'POST',body:{event_type:$('eventType').value,occurred_at:toIso($('eventTime').value),location_id:$('eventLocation').value||null,title:$('eventTitle').value,notes:$('eventNotes').value}});toast(tr('saved'));form.reset();$('eventTime').value=toInput(new Date());await reloadCatalog();}catch(err){toast(err.message,true);}});
     $('gmcmapUploadButton').addEventListener('click',uploadGmcmap);$('gmcmapRetryButton').addEventListener('click',retryGmcmap);$('refreshGmcmap').addEventListener('click',loadGmcmap);
@@ -585,7 +599,7 @@
   function resetClientData() {
     overviewRecords=[];
     historyRecords=[];
-    catalog={locations:[],sessions:[],campaigns:[],devices:[],events:[],reports:[]};
+    catalog={locations:[],sessions:[],campaigns:[],devices:[],events:[],reports:[],homeassistant_location:{}};
     analysisData=null;
     catalogInitialised=false;
   }
