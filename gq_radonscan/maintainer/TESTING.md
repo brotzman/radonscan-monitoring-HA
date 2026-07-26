@@ -1,4 +1,4 @@
-# Testing - Radon Monitoring 5.1.0
+# Testing - Radon Monitoring 5.2.0
 
 ## Standard command
 
@@ -26,6 +26,11 @@ Root `pyproject.toml` supplies the app library path and test directory. The app 
 - all eight languages at mobile width
 - 200% text scaling, keyboard operation and accessible names
 - browser workflows for local reset, Recorder purge and verification
+- filter-coherent Overview state/history requests for device, site and campaign
+- 24-hour Radon traffic-light assessment and provisional hourly fallback
+- precise, reduced and hidden location modes including coordinate units
+- chart event markers, dedicated Sites & events navigation and hidden disabled World Map
+- plain-language Analysis summary with collapsed advanced diagnostics
 
 ## Additional checks before release
 

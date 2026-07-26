@@ -249,7 +249,17 @@ class WebServer:
                         return
 
                     if path == "/api/state":
-                        state = build_state(app.storage, app.settings)
+                        selection_explicit = (query.get("scope") or [""])[0] == "selection" or any(
+                            key in query for key in ("device_id", "location_id", "campaign_id")
+                        )
+                        state = build_state(
+                            app.storage,
+                            app.settings,
+                            device_id=(query.get("device_id") or [None])[0],
+                            location_id=self.query_int(query, "location_id"),
+                            campaign_id=self.query_int(query, "campaign_id"),
+                            selection_explicit=selection_explicit,
+                        )
                         state["homeassistant"] = app.ha.status()
                         self.json_response(state)
                         return
@@ -417,7 +427,7 @@ class WebServer:
 
                     if path in {"/docs/user-manual.pdf", "/docs/protocol-reference.pdf"}:
                         locale = self.locale(query)
-                        prefix = "Radon_Monitoring_User_Manual_5.1.0" if "user-manual" in path else "GQ_RadonScan_Protocol_Reference_3.0.0"
+                        prefix = "Radon_Monitoring_User_Manual_5.2.0" if "user-manual" in path else "GQ_RadonScan_Protocol_Reference_3.0.0"
                         candidates = [app.docs_dir / f"{prefix}_{locale}.pdf", app.docs_dir / f"{prefix}_en.pdf"]
                         manual = next((candidate for candidate in candidates if candidate.is_file()), None)
                         if manual is None:

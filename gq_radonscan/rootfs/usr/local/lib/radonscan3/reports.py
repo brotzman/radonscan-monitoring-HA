@@ -504,7 +504,7 @@ class ScientificReport:
             "minimum_bq_m3": stats.get("minimum_bq_m3"),
             "maximum_bq_m3": stats.get("maximum_bq_m3"),
             "app_version": __version__,
-            "analysis_model": "5.1.0",
+            "analysis_model": "5.2.0",
             "chart_points": len(plot_records),
             "chart_downsampled": len(plot_records) < len(analysis["records"]),
             "scientific_quality_class": stats.get("scientific_quality_class"),

@@ -2,7 +2,8 @@
   'use strict';
   const {boot,translations:t,byId:$,all:$$,tr,locale,escapeHtml,fmtNumber,fmtInteger,fmtDate,fmtDateOnly,fmtFirmware,fmtBytes,toIso,toInput,storageGet,storageSet,api,toast} = window.RMCore;
   let state = null;
-  let records = [];
+  let overviewRecords = [];
+  let historyRecords = [];
   let catalog = {locations:[],sessions:[],campaigns:[],devices:[],events:[],reports:[]};
   let analysisData = null;
   let dataManagement = null;
@@ -16,6 +17,33 @@
   const radon = bq => bq === null || bq === undefined ? '–' : `${fmtNumber(radonValue(bq), unit()==='pCi/L'?3:1)} ${unit()}`;
   const bool = value => value ? tr('yes') : tr('no');
   const statusText = value => tr(value || 'unknown');
+  const overviewStorageKeys = {
+    device:'radonOverviewDevice', location:'radonOverviewLocation', campaign:'radonOverviewCampaign',
+  };
+  const selectedValue = id => $(id)?.value || '';
+  const coordinateText = (value, positive, negative, digits) => {
+    const number=Number(value);
+    if(!Number.isFinite(number)) return '';
+    const direction=number<0?negative:positive;
+    return `${fmtNumber(Math.abs(number),digits)}° ${direction}`;
+  };
+
+  function overviewQuery({history=false}={}) {
+    const params=new URLSearchParams();
+    if(!history) params.set('scope','selection');
+    const device=selectedValue('overviewDevice'), locationId=selectedValue('overviewLocation'), campaign=selectedValue('overviewCampaign');
+    if(device) params.set('device_id',device);
+    if(locationId) params.set('location_id',locationId);
+    if(campaign) params.set('campaign_id',campaign);
+    if(history) {params.set('limit','10000');params.set('order','asc');}
+    return params;
+  }
+
+  function persistOverviewSelection() {
+    storageSet('local',overviewStorageKeys.device,selectedValue('overviewDevice'));
+    storageSet('local',overviewStorageKeys.location,selectedValue('overviewLocation'));
+    storageSet('local',overviewStorageKeys.campaign,selectedValue('overviewCampaign'));
+  }
 
   function applyTranslations() {
     $$('[data-i18n]').forEach(el=>{const key=el.dataset.i18n;if(t[key]) el.textContent=t[key];});
@@ -42,14 +70,22 @@
     const enabled=dataManagementEnabled();
     const nav=$('dataManagementNav'); if(nav) nav.hidden=!enabled;
     const view=$('view-data'); if(view) view.hidden=!enabled;
-    if(!enabled && (location.hash==='#data' || storageGet('local','radonMonitoringView')==='data')) {
+    const worldMapEnabled=state ? state.settings?.gmcmap_enabled===true : true;
+    const mapNav=$('gmcmapNav'); if(mapNav) mapNav.hidden=!worldMapEnabled;
+    const mapView=$('view-map'); if(mapView) mapView.hidden=!worldMapEnabled;
+    const blockedData=!enabled && (location.hash==='#data' || storageGet('local','radonMonitoringView')==='data');
+    const blockedMap=!worldMapEnabled && (location.hash==='#map' || storageGet('local','radonMonitoringView')==='map');
+    if(blockedData||blockedMap) {
       storageSet('local','radonMonitoringView','overview');
-      if(location.hash==='#data') history.replaceState(null,'','#overview');
+      history.replaceState(null,'','#overview');
+      $$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view==='overview'));
+      $$('.view').forEach(v=>v.classList.toggle('active',v.id==='view-overview'));
     }
   }
 
   function setView(name) {
     if(name==='data' && !dataManagementEnabled()) name='overview';
+    if(name==='map' && state && state.settings?.gmcmap_enabled!==true) name='overview';
     $$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
     $$('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${name}`));
     history.replaceState(null,'',`#${name}`);
@@ -99,31 +135,43 @@
   }
 
   function renderHomeAssistantLocation() {
-    const ha=state?.homeassistant||{};
+    const ha=state?.homeassistant||{}, settings=state?.settings||{};
     const card=$('homeAssistantLocationCard');
     if(!card) return;
+    const mode=settings.location_display_mode||'full';
+    card.hidden=mode==='hidden';
+    if(mode==='hidden') return;
     const hasValue=value=>value!==null&&value!==undefined&&String(value).trim()!=='';
     const latitude=Number(ha.latitude), longitude=Number(ha.longitude);
-    const address=hasValue(ha.address)?String(ha.address).trim():(hasValue(ha.location_name)?String(ha.location_name).trim():tr('ha_location_unavailable'));
+    const reduced=mode==='reduced';
+    const address=reduced
+      ? (hasValue(ha.location_name)?String(ha.location_name).trim():tr('ha_location_unavailable'))
+      : (hasValue(ha.address)?String(ha.address).trim():(hasValue(ha.location_name)?String(ha.location_name).trim():tr('ha_location_unavailable')));
     $('homeAssistantLocationAddress').textContent=address;
 
     const details=[];
-    if(hasValue(ha.latitude)&&hasValue(ha.longitude)&&Number.isFinite(latitude)&&Number.isFinite(longitude)) details.push(`${tr('ha_location_coordinates')}: ${fmtNumber(latitude,5)}, ${fmtNumber(longitude,5)}`);
+    if(hasValue(ha.latitude)&&hasValue(ha.longitude)&&Number.isFinite(latitude)&&Number.isFinite(longitude)) {
+      const digits=reduced?2:5;
+      details.push(`${tr('ha_location_coordinates')}: ${coordinateText(latitude,'N','S',digits)}, ${coordinateText(longitude,'E','W',digits)}`);
+    }
     if(hasValue(ha.elevation)&&Number.isFinite(Number(ha.elevation))) details.push(`${tr('ha_location_elevation')}: ${fmtNumber(Number(ha.elevation),0)} m`);
     if(hasValue(ha.country)) details.push(`${tr('ha_location_country')}: ${String(ha.country).trim().toUpperCase()}`);
     if(hasValue(ha.time_zone)) details.push(`${tr('ha_location_timezone')}: ${String(ha.time_zone).trim()}`);
     $('homeAssistantLocationDetails').textContent=details.length?details.join(' · '):tr('ha_location_unavailable');
+    $('homeAssistantLocationPrivacyMode').textContent=`· ${tr(`location_display_${mode}`)}`;
     card.classList.toggle('unavailable',!ha.connected||details.length===0);
   }
 
   function renderRadonTraffic() {
     const card=$('radonTrafficCard'), signal=$('radonTrafficSignal');
     if(!card||!signal) return;
-    const measurement=state?.measurement||{}, settings=state?.settings||{};
-    const value=Number(measurement.bq_m3);
+    const measurement=state?.measurement||{}, settings=state?.settings||{}, period=state?.statistics?.['24h']||{};
+    const periodValue=Number(period.mean_bq_m3), currentValue=Number(measurement.bq_m3);
+    const stableBasis=Boolean(period.available)&&Number.isFinite(periodValue);
+    const value=stableBasis?periodValue:currentValue;
     const warning=Number(settings.warning_threshold_bq_m3);
     const danger=Number(settings.danger_threshold_bq_m3);
-    const available=Boolean(measurement.available)&&Number.isFinite(value);
+    const available=(stableBasis||Boolean(measurement.available))&&Number.isFinite(value);
     let level='neutral';
     if(available&&Number.isFinite(warning)&&Number.isFinite(danger)) level=value>=danger?'danger':value>=warning?'warning':'normal';
 
@@ -137,7 +185,17 @@
     const badge=$('radonTrafficStatus');
     badge.className=`badge ${level}`;
     badge.textContent=label;
-    $('radonTrafficValue').textContent=available?`${tr('radon_traffic_current')}: ${radon(value)}`:tr('radon_traffic_unavailable');
+    $('radonTrafficValue').textContent=available
+      ? `${tr(stableBasis?'radon_traffic_average_24h':'radon_traffic_current')}: ${radon(value)}`
+      : tr('radon_traffic_unavailable');
+    if(stableBasis) {
+      $('radonTrafficBasis').textContent=`${tr('radon_traffic_basis')}: ${tr('basis_24h_average')} · ${tr('coverage')}: ${fmtNumber(period.coverage_percent,0)} %`;
+    } else if(available) {
+      const coverage=Number.isFinite(Number(period.coverage_percent))?` · ${tr('coverage')}: ${fmtNumber(period.coverage_percent,0)} %`:'';
+      $('radonTrafficBasis').textContent=`${tr('radon_traffic_basis')}: ${tr('basis_last_hour')} · ${tr('provisional')}${coverage}`;
+    } else {
+      $('radonTrafficBasis').textContent=tr('not_available');
+    }
 
     if(Number.isFinite(warning)&&Number.isFinite(danger)) {
       const decimals=unit()==='pCi/L'?3:1;
@@ -146,6 +204,13 @@
     } else {
       $('radonTrafficThresholds').textContent=tr('not_available');
     }
+  }
+
+  function renderOverviewSelectionSummary() {
+    const target=$('overviewSelectionSummary');
+    if(!target) return;
+    const label=id=>{const el=$(id);return el?.selectedOptions?.[0]?.textContent?.trim()||tr('not_available');};
+    target.textContent=`${label('overviewDevice')} · ${label('overviewLocation')} · ${label('overviewCampaign')}`;
   }
 
   function renderState() {
@@ -162,17 +227,20 @@
     renderAverage('metric24','avg24','coverage24','24h');
     renderAverage('metric7d','avg7d','coverage7d','7d');
     renderAverage('metric30d','avg30d','coverage30d','30d');
-    const all=state.statistics?.all||{};
-    $('avgAll').textContent=all.available?radon(all.mean_bq_m3):tr('not_yet_calculable');
-    $('rangeAll').textContent=all.available?`${tr('minimum')}: ${radon(all.minimum_bq_m3)} · ${tr('maximum')}: ${radon(all.maximum_bq_m3)}`:tr('no_data');
+    const peak24=state.statistics?.['24h']||{};
+    const peakValue=peak24.observed_maximum_bq_m3??peak24.maximum_bq_m3;
+    const peakAvailable=peakValue!==null&&peakValue!==undefined&&Number.isFinite(Number(peakValue));
+    $('metricPeak24').classList.toggle('unavailable',!peakAvailable);
+    $('peak24').textContent=peakAvailable?radon(peakValue):tr('not_yet_calculable');
+    $('peak24Time').textContent=peakAvailable?`${tr('measured_at')}: ${fmtDate(peak24.observed_maximum_at||peak24.period_end)} · ${tr('coverage')}: ${fmtNumber(peak24.coverage_percent||0,0)} %`:periodReason(peak24);
     $('overviewDeviceStatus').textContent=connected?tr('connected'):tr('disconnected');
     $('overviewMqttStatus').textContent=state.mqtt?.connected?tr('online'):tr('offline');
     $('overviewLastUpdate').textContent=fmtDate(m.completed_at);
-    $('overviewDatabaseStatus').textContent=`${fmtInteger(state.database?.sample_count||0)} ${tr('hours_short')} · ${fmtBytes(state.database?.size_bytes||0)}`;
+    $('overviewDatabaseStatus').textContent=`${fmtInteger(state.database?.sample_count||0)} / ${fmtInteger(state.database?.total_sample_count||state.database?.sample_count||0)} ${tr('hours_short')} · ${fmtBytes(state.database?.size_bytes||0)}`;
     const q=state.statistics?.['30d']?.quality||state.statistics?.all?.quality||'insufficient';
     const qBadge=$('qualityBadge');qBadge.className=`badge ${q}`;qBadge.textContent=tr(`quality_${q}`);
     $('overviewCoverage').textContent=`${fmtNumber(state.statistics?.['30d']?.coverage_percent||0,0)} %`;
-    renderHomeAssistantLocation(); renderRadonTraffic(); renderFacts(); renderSettings(); renderOverviewChart();
+    renderHomeAssistantLocation(); renderRadonTraffic(); renderOverviewSelectionSummary(); renderFacts(); renderSettings(); renderOverviewChart();
     $('manualLink').href=`docs/user-manual.pdf?lang=${boot.locale}`; $('protocolLink').href=`docs/protocol-reference.pdf?lang=${boot.locale}`;
   }
 
@@ -192,17 +260,31 @@
       [tr('settings_group_statistics'),[[tr('warning_threshold'),`${s.warning_threshold_bq_m3} Bq/m³`],[tr('danger_threshold'),`${s.danger_threshold_bq_m3} Bq/m³`],[tr('minimum_coverage'),`${s.minimum_data_coverage_percent} %`],[tr('backfill'),bool(s.backfill_history)],[tr('retention'),`${s.history_retention_days} ${tr('days')}`]]],
       [tr('settings_group_worldmap'),[[tr('gmcmap_enabled'),bool(s.gmcmap_enabled)],[tr('gmcmap_auto_upload'),bool(s.gmcmap_auto_upload)],[tr('gmcmap_upload_interval_minutes'),`${s.gmcmap_upload_interval_minutes||'–'} min`],[tr('gmcmap_account_id'),s.gmcmap_account_id_masked||tr('not_set')],[tr('gmcmap_device_id'),s.gmcmap_device_id_masked||tr('not_set')]]],
       [tr('settings_group_reports'),[[tr('report_author'),s.report_author||tr('not_set')],[tr('report_organisation'),s.report_organisation||tr('not_set')]]],
-      [tr('settings_group_data'),[[tr('data_management'),bool(s.data_management_enabled)],[tr('admin_token_status'),s.homeassistant_access_token_configured?tr('configured_securely'):tr('not_configured')]]],
+      [tr('settings_group_data'),[[tr('location_display_mode'),tr(`location_display_${s.location_display_mode||'full'}`)],[tr('data_management'),bool(s.data_management_enabled)],[tr('admin_token_status'),s.homeassistant_access_token_configured?tr('configured_securely'):tr('not_configured')]]],
       [tr('settings_group_diagnostics'),[[tr('diagnostic_logging'),bool(s.diagnostic_logging)],[tr('analysis_timezone'),s.analysis_timezone||tr('automatic')]]]
     ];
     $('settingsGrid').innerHTML=groups.map(([title,rows],index)=>`<section class="settings-group panel" aria-labelledby="settings-group-${index}"><div class="settings-group-heading"><h3 id="settings-group-${index}">${escapeHtml(title)}</h3>${title===tr('settings_group_data')?`<p>${escapeHtml(tr('security_note'))}</p>`:''}</div><div class="settings-grid">${rows.map(([a,b])=>`<div class="setting-row"><span>${escapeHtml(a)}</span><strong>${escapeHtml(b??tr('not_available'))}</strong></div>`).join('')}</div></section>`).join('');
   }
 
+  function eventsForOverview() {
+    const locationId=selectedValue('overviewLocation');
+    const deviceId=selectedValue('overviewDevice');
+    const campaignId=selectedValue('overviewCampaign');
+    const sessions=new Map((catalog.sessions||[]).map(session=>[String(session.id),session]));
+    return (catalog.events||[]).filter(event=>{
+      if(locationId && String(event.location_id||'')!==locationId) return false;
+      const session=event.session_id!==null&&event.session_id!==undefined?sessions.get(String(event.session_id)):null;
+      if(deviceId && session?.device_id && String(session.device_id)!==deviceId) return false;
+      if(campaignId && session?.campaign_id && String(session.campaign_id)!==campaignId) return false;
+      return true;
+    });
+  }
+
   function renderOverviewChart() {
-    let rows=[...records].sort((a,b)=>new Date(a.completed_at)-new Date(b.completed_at));
+    let rows=[...overviewRecords].sort((a,b)=>new Date(a.completed_at)-new Date(b.completed_at));
     if(rows.length&&chartDays>0){const end=new Date(rows[rows.length-1].completed_at).getTime();const cutoff=end-chartDays*86400000;rows=rows.filter(r=>new Date(r.completed_at).getTime()>=cutoff);}
     $('chartSubtitle').textContent=`${rows.length} ${tr('samples')} · ${rows.length?`${fmtDate(rows[0].completed_at)} – ${fmtDate(rows[rows.length-1].completed_at)}`:'–'}`;
-    renderLineChart($('chart'),rows,{moving:false});
+    renderLineChart($('chart'),rows,{moving:false,events:eventsForOverview()});
   }
 
   function splitSegments(rows) {
@@ -228,9 +310,11 @@
     const thresholds=[[warning,'threshold-warning'],[danger,'threshold-danger']].filter(([v])=>v<=maxV).map(([v,c])=>`<line class="${c}" x1="${padL}" y1="${y(v)}" x2="${width-padR}" y2="${y(v)}"/>`).join('');
     const segmentSvg=splitSegments(chartRows).map(segment=>{const points=segment.map(r=>`${x(new Date(r.completed_at).getTime()).toFixed(1)},${y(Number(r.chart_value)).toFixed(1)}`).join(' ');return `<polyline class="line" points="${points}"/>`;}).join('');
     let moving='';if(options.moving){const avgs=movingAverage(chartRows,Math.min(24,chartRows.length));const points=chartRows.map((r,i)=>avgs[i]===null?null:`${x(times[i]).toFixed(1)},${y(avgs[i]).toFixed(1)}`).filter(Boolean).join(' ');moving=`<polyline class="moving-line" points="${points}"/>`;}
+    const eventRows=(options.events||[]).map(event=>({...event,event_time:new Date(event.occurred_at).getTime()})).filter(event=>Number.isFinite(event.event_time)&&event.event_time>=minT&&event.event_time<=maxT).slice(0,80);
+    const eventMarkers=eventRows.map(event=>{const xx=x(event.event_time);const title=[tr(`event_${event.event_type}`)||event.event_type,event.title,event.location_name,event.notes].filter(Boolean).join(' · ');return `<g><line class="event-marker" x1="${xx.toFixed(1)}" y1="${padT}" x2="${xx.toFixed(1)}" y2="${height-padB}"/><circle class="event-marker-dot" cx="${xx.toFixed(1)}" cy="${padT+7}" r="4"><title>${escapeHtml(fmtDate(event.occurred_at))}: ${escapeHtml(title)}</title></circle></g>`;}).join('');
     const circles=chartRows.length<=180?chartRows.map((r,i)=>`<circle class="point" cx="${x(times[i])}" cy="${y(values[i])}" r="2.8"><title>${escapeHtml(fmtDate(r.completed_at))}: ${escapeHtml(radon(r.bq_m3))}</title></circle>`).join(''):'';
     const start=fmtDateOnly(rows[0].completed_at),end=fmtDateOnly(rows[rows.length-1].completed_at);
-    element.innerHTML=`<svg viewBox="0 0 ${width} ${height}" role="img"><defs><linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f47b20" stop-opacity=".22"/><stop offset="1" stop-color="#f47b20" stop-opacity="0"/></linearGradient></defs>${grids}${thresholds}${segmentSvg}${moving}${circles}<text x="${padL}" y="${height-8}">${escapeHtml(start)}</text><text x="${width-padR}" y="${height-8}" text-anchor="end">${escapeHtml(end)}</text></svg>`;
+    element.innerHTML=`<svg viewBox="0 0 ${width} ${height}" role="img"><defs><linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f47b20" stop-opacity=".22"/><stop offset="1" stop-color="#f47b20" stop-opacity="0"/></linearGradient></defs>${grids}${thresholds}${segmentSvg}${moving}${eventMarkers}${circles}<text x="${padL}" y="${height-8}">${escapeHtml(start)}</text><text x="${width-padR}" y="${height-8}" text-anchor="end">${escapeHtml(end)}</text></svg>`;
   }
 
   function renderHistogram(element,histogram) {
@@ -255,8 +339,18 @@
     catch(err){toast(err.message,true);} finally {$('analysisApply').disabled=false;}
   }
 
+  function analysisNarrative(statistics, thresholds) {
+    if(!statistics?.samples) return tr('analysis_summary_no_data');
+    const slope=Number(statistics.slope_bq_m3_per_day);
+    const spread=Number(statistics.standard_deviation_bq_m3||0);
+    const stableLimit=Math.max(0.25,spread*0.03);
+    const trendKey=!Number.isFinite(slope)||Math.abs(slope)<=stableLimit?'analysis_trend_stable':slope>0?'analysis_trend_rising':'analysis_trend_falling';
+    return `${tr('analysis_summary_result')} ${tr(trendKey)} ${tr('analysis_summary_warning')} ${fmtNumber(thresholds.warning?.percent||0,1)} %. ${tr('analysis_summary_danger')} ${fmtNumber(thresholds.danger?.percent||0,1)} %. ${tr('analysis_summary_coverage')} ${fmtNumber(statistics.coverage_percent||0,1)} %.`;
+  }
+
   function renderAnalysis() {
     if(!analysisData)return;const s=analysisData.statistics||{},thresholds=analysisData.thresholds||{};
+    $('analysisSummaryText').textContent=analysisNarrative(s,thresholds);
     $('analysisMean').textContent=radon(s.mean_bq_m3);$('analysisCoverage').textContent=`${tr('coverage')}: ${fmtNumber(s.coverage_percent,1)} %`;
     $('analysisMedian').textContent=radon(s.median_bq_m3);$('analysisSamples').textContent=`${fmtInteger(s.samples)} / ${fmtInteger(s.expected_samples)} ${tr('samples')}`;
     $('analysisP95').textContent=radon(s.p95_bq_m3);$('analysisStddev').textContent=`σ ${radon(s.standard_deviation_bq_m3)}`;
@@ -278,7 +372,7 @@
     $('sensitivityFacts').innerHTML=[fact(tr('mean'),radon(sens.mean_bq_m3)),fact(tr('median'),radon(sens.median_bq_m3)),fact(tr('trimmed_mean_10'),radon(sens.trimmed_mean_10_bq_m3)),fact(tr('mean_trimmed_difference'),sens.difference_mean_vs_trimmed_percent===null?'–':`${fmtNumber(sens.difference_mean_vs_trimmed_percent,1)} %`)].join('');
     const notice=$('analysisNotice');notice.className=`notice ${s.sufficient?'hidden':'warning'}`;notice.textContent=s.samples?`${tr('analysis_limited')}: ${fmtNumber(s.coverage_percent,1)} %`:tr('no_data');
     $('analysisPeriodLabel').textContent=`${fmtDate(s.period_start)} – ${fmtDate(s.period_end)}`;
-    renderLineChart($('analysisChart'),analysisData.records||[],{moving:true});renderHistogram($('histogramChart'),analysisData.histogram||[]);renderHeatmap();renderProfiles();renderDaily();
+    renderLineChart($('analysisChart'),analysisData.records||[],{moving:true,events:analysisData.events||[]});renderHistogram($('histogramChart'),analysisData.histogram||[]);renderHeatmap();renderProfiles();renderDaily();
     $('analysisQualityFacts').innerHTML=[fact(tr('quality'),tr(`quality_${s.quality}`)),fact(tr('expected_samples'),fmtInteger(s.expected_samples)),fact(tr('missing_samples'),fmtInteger(s.missing_samples)),fact(tr('longest_gap'),`${fmtNumber(s.longest_gap_hours,1)} h`),fact(tr('data_span'),`${fmtNumber(s.data_span_hours,1)} h`),fact(tr('exposure_index'),`${fmtNumber(s.exposure_index_bq_h_m3,1)} Bq·h/m³`),fact(tr('weekday_mean'),radon(s.weekday_mean_bq_m3)),fact(tr('weekend_mean'),radon(s.weekend_mean_bq_m3)),fact(tr('day_mean'),radon(s.day_mean_bq_m3)),fact(tr('night_mean'),radon(s.night_mean_bq_m3))].join('');
   }
 
@@ -298,20 +392,36 @@
   }
 
   function options(items,valueKey,labelFn,allLabel) {return `${allLabel!==undefined?`<option value="">${escapeHtml(allLabel)}</option>`:''}${items.map(item=>`<option value="${escapeHtml(item[valueKey])}">${escapeHtml(labelFn(item))}</option>`).join('')}`;}
+  function renderOverviewCampaignOptions(preferredValue=null) {
+    const element=$('overviewCampaign');
+    if(!element) return;
+    const deviceId=selectedValue('overviewDevice');
+    const campaigns=(catalog.campaigns||[]).filter(c=>!deviceId||!c.device_id||String(c.device_id)===deviceId);
+    const old=element.value;
+    element.innerHTML=options(campaigns,'id',c=>`#${c.id} · ${fmtDate(c.started_at)} · ${c.sample_count} ${tr('samples')}`,tr('all_campaigns'));
+    const valid=value=>value!==null&&value!==undefined&&Array.from(element.options).some(option=>option.value===String(value));
+    if(valid(preferredValue)) element.value=String(preferredValue);
+    else if(valid(old)) element.value=old;
+    else {
+      const active=campaigns.find(c=>Boolean(c.active))||campaigns[0];
+      element.value=active?String(active.id):'';
+    }
+  }
+
   function renderCatalog() {
     const updateSelect=(id,html,restoreValue=true,preferredValue=null)=>{
       const element=$(id);
       if(!element) return;
       const old=element.value;
       element.innerHTML=html;
-      if(restoreValue && old) element.value=old;
-      if(preferredValue!==null && (!element.value || !Array.from(element.options).some(option=>option.value===element.value))) {
-        element.value=String(preferredValue);
-      }
+      const valid=value=>value!==null&&value!==undefined&&Array.from(element.options).some(option=>option.value===String(value));
+      if(restoreValue&&valid(old)) element.value=old;
+      else if(valid(preferredValue)) element.value=String(preferredValue);
     };
-    const locOpts=options(catalog.locations,'id',l=>[l.building,l.floor,l.name].filter(Boolean).join(' · '),tr('all_sites'));
+    const locationLabel=l=>[l.building,l.floor,l.name].filter(Boolean).join(' · ');
+    const locOpts=options(catalog.locations,'id',locationLabel,tr('all_sites'));
     ['analysisLocation','historyLocation','reportLocation','eventLocation'].forEach(id=>updateSelect(id,locOpts));
-    ['assignLocation'].forEach(id=>updateSelect(id,options(catalog.locations,'id',l=>[l.building,l.floor,l.name].filter(Boolean).join(' · '))));
+    ['assignLocation'].forEach(id=>updateSelect(id,options(catalog.locations,'id',locationLabel)));
     const deviceLabel=d=>[d.model,d.serial_number||d.device_id].filter(Boolean).join(' · ');
     const allDeviceOpts=options(catalog.devices,'device_id',deviceLabel,tr('all_devices_combined'));
     ['analysisDevice','historyDevice'].forEach(id=>{
@@ -329,7 +439,29 @@
     });
     const campOpts=options(catalog.campaigns,'id',c=>`#${c.id} · ${fmtDate(c.started_at)} · ${c.sample_count} ${tr('samples')}`,tr('all_campaigns'));
     ['analysisCampaign','historyCampaign'].forEach(id=>updateSelect(id,campOpts));
+
+    const overviewDevice=$('overviewDevice');
+    const overviewLocation=$('overviewLocation');
+    if(overviewDevice) {
+      overviewDevice.innerHTML=allDeviceOpts;
+      const stored=storageGet('local',overviewStorageKeys.device);
+      const fallback=state?.measurement?.device_id??catalog.devices[0]?.device_id??'';
+      const preferred=stored!==null?stored:fallback;
+      if(Array.from(overviewDevice.options).some(option=>option.value===String(preferred))) overviewDevice.value=String(preferred);
+    }
+    if(overviewLocation) {
+      overviewLocation.innerHTML=locOpts;
+      const stored=storageGet('local',overviewStorageKeys.location);
+      const fallback=state?.measurement?.location_id??'';
+      const preferred=stored!==null?stored:fallback;
+      if(Array.from(overviewLocation.options).some(option=>option.value===String(preferred))) overviewLocation.value=String(preferred);
+    }
+    const storedCampaign=storageGet('local',overviewStorageKeys.campaign);
+    const campaignFallback=state?.measurement?.campaign_id??null;
+    renderOverviewCampaignOptions(storedCampaign!==null?storedCampaign:campaignFallback);
+
     catalogInitialised=true;
+    renderOverviewSelectionSummary();
     if($('locationCards')) renderLocations();
     if($('eventList')) renderEvents();
     if($('reportList')) renderReports();
@@ -348,8 +480,24 @@
   function renderReports() {$('reportCount').textContent=catalog.reports.length;const wrap=$('reportList');if(!catalog.reports.length){wrap.innerHTML=`<div class="empty">${tr('no_reports')}</div>`;return;}wrap.innerHTML=catalog.reports.map(r=>`<div class="report-item"><small>${fmtDate(r.created_at)}</small><div><strong>${escapeHtml(r.title)}</strong><small>${escapeHtml(r.location_name||tr('all_sites'))} · ${escapeHtml(r.device_model||r.device_id||tr('not_available'))} · ${escapeHtml(r.profile)}</small></div><div><strong>${r.mean_bq_m3===null||r.mean_bq_m3===undefined?'–':radon(r.mean_bq_m3)}</strong><small>${fmtInteger(r.samples)} ${tr('samples')} · ${fmtNumber(r.coverage_percent,0)} %</small></div><div class="report-actions"><a class="mini-button" href="reports/${encodeURIComponent(r.report_id)}" target="_blank">PDF</a><button class="mini-button" data-delete-report="${escapeHtml(r.report_id)}">${tr('delete')}</button></div></div>`).join('');wrap.querySelectorAll('[data-delete-report]').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm(tr('confirm_delete_report')))return;try{await api(`api/reports/${encodeURIComponent(btn.dataset.deleteReport)}`,{method:'DELETE'});toast(tr('deleted'));await reloadCatalog();}catch(err){toast(err.message,true);}}));}
 
   function historyQuery() {const params=new URLSearchParams({limit:'10000'});const value=id=>$(id)?.value||'';const start=toIso(value('historyStart')),end=toIso(value('historyEnd'));if(start)params.set('start',start);if(end)params.set('end',end);if(value('historyDevice'))params.set('device_id',value('historyDevice'));if(value('historyLocation'))params.set('location_id',value('historyLocation'));if(value('historyCampaign'))params.set('campaign_id',value('historyCampaign'));return params;}
-  async function loadHistoryFiltered() {try{const payload=await api(`api/history?${historyQuery()}`);records=payload.items||[];renderHistory();renderOverviewChart();const exportParams=historyQuery();exportParams.delete('limit');$('historyCsv').href=`export/history.csv?${exportParams}`;}catch(err){toast(err.message,true);}}
-  function renderHistory() {const body=$('historyBody');$('historySummary').textContent=`${fmtInteger(records.length)} ${tr('samples')}`;if(!records.length){body.innerHTML=`<tr><td colspan="7" class="empty-cell">${tr('history_empty')}</td></tr>`;return;}body.innerHTML=records.slice(0,1000).map(row=>`<tr><td>${fmtDate(row.completed_at)}</td><td>${radon(row.bq_m3)}</td><td>${row.raw_cph}</td><td>${escapeHtml([row.model,row.serial_number||row.device_id].filter(Boolean).join(' · '))}</td><td>${escapeHtml(row.location_name||tr('not_assigned'))}</td><td>#${row.campaign_id}</td><td>${tr('source_spir')}</td></tr>`).join('');}
+  async function loadOverviewSelection(showError=true) {
+    const button=$('overviewApply'); if(button) button.disabled=true;
+    try {
+      persistOverviewSelection();
+      const [statePayload,historyPayload]=await Promise.all([
+        api(`api/state?${overviewQuery()}`),
+        api(`api/history?${overviewQuery({history:true})}`),
+      ]);
+      state=statePayload;
+      overviewRecords=historyPayload.items||[];
+      renderState();
+      const ha=state.homeassistant||{};const haStatus=$('haStatus');
+      if(haStatus)haStatus.textContent=ha.connected?`${tr('connected')} · ${ha.location_name||''} · ${ha.version||''}`:(ha.error||tr('offline'));
+    } catch(err) {if(showError) toast(err.message,true); else console.warn('Overview refresh failed',err);}
+    finally {if(button) button.disabled=false;}
+  }
+  async function loadHistoryFiltered(showError=true) {try{const payload=await api(`api/history?${historyQuery()}`);historyRecords=payload.items||[];renderHistory();const exportParams=historyQuery();exportParams.delete('limit');$('historyCsv').href=`export/history.csv?${exportParams}`;}catch(err){if(showError)toast(err.message,true);else console.warn('History refresh failed',err);}}
+  function renderHistory() {const body=$('historyBody');$('historySummary').textContent=`${fmtInteger(historyRecords.length)} ${tr('samples')}`;if(!historyRecords.length){body.innerHTML=`<tr><td colspan="7" class="empty-cell">${tr('history_empty')}</td></tr>`;return;}body.innerHTML=historyRecords.slice(0,1000).map(row=>`<tr><td>${fmtDate(row.completed_at)}</td><td>${radon(row.bq_m3)}</td><td>${row.raw_cph}</td><td>${escapeHtml([row.model,row.serial_number||row.device_id].filter(Boolean).join(' · '))}</td><td>${escapeHtml(row.location_name||tr('not_assigned'))}</td><td>#${row.campaign_id}</td><td>${tr('source_spir')}</td></tr>`).join('');}
 
   async function loadGmcmap() {
     try {
@@ -367,7 +515,8 @@
 
   async function reloadCatalog() {catalog=await api('api/catalog');renderCatalog();}
   async function loadStateFast() {
-    const refreshed=await api('api/state');
+    const suffix=catalogInitialised?`?${overviewQuery()}`:'';
+    const refreshed=await api(`api/state${suffix}`);
     state=refreshed;
     renderState();
     const ha=state.homeassistant||{};
@@ -380,39 +529,24 @@
     loadInProgress=true;
     const refreshButton=$('refreshButton'); if(refreshButton) refreshButton.disabled=true;
     try {
-      // Load and render the compact state first. Slow history, catalogue or analysis
-      // requests must never keep the complete dashboard in its loading state.
-      const s=await api('api/state');
+      const suffix=catalogInitialised?`?${overviewQuery()}`:'';
+      const s=await api(`api/state${suffix}`);
       state=s;
       renderState();
       const ha=state.homeassistant||{};
       $('haStatus').textContent=ha.connected?`${tr('connected')} · ${ha.location_name||''} · ${ha.version||''}`:(ha.error||tr('offline'));
       initialLoadComplete=true;
 
-      // If an Ingress iframe survived an add-on update, reload once so HTML,
-      // JavaScript and backend use the same release.
       if(state.app?.version && boot.version && state.app.version!==boot.version && !storageGet('session','radonVersionReloaded')) {
         storageSet('session','radonVersionReloaded','1');
         location.reload();
         return;
       }
 
-      const results=await Promise.allSettled([
-        api('api/catalog'),
-        api(`api/history?${historyQuery()}`),
-      ]);
-      if(results[0].status==='fulfilled') {catalog=results[0].value;renderCatalog();}
-      else console.warn('Catalogue refresh failed',results[0].reason);
-      if(results[1].status==='fulfilled') {
-        records=results[1].value.items||[];
-        renderHistory();
-        renderOverviewChart();
-        const exportParams=historyQuery();exportParams.delete('limit');$('historyCsv').href=`export/history.csv?${exportParams}`;
-      } else console.warn('History refresh failed',results[1].reason);
+      try {catalog=await api('api/catalog');renderCatalog();}
+      catch(err) {console.warn('Catalogue refresh failed',err);}
+      await Promise.allSettled([loadOverviewSelection(false),loadHistoryFiltered(false)]);
     } catch(err) {
-      // Only a failed state request means that the app/device status is unknown.
-      // Rendering or secondary catalogue/history errors must not overwrite a
-      // successfully received connection state with “Not connected”.
       if(!state) setConnection(false);
       toast(err.message,true);
       console.error(err);
@@ -430,6 +564,10 @@
     $('refreshButton')?.addEventListener('click',loadAll);
     $('languageSelect').addEventListener('change',event=>{const url=new URL(location.href);url.searchParams.set('lang',event.target.value);location.href=url.toString();});
     $$('#rangeSwitch button').forEach(button=>button.addEventListener('click',()=>{chartDays=Number(button.dataset.days);$$('#rangeSwitch button').forEach(x=>x.classList.toggle('active',x===button));renderOverviewChart();}));
+    $('overviewApply')?.addEventListener('click',()=>loadOverviewSelection(true));
+    $('overviewDevice')?.addEventListener('change',()=>{renderOverviewCampaignOptions();renderOverviewSelectionSummary();});
+    $('overviewLocation')?.addEventListener('change',renderOverviewSelectionSummary);
+    $('overviewCampaign')?.addEventListener('change',renderOverviewSelectionSummary);
     $('analysisApply')?.addEventListener('click',loadAnalysis);$('analysisPreset')?.addEventListener('change',()=>{const custom=$('analysisPreset')?.value==='custom';if($('analysisStart'))$('analysisStart').disabled=!custom;if($('analysisEnd'))$('analysisEnd').disabled=!custom;});
     $('analysisCsvButton').addEventListener('click',()=>{const params=analysisQuery();location.href=`export/history.csv?${params}`;});
     $('locationForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;const payload={id:$('locationId').value||null,name:$('locationName').value,building:$('locationBuilding').value,floor:$('locationFloor').value,room_type:$('locationRoomType').value,map_id:null,x_percent:null,y_percent:null,measurement_height_m:$('locationHeight').value||null,notes:$('locationNotes').value,active:true};try{await api('api/locations',{method:'POST',body:payload});toast(tr('saved'));form.reset();$('locationId').value='';await reloadCatalog();}catch(err){toast(err.message,true);}});
@@ -445,7 +583,8 @@
   }
 
   function resetClientData() {
-    records=[];
+    overviewRecords=[];
+    historyRecords=[];
     catalog={locations:[],sessions:[],campaigns:[],devices:[],events:[],reports:[]};
     analysisData=null;
     catalogInitialised=false;

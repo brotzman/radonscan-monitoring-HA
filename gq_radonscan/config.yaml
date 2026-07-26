@@ -1,5 +1,5 @@
 name: Radon Monitoring
-version: 5.1.0
+version: 5.2.0
 slug: gq_radonscan
 description: >-
   Local monitoring for GQ RadonScan devices with read-only SPIR history,
@@ -49,6 +49,7 @@ options:
   gmcmap_max_age_hours: 72
   gmcmap_retry_limit: 8
   analysis_timezone: auto
+  location_display_mode: full
   data_management_enabled: true
   homeassistant_access_token: ""
   diagnostic_logging: false
@@ -79,6 +80,7 @@ schema:
   gmcmap_max_age_hours: int(1,8760)
   gmcmap_retry_limit: int(1,20)
   analysis_timezone: str
+  location_display_mode: list(full|reduced|hidden)
   data_management_enabled: bool
   homeassistant_access_token: password
   diagnostic_logging: bool

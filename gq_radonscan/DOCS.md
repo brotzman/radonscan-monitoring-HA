@@ -1,4 +1,4 @@
-# Radon Monitoring 5.1.0 - App documentation
+# Radon Monitoring 5.2.0 - App documentation
 
 ## Purpose
 
@@ -20,25 +20,43 @@ Only completed hours are imported. A newly connected device may therefore remain
 
 ### Overview
 
-Shows the latest completed value, age, measurement site, raw CPH, stored sample count, device/MQTT state and 24-hour, 7-day and 30-day summaries. A period card shows a reason instead of a number when duration or coverage is insufficient.
+The context bar selects a **device**, **measurement site** and **campaign**. The selection is retained locally in the browser. Applying it reloads the latest measurement, 24-hour, 7-day and 30-day summaries, selected sample count, 24-hour peak and chart from the same filtered record set. This avoids combining values from different devices or rooms.
 
-The Home Assistant location card reads the location name or locally supplied address, latitude, longitude, elevation, country and time zone from the local Home Assistant Core configuration. It performs no reverse geocoding and sends no location data to an external geocoding service. If Home Assistant does not expose a postal address, the configured location name is shown instead. The Radon traffic light classifies the latest completed hourly measurement using the warning and danger thresholds configured in Settings.
+The Radon traffic light uses the 24-hour mean when the period has sufficient duration and coverage. Before that condition is met, it uses the latest completed hourly value and labels the result as provisional. The exact assessment basis, data coverage and configured warning/danger thresholds are shown with the signal.
+
+The fourth overview metric is the maximum observed value in the latest 24-hour window, with measurement time and coverage. Documented events are drawn as vertical markers in the chart. Gaps longer than 90 minutes split the line so missing data is not visually interpolated.
+
+The Home Assistant location card reads only local Core configuration values. In full mode it shows the address, or the configured location name when no address is available, plus coordinates, elevation, country and time zone. Coordinates include degrees and cardinal directions, for example `51,60176° N, 7,45410° E`. No reverse geocoding is performed and no location values are sent to an external geocoding service.
+
+`location_display_mode` controls disclosure:
+
+- `full`: address/location name and precise coordinates
+- `reduced`: location name and coordinates rounded to two decimals
+- `hidden`: card omitted from the Overview
 
 ### Analysis
 
-Contains basic and advanced statistics, distribution and trend diagnostics, daily and weekday profiles, rolling robust values, threshold events and a weekly heatmap. Missing values are not imputed and flagged observations are not silently deleted.
+Analysis starts with a plain-language summary of trend direction, warning-threshold share, danger-threshold share and data coverage. Basic statistics remain immediately visible. Scientific quality, counting uncertainty, effective sample size, confidence intervals, autocorrelation, distribution diagnostics and sensitivity results are grouped under a collapsed advanced section.
+
+The analysis time series includes documented events and visible gaps. Missing values are not imputed and flagged observations are not silently deleted. Statistical significance does not establish causality; event notes and measurement conditions still require professional interpretation.
+
+### Measurement sites & events
+
+This dedicated view contains sites, device-to-site assignments/sessions and event documentation. It can record room, building, floor, placement height, ventilation, interventions, building work, outages and device changes without altering the original measurement values.
 
 ### Devices & System
 
-Shows device, protocol, service and database status in one consolidated view. Configured thresholds and other operating parameters are shown under Settings. The former Expert view was removed completely from the interface and sidebar in version 5.1.0.
+Shows device, protocol, service and database status in one consolidated view. Configured thresholds and other operating parameters are shown under Settings. The former Expert view remains removed because its operational data is available here and under Settings.
 
 ### GQ Radiation World Map
 
-Uploads are optional and disabled by default. The persistent queue retries temporary failures and prevents duplicate publication. The app sends the radon value and GQ identifiers required by the configured protocol; public location settings are managed in the GQ account.
+Uploads are optional and disabled by default. When `gmcmap_enabled` is false, the view is also hidden from the sidebar. When enabled, the view contains only external upload status, queue and history functions; local sites and events remain in their own view.
 
-### Measurement sites and events
+The persistent queue retries temporary failures and prevents duplicate publication. The app sends the radon value and GQ identifiers required by the configured protocol. Public location settings are managed in the GQ account; the app does not transmit its Home Assistant coordinates through this feature.
 
-Sites, sessions and events are local metadata. They can document room, building, placement, ventilation, interventions and device changes without modifying the original measurement.
+### History
+
+History has independent filters and does not overwrite the selected Overview context. The CSV export uses the current History filters and includes all matching records, not only rows visible in the table.
 
 ### Reports
 
@@ -78,6 +96,10 @@ Use a dedicated long-lived Home Assistant token and remove it when Recorder main
 - `minimum_data_coverage_percent`
 - `analysis_timezone`
 
+### Privacy and location display
+
+- `location_display_mode`: `full`, `reduced` or `hidden`
+
 ### GQ Radiation World Map
 
 - `gmcmap_enabled`
@@ -102,6 +124,22 @@ Use a dedicated long-lived Home Assistant token and remove it when Recorder main
 - `language`
 
 ## Troubleshooting
+
+### Overview shows unexpected values
+
+Check the selected device, site and campaign in the Overview context bar, then press Apply. The selected count is shown before the total database count. History has separate filters and does not change the Overview selection.
+
+### Radon traffic light is marked provisional
+
+The selected records do not yet provide a complete 24-hour assessment with the configured minimum coverage. The latest completed hour is therefore used temporarily. The basis line shows the available coverage.
+
+### Location card is absent or less precise
+
+Review `location_display_mode`. In `hidden` mode the card is intentionally omitted; `reduced` mode uses the Home Assistant location name and rounds coordinates to two decimals. Home Assistant may not expose a postal address, in which case the location name is used.
+
+### GQ Radiation World Map is absent from the sidebar
+
+This is expected when `gmcmap_enabled` is false. Enable the function in the app options only when external publication is intended.
 
 ### Device not connected
 
@@ -135,6 +173,6 @@ From the repository root:
 python3 -m pytest
 ```
 
-Version 5.1.0 includes tests for Home Assistant location mapping, Radon traffic-light thresholds, removal of the Expert view, web assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
+Version 5.2.0 includes tests for filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, separation of local sites from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
 
 Real-device and real-Home-Assistant field testing remains necessary for USB hardware variations, Home Assistant upgrades and Recorder backends.

@@ -23,9 +23,30 @@ def _status(value: float | None, settings: Settings) -> str:
     return "normal"
 
 
-def build_state(storage: Storage, settings: Settings) -> dict[str, Any]:
-    latest = storage.latest()
-    current_device_id = str(latest.get("device_id")) if latest else None
+def build_state(
+    storage: Storage,
+    settings: Settings,
+    *,
+    device_id: str | None = None,
+    location_id: int | None = None,
+    campaign_id: int | None = None,
+    selection_explicit: bool = False,
+) -> dict[str, Any]:
+    if selection_explicit:
+        overview = storage.overview_selection(
+            minimum_coverage_percent=settings.minimum_data_coverage_percent,
+            device_id=device_id,
+            location_id=location_id,
+            campaign_id=campaign_id,
+        )
+        latest = overview.get("latest")
+        stats = overview.get("statistics") or {}
+        selected_sample_count = int(overview.get("sample_count") or 0)
+    else:
+        latest = storage.latest()
+        stats = None
+        selected_sample_count = None
+    current_device_id = str(latest.get("device_id")) if latest else device_id
     device = storage.device(current_device_id) or {}
     runtime = storage.runtime_all()
     connection = runtime.get("connection") or {
@@ -35,7 +56,8 @@ def build_state(storage: Storage, settings: Settings) -> dict[str, Any]:
     }
     protocol = runtime.get("protocol") or {}
     mqtt = runtime.get("mqtt") or {"connected": False}
-    stats = storage.stats(settings.minimum_data_coverage_percent, current_device_id)
+    if stats is None:
+        stats = storage.stats(settings.minimum_data_coverage_percent, current_device_id)
     data_summary = storage.data_summary()
 
     current_bq = float(latest["bq_m3"]) if latest else None
@@ -85,12 +107,13 @@ def build_state(storage: Storage, settings: Settings) -> dict[str, Any]:
             "location_name": latest.get("location_name") if latest else None,
             "session_id": latest.get("session_id") if latest else None,
             "session_title": latest.get("session_title") if latest else None,
+            "campaign_id": latest.get("campaign_id") if latest else campaign_id,
         },
         "statistics": {},
         "protocol": protocol,
         "database": {
             "path": str(storage.path),
-            "sample_count": storage.count(current_device_id),
+            "sample_count": selected_sample_count if selected_sample_count is not None else storage.count(current_device_id),
             "total_sample_count": storage.count(),
             "size_bytes": data_summary.get("database_size_bytes", 0),
             "first_measurement": data_summary.get("first_measurement"),
@@ -108,6 +131,12 @@ def build_state(storage: Storage, settings: Settings) -> dict[str, Any]:
             "devices": data_summary.get("devices", 0),
         },
         "settings": settings.public_dict(),
+        "selection": {
+            "explicit": selection_explicit,
+            "device_id": device_id,
+            "location_id": location_id,
+            "campaign_id": campaign_id,
+        },
     }
     for period, values in stats.items():
         mean = values.get("mean_bq_m3")

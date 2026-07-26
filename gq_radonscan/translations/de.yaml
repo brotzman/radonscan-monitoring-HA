@@ -96,3 +96,6 @@ configuration:
     name: Home-Assistant-Administratortoken
     description: Optionaler langlebiger Zugriffstoken eines Home-Assistant-Administrators.
       Er wird nur für die administratorgeschützte Löschung des Recorder-Verlaufs benötigt.
+  location_display_mode:
+    name: Standort-Datenschutzstufe
+    description: Legt fest, ob die Übersicht Adresse und genaue Koordinaten, nur Standortname und gerundete Koordinaten oder keine Standortkarte anzeigt.

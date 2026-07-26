@@ -19,8 +19,9 @@
       <nav class="side-nav" data-i18n-aria-label="main_navigation" aria-label="Main navigation">
         <button class="nav-item active" data-view="overview"><span class="nav-icon">⌂</span><span data-i18n="overview"></span></button>
         <button class="nav-item" data-view="analysis"><span class="nav-icon">⌁</span><span data-i18n="analysis"></span></button>
+        <button class="nav-item" data-view="sites"><span class="nav-icon">⌖</span><span data-i18n="sites_events_nav"></span></button>
         <div class="nav-separator"></div>
-        <button class="nav-item" data-view="map"><span class="nav-icon">◎</span><span data-i18n="gmcmap_nav"></span></button>
+        <button id="gmcmapNav" class="nav-item" data-view="map"><span class="nav-icon">◎</span><span data-i18n="gmcmap_nav"></span></button>
         <button class="nav-item" data-view="history"><span class="nav-icon">≋</span><span data-i18n="history"></span></button>
         <button class="nav-item" data-view="reports"><span class="nav-icon">▤</span><span data-i18n="reports"></span></button>
         <button id="dataManagementNav" class="nav-item" data-view="data"><span class="nav-icon">◫</span><span data-i18n="data_management"></span></button>
@@ -51,6 +52,17 @@
 
       <main id="mainContent" tabindex="-1">
         <section id="view-overview" class="view active">
+          <article class="panel filter-panel overview-filter-panel" aria-labelledby="overviewContextTitle">
+            <div class="panel-heading compact">
+              <div><span class="eyebrow" data-i18n="overview_context"></span><h2 id="overviewContextTitle" data-i18n="overview_selection"></h2><p id="overviewSelectionSummary" data-i18n="overview_selection_hint"></p></div>
+            </div>
+            <div class="filter-grid overview-filter-grid">
+              <label><span data-i18n="device"></span><select id="overviewDevice"></select></label>
+              <label><span data-i18n="measurement_site"></span><select id="overviewLocation"></select></label>
+              <label><span data-i18n="campaign"></span><select id="overviewCampaign"></select></label>
+              <button id="overviewApply" class="button primary align-end" data-i18n="apply_selection"></button>
+            </div>
+          </article>
           <div class="hero-grid">
             <article class="primary-card" id="currentCard">
               <div class="card-kicker"><span data-i18n="hourly_value"></span><span id="currentStatus" class="badge neutral" data-i18n="unknown"></span></div>
@@ -82,7 +94,7 @@
                   <h2 id="homeAssistantLocationTitle" data-i18n="ha_location_title"></h2>
                   <p id="homeAssistantLocationAddress" class="ha-location-address">–</p>
                   <p id="homeAssistantLocationDetails" class="ha-location-details">–</p>
-                  <p class="ha-location-privacy" data-i18n="ha_location_privacy"></p>
+                  <p class="ha-location-privacy"><span data-i18n="ha_location_privacy"></span> <span id="homeAssistantLocationPrivacyMode" class="privacy-mode-label"></span></p>
                 </div>
               </div>
             </article>
@@ -100,6 +112,7 @@
                 </div>
                 <div class="radon-traffic-copy">
                   <p id="radonTrafficValue" class="radon-traffic-value">–</p>
+                  <p id="radonTrafficBasis" class="radon-traffic-basis">–</p>
                   <p id="radonTrafficThresholds" class="radon-traffic-thresholds">–</p>
                   <p class="radon-traffic-hint" data-i18n="radon_traffic_hint"></p>
                 </div>
@@ -111,7 +124,7 @@
             <article class="metric-card" id="metric24"><span data-i18n="average_24h"></span><strong id="avg24">–</strong><small id="coverage24">–</small></article>
             <article class="metric-card" id="metric7d"><span data-i18n="average_7d"></span><strong id="avg7d">–</strong><small id="coverage7d">–</small></article>
             <article class="metric-card" id="metric30d"><span data-i18n="average_30d"></span><strong id="avg30d">–</strong><small id="coverage30d">–</small></article>
-            <article class="metric-card"><span data-i18n="average_all"></span><strong id="avgAll">–</strong><small id="rangeAll">–</small></article>
+            <article class="metric-card" id="metricPeak24"><span data-i18n="maximum_24h"></span><strong id="peak24">–</strong><small id="peak24Time">–</small></article>
           </div>
 
           <article class="panel chart-panel">
@@ -125,7 +138,7 @@
               </div>
             </div>
             <div id="chart" class="chart"><div class="empty" data-i18n="chart_empty"></div></div>
-            <div class="chart-legend"><span><i class="legend-line"></i><span data-i18n="hourly_measurement"></span></span><span><i class="legend-warning"></i><span data-i18n="warning_threshold"></span></span><span><i class="legend-danger"></i><span data-i18n="danger_threshold"></span></span></div>
+            <div class="chart-legend"><span><i class="legend-line"></i><span data-i18n="hourly_measurement"></span></span><span><i class="legend-warning"></i><span data-i18n="warning_threshold"></span></span><span><i class="legend-danger"></i><span data-i18n="danger_threshold"></span></span><span><i class="legend-event"></i><span data-i18n="documented_events"></span></span></div>
           </article>
         </section>
 
@@ -142,6 +155,7 @@
               <button id="analysisApply" class="button primary align-end" data-i18n="apply"></button>
             </div>
           </article>
+          <article id="analysisSummary" class="panel analysis-summary" aria-live="polite"><span class="eyebrow" data-i18n="analysis_summary"></span><p id="analysisSummaryText">–</p></article>
           <div class="analysis-level-heading"><h3 data-i18n="basic_statistics"></h3><p data-i18n="basic_statistics_hint"></p></div>
           <div class="analysis-metrics">
             <article class="metric-card"><span data-i18n="mean"></span><strong id="analysisMean">–</strong><small id="analysisCoverage">–</small></article>
@@ -150,27 +164,62 @@
             <article class="metric-card"><span data-i18n="trend"></span><strong id="analysisTrend">–</strong><small id="analysisR2">–</small></article>
             <article class="metric-card"><span data-i18n="above_warning"></span><strong id="analysisWarning">–</strong><small id="analysisWarningRun">–</small></article>
             <article class="metric-card"><span data-i18n="above_danger"></span><strong id="analysisDanger">–</strong><small id="analysisDangerRun">–</small></article>
-            <article class="metric-card"><span data-i18n="scientific_quality"></span><strong id="analysisScienceClass">–</strong><small id="analysisQcStatus">–</small></article>
-            <article class="metric-card"><span data-i18n="measurement_uncertainty"></span><strong id="analysisUncertainty">–</strong><small id="analysisUncertaintyNote">–</small></article>
-                      <article class="metric-card"><span data-i18n="effective_sample_size"></span><strong id="analysisEffectiveN">–</strong><small id="analysisCorrelation">–</small></article>
-            <article class="metric-card"><span data-i18n="confidence_interval"></span><strong id="analysisMeanCi">–</strong><small data-i18n="block_bootstrap"></small></article>
           </div>
           <div id="analysisNotice" class="notice hidden"></div>
           <div class="two-column wide-left">
-            <article class="panel"><div class="panel-heading"><h3 data-i18n="time_series"></h3><span id="analysisPeriodLabel" class="muted">–</span></div><div id="analysisChart" class="chart compact-chart"></div></article>
+            <article class="panel"><div class="panel-heading"><h3 data-i18n="time_series"></h3><span id="analysisPeriodLabel" class="muted">–</span></div><div id="analysisChart" class="chart compact-chart"></div><div class="chart-legend compact"><span><i class="legend-event"></i><span data-i18n="documented_events"></span></span></div></article>
             <article class="panel"><div class="panel-heading"><div><h3 data-i18n="distribution"></h3><p data-i18n="distribution_hint"></p></div></div><div id="histogramChart" class="chart compact-chart"></div></article>
           </div>
           <article class="panel"><div class="panel-heading"><div><h3 data-i18n="weekly_heatmap"></h3><p data-i18n="heatmap_hint"></p></div></div><div id="weeklyHeatmap" class="heatmap"></div></article>
-          <div class="analysis-level-heading advanced"><h3 data-i18n="advanced_statistics"></h3><p data-i18n="advanced_statistics_hint"></p></div>
-          <div class="two-column">
-            <article class="panel"><h3 data-i18n="time_patterns"></h3><div id="profileBars" class="profile-bars"></div></article>
-            <article class="panel"><h3 data-i18n="data_quality"></h3><dl id="analysisQualityFacts" class="facts-grid"></dl></article>
-            <article class="panel"><h3 data-i18n="scientific_interpretation"></h3><dl id="scientificFacts" class="facts-grid"></dl><div id="scientificNotice" class="notice info"></div></article>
-            <article class="panel"><h3 data-i18n="distribution_diagnostics"></h3><dl id="distributionFacts" class="facts-grid"></dl></article>
-            <article class="panel"><h3 data-i18n="threshold_events"></h3><dl id="thresholdEventFacts" class="facts-grid"></dl></article>
-            <article class="panel"><h3 data-i18n="sensitivity_analysis"></h3><dl id="sensitivityFacts" class="facts-grid"></dl></article>
-          </div>
+          <details id="analysisAdvanced" class="analysis-advanced">
+            <summary><span><strong data-i18n="advanced_statistics"></strong><small data-i18n="advanced_statistics_hint"></small></span><span class="details-chevron" aria-hidden="true">⌄</span></summary>
+            <div class="analysis-metrics advanced-metrics">
+              <article class="metric-card"><span data-i18n="scientific_quality"></span><strong id="analysisScienceClass">–</strong><small id="analysisQcStatus">–</small></article>
+              <article class="metric-card"><span data-i18n="measurement_uncertainty"></span><strong id="analysisUncertainty">–</strong><small id="analysisUncertaintyNote">–</small></article>
+              <article class="metric-card"><span data-i18n="effective_sample_size"></span><strong id="analysisEffectiveN">–</strong><small id="analysisCorrelation">–</small></article>
+              <article class="metric-card"><span data-i18n="confidence_interval"></span><strong id="analysisMeanCi">–</strong><small data-i18n="block_bootstrap"></small></article>
+            </div>
+            <div class="two-column">
+              <article class="panel"><h3 data-i18n="time_patterns"></h3><div id="profileBars" class="profile-bars"></div></article>
+              <article class="panel"><h3 data-i18n="data_quality"></h3><dl id="analysisQualityFacts" class="facts-grid"></dl></article>
+              <article class="panel"><h3 data-i18n="scientific_interpretation"></h3><dl id="scientificFacts" class="facts-grid"></dl><div id="scientificNotice" class="notice info"></div></article>
+              <article class="panel"><h3 data-i18n="distribution_diagnostics"></h3><dl id="distributionFacts" class="facts-grid"></dl></article>
+              <article class="panel"><h3 data-i18n="threshold_events"></h3><dl id="thresholdEventFacts" class="facts-grid"></dl></article>
+              <article class="panel"><h3 data-i18n="sensitivity_analysis"></h3><dl id="sensitivityFacts" class="facts-grid"></dl></article>
+            </div>
+          </details>
           <article class="panel"><div class="panel-heading"><h3 data-i18n="daily_statistics"></h3><button id="analysisCsvButton" class="button secondary" data-i18n="export_csv"></button></div><div class="table-wrap"><table><thead><tr><th data-i18n="date"></th><th data-i18n="samples"></th><th data-i18n="coverage"></th><th data-i18n="minimum"></th><th data-i18n="median"></th><th data-i18n="maximum"></th><th data-i18n="mean"></th></tr></thead><tbody id="dailyBody"></tbody></table></div></article>
+        </section>
+
+        <section id="view-sites" class="view">
+          <div class="section-header"><div><span class="eyebrow" data-i18n="local_metadata"></span><h2 data-i18n="sites_events_title"></h2><p data-i18n="sites_events_hint"></p></div></div>
+          <div class="two-column">
+            <article class="panel">
+              <h3 data-i18n="measurement_site"></h3>
+              <form id="locationForm" class="form-stack">
+                <input type="hidden" id="locationId">
+                <label><span data-i18n="name"></span><input id="locationName" required></label>
+                <div class="two-field"><label><span data-i18n="building"></span><input id="locationBuilding"></label><label><span data-i18n="floor"></span><input id="locationFloor"></label></div>
+                <div class="two-field"><label><span data-i18n="room_type"></span><input id="locationRoomType"></label><label><span data-i18n="measurement_height"></span><input id="locationHeight" type="number" min="0" max="10" step="0.1"></label></div>
+                <label><span data-i18n="notes"></span><textarea id="locationNotes" rows="3"></textarea></label>
+                <button class="button primary" type="submit" data-i18n="save_site"></button>
+              </form>
+            </article>
+            <article class="panel">
+              <h3 data-i18n="assign_measurements"></h3>
+              <form id="assignForm" class="form-stack">
+                <label><span data-i18n="device"></span><select id="assignDevice" required></select></label>
+                <label><span data-i18n="measurement_site"></span><select id="assignLocation" required></select></label>
+                <label><span data-i18n="session_title"></span><input id="assignTitle" required></label>
+                <div class="two-field"><label><span data-i18n="start"></span><input id="assignStart" type="datetime-local" required></label><label><span data-i18n="end_optional"></span><input id="assignEnd" type="datetime-local"></label></div>
+                <label><span data-i18n="purpose"></span><input id="assignPurpose"></label>
+                <label><span data-i18n="notes"></span><textarea id="assignNotes" rows="2"></textarea></label>
+                <button type="submit" class="button primary" data-i18n="assign"></button>
+              </form>
+            </article>
+          </div>
+          <article class="panel"><div class="panel-heading"><h3 data-i18n="measurement_sites"></h3><span id="locationCount" class="muted">0</span></div><div id="locationCards" class="location-grid"></div></article>
+          <div class="two-column"><article class="panel"><h3 data-i18n="add_event"></h3><form id="eventForm" class="form-stack"><div class="two-field"><label><span data-i18n="event_type"></span><select id="eventType"><option value="ventilation" data-i18n="ventilation"></option><option value="window" data-i18n="window"></option><option value="construction" data-i18n="construction"></option><option value="device_move" data-i18n="device_move"></option><option value="outage" data-i18n="outage"></option><option value="note" data-i18n="note"></option></select></label><label><span data-i18n="time"></span><input id="eventTime" type="datetime-local" required></label></div><label><span data-i18n="measurement_site"></span><select id="eventLocation"></select></label><label><span data-i18n="title"></span><input id="eventTitle" required></label><label><span data-i18n="notes"></span><textarea id="eventNotes" rows="2"></textarea></label><button type="submit" class="button primary" data-i18n="save_event"></button></form></article><article class="panel"><div class="panel-heading"><h3 data-i18n="events"></h3><span id="eventCount" class="muted">0</span></div><div id="eventList" class="event-list"></div></article></div>
         </section>
 
         <section id="view-map" class="view gmcmap-view">
@@ -199,34 +248,6 @@
           </article>
           <article class="panel"><div class="panel-heading"><h3 data-i18n="upload_history"></h3><button id="refreshGmcmap" class="button secondary" data-i18n="refresh"></button></div><div class="table-wrap"><table><thead><tr><th data-i18n="time"></th><th data-i18n="measurement_time"></th><th>Bq/m³</th><th>pCi/L</th><th data-i18n="trigger"></th><th data-i18n="status"></th><th data-i18n="response"></th></tr></thead><tbody id="gmcmapHistoryBody"></tbody></table></div></article>
 
-          <div class="section-header sub-section"><div><span class="eyebrow" data-i18n="local_metadata"></span><h2 data-i18n="measurement_sites"></h2><p data-i18n="sites_without_floorplan_hint"></p></div></div>
-          <div class="two-column">
-            <article class="panel">
-              <h3 data-i18n="measurement_site"></h3>
-              <form id="locationForm" class="form-stack">
-                <input type="hidden" id="locationId">
-                <label><span data-i18n="name"></span><input id="locationName" required></label>
-                <div class="two-field"><label><span data-i18n="building"></span><input id="locationBuilding"></label><label><span data-i18n="floor"></span><input id="locationFloor"></label></div>
-                <div class="two-field"><label><span data-i18n="room_type"></span><input id="locationRoomType"></label><label><span data-i18n="measurement_height"></span><input id="locationHeight" type="number" min="0" max="10" step="0.1"></label></div>
-                <label><span data-i18n="notes"></span><textarea id="locationNotes" rows="3"></textarea></label>
-                <button class="button primary" type="submit" data-i18n="save_site"></button>
-              </form>
-            </article>
-            <article class="panel">
-              <h3 data-i18n="assign_measurements"></h3>
-              <form id="assignForm" class="form-stack">
-                <label><span data-i18n="device"></span><select id="assignDevice" required></select></label>
-                <label><span data-i18n="measurement_site"></span><select id="assignLocation" required></select></label>
-                <label><span data-i18n="session_title"></span><input id="assignTitle" required></label>
-                <div class="two-field"><label><span data-i18n="start"></span><input id="assignStart" type="datetime-local" required></label><label><span data-i18n="end_optional"></span><input id="assignEnd" type="datetime-local"></label></div>
-                <label><span data-i18n="purpose"></span><input id="assignPurpose"></label>
-                <label><span data-i18n="notes"></span><textarea id="assignNotes" rows="2"></textarea></label>
-                <button type="submit" class="button primary" data-i18n="assign"></button>
-              </form>
-            </article>
-          </div>
-          <article class="panel"><div class="panel-heading"><h3 data-i18n="measurement_sites"></h3><span id="locationCount" class="muted">0</span></div><div id="locationCards" class="location-grid"></div></article>
-          <div class="two-column"><article class="panel"><h3 data-i18n="add_event"></h3><form id="eventForm" class="form-stack"><div class="two-field"><label><span data-i18n="event_type"></span><select id="eventType"><option value="ventilation" data-i18n="ventilation"></option><option value="window" data-i18n="window"></option><option value="construction" data-i18n="construction"></option><option value="device_move" data-i18n="device_move"></option><option value="outage" data-i18n="outage"></option><option value="note" data-i18n="note"></option></select></label><label><span data-i18n="time"></span><input id="eventTime" type="datetime-local" required></label></div><label><span data-i18n="measurement_site"></span><select id="eventLocation"></select></label><label><span data-i18n="title"></span><input id="eventTitle" required></label><label><span data-i18n="notes"></span><textarea id="eventNotes" rows="2"></textarea></label><button type="submit" class="button primary" data-i18n="save_event"></button></form></article><article class="panel"><div class="panel-heading"><h3 data-i18n="events"></h3><span id="eventCount" class="muted">0</span></div><div id="eventList" class="event-list"></div></article></div>
         </section>
 
         <section id="view-history" class="view">

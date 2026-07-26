@@ -92,3 +92,6 @@ configuration:
     name: Home Assistant administrator token
     description: Optional long-lived access token of a Home Assistant administrator.
       It is used only for the administrator-protected Recorder history purge.
+  location_display_mode:
+    name: Location privacy level
+    description: Controls whether the Overview shows the address and precise coordinates, only the location name and rounded coordinates, or no location card.

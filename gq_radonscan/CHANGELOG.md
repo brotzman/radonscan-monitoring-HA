@@ -2,6 +2,19 @@
 
 All notable changes to Radon Monitoring are documented here. Versions follow semantic versioning.
 
+## 5.2.0 - Context-aware overview, event markers and privacy controls
+
+- Added persistent Overview selectors for device, measurement site and campaign; current value, statistics, peak, sample count and chart now use one coherent filtered record set.
+- Changed the Radon traffic light to use the 24-hour mean when sufficient data is available and to label the latest-hour fallback as provisional, including the assessment basis and coverage.
+- Replaced the overall-average Overview tile with the observed 24-hour maximum, measurement time and coverage.
+- Added documented-event markers to Overview and Analysis charts while retaining visible breaks across data gaps.
+- Added a plain-language Analysis summary and collapsed extended scientific diagnostics by default.
+- Moved measurement sites, assignments and events into a dedicated view; the GQ Radiation World Map view now contains only external upload functions and is hidden when disabled.
+- Added full, reduced and hidden Home Assistant location display modes.
+- Added degree units and cardinal directions to coordinates, for example `51,60176° N, 7,45410° E`.
+- Updated all eight interface languages, Home Assistant option translations, automated tests and the German and English user manuals.
+- No database-schema change; existing 4.x, 5.0.0 and 5.1.0 databases remain compatible.
+
 ## 5.1.0 - Overview location, Radon traffic light and streamlined navigation
 
 - Added a responsive Home Assistant location card to the Overview.

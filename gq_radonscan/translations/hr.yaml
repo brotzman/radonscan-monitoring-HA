@@ -86,3 +86,6 @@ configuration:
   homeassistant_access_token:
     name: Administratorski token Home Assistanta
     description: Neobavezni dugotrajni pristupni token administratora Home Assistanta, koristi se samo za brisanje Recorder povijesti.
+  location_display_mode:
+    name: Razina privatnosti lokacije
+    description: Određuje prikazuje li pregled adresu i precizne koordinate, samo naziv lokacije i zaokružene koordinate ili uopće ne prikazuje karticu lokacije.

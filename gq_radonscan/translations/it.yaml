@@ -86,3 +86,6 @@ configuration:
   homeassistant_access_token:
     name: Token amministratore Home Assistant
     description: Token di accesso a lunga durata facoltativo di un amministratore Home Assistant, usato solo per eliminare la cronologia Recorder.
+  location_display_mode:
+    name: Livello di privacy della posizione
+    description: Stabilisce se la panoramica mostra indirizzo e coordinate precise, solo il nome del luogo e coordinate arrotondate oppure nessuna scheda della posizione.

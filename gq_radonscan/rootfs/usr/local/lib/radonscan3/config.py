@@ -9,6 +9,7 @@ from pathlib import Path
 LOGGER = logging.getLogger(__name__)
 SUPPORTED_LANGUAGES = ("auto", "de", "en", "es", "fr", "hr", "it", "nl", "pl")
 SUPPORTED_UNITS = ("Bq/m3", "pCi/L")
+SUPPORTED_LOCATION_DISPLAY_MODES = ("full", "reduced", "hidden")
 
 
 def _as_bool(value: object, default: bool) -> bool:
@@ -51,6 +52,7 @@ class Settings:
     gmcmap_max_age_hours: int
     gmcmap_retry_limit: int
     analysis_timezone: str
+    location_display_mode: str
     homeassistant_access_token: str
 
     @classmethod
@@ -84,6 +86,9 @@ class Settings:
 
         minimum_coverage = float(raw.get("minimum_data_coverage_percent", 95.0))
         minimum_coverage = max(50.0, min(100.0, minimum_coverage))
+        location_display_mode = str(raw.get("location_display_mode", "full")).strip().lower()
+        if location_display_mode not in SUPPORTED_LOCATION_DISPLAY_MODES:
+            location_display_mode = "full"
 
         return cls(
             data_dir=Path(os.environ.get("DATA_DIR", "/data")),
@@ -116,6 +121,7 @@ class Settings:
             gmcmap_max_age_hours=max(1, min(8760, int(raw.get("gmcmap_max_age_hours", 72)))),
             gmcmap_retry_limit=max(1, min(20, int(raw.get("gmcmap_retry_limit", 8)))),
             analysis_timezone=str(raw.get("analysis_timezone", "auto")).strip() or "auto",
+            location_display_mode=location_display_mode,
             homeassistant_access_token=str(raw.get("homeassistant_access_token", "")).strip(),
         )
 
@@ -147,5 +153,6 @@ class Settings:
             "gmcmap_max_age_hours": self.gmcmap_max_age_hours,
             "gmcmap_retry_limit": self.gmcmap_retry_limit,
             "analysis_timezone": self.analysis_timezone,
+            "location_display_mode": self.location_display_mode,
             "homeassistant_access_token_configured": bool(self.homeassistant_access_token),
         }

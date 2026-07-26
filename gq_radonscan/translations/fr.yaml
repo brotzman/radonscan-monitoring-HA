@@ -86,3 +86,6 @@ configuration:
   homeassistant_access_token:
     name: Jeton administrateur Home Assistant
     description: Jeton d’accès longue durée facultatif d’un administrateur Home Assistant, utilisé uniquement pour supprimer l’historique Recorder.
+  location_display_mode:
+    name: Niveau de confidentialité du lieu
+    description: Détermine si la vue d’ensemble affiche l’adresse et les coordonnées précises, uniquement le nom du lieu et des coordonnées arrondies, ou aucune carte de lieu.

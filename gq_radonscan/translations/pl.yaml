@@ -86,3 +86,6 @@ configuration:
   homeassistant_access_token:
     name: Token administratora Home Assistant
     description: Opcjonalny długoterminowy token dostępu administratora Home Assistant, używany wyłącznie do usuwania historii Recorder.
+  location_display_mode:
+    name: Poziom prywatności lokalizacji
+    description: Określa, czy przegląd pokazuje adres i dokładne współrzędne, tylko nazwę lokalizacji i zaokrąglone współrzędne, czy nie pokazuje karty lokalizacji.

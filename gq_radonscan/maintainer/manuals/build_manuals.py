@@ -11,7 +11,7 @@ from reportlab.platypus import (
     Paragraph, Spacer, Table, TableStyle,
 )
 
-VERSION = "5.1.0"
+VERSION = "5.2.0"
 ORANGE = colors.HexColor("#F47B20")
 DARK = colors.HexColor("#172033")
 MUTED = colors.HexColor("#667085")
@@ -38,17 +38,17 @@ CONTENT = {
 ]),
 ("2. Installation, Upgrade und erster Start", [
 "Verbinden Sie das RadonScan Gerät per USB, stellen Sie MQTT für Home Assistant bereit und starten Sie die App. Für die automatische Erkennung kann serial_port leer beziehungsweise auf auto bleiben. Für eine feste Zuordnung ist ein Pfad unter /dev/serial/by-id/ vorzuziehen.",
-"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.1.0 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
+"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.2.0 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
 "Nur abgeschlossene Stunden werden übernommen. Nach dem ersten Anschließen kann deshalb zunächst noch kein aktueller Messwert verfügbar sein."
 ]),
 ("3. Übersicht", [
-"Die Übersicht zeigt den letzten abgeschlossenen Stundenwert, Datenalter, Rohwert, Messort, gespeicherte Stunden, Geräteverbindung und MQTT-Status. Zusätzlich werden 24-Stunden-, 7-Tage- und 30-Tage-Kennwerte angezeigt.",
-"Ein Zeitraumwert erscheint erst, wenn die geforderte Messdauer und Mindestabdeckung erreicht sind. Andernfalls steht in der Kachel eine konkrete Begründung wie Zeitraum noch nicht vollständig oder Datenabdeckung zu gering.",
-"Der Home-Assistant-Standort zeigt den in den allgemeinen Home-Assistant-Einstellungen hinterlegten Standortnamen oder eine dort bereitgestellte Adresse sowie Koordinaten, Höhe, Land und Zeitzone. Radon Monitoring führt keine externe Rückwärts-Geokodierung durch und sendet die Standortdaten nicht an einen Geokodierungsdienst. Die Radonampel ordnet den aktuellen Stundenwert anhand der konfigurierten Warn- und Gefahrenschwellen als grün, gelb oder rot ein.",
-"Der Aktualisieren-Schalter lädt zuerst den kompakten Systemzustand. Verlauf, Katalog und Analyse folgen getrennt, damit neue USB-Daten nicht durch langsamere Abfragen verdeckt werden."
+"Die Kontextleiste der Übersicht wählt Gerät, Messort und Kampagne. Aktueller Wert, Zeitfenster, Stichprobenzahl, 24-Stunden-Maximum und Diagramm werden anschließend aus demselben gefilterten Datensatz gebildet. Die Auswahl bleibt lokal im Browser gespeichert.",
+"Die Radonampel bewertet bevorzugt den 24-Stunden-Mittelwert. Reichen Messdauer oder Datenabdeckung noch nicht aus, verwendet sie vorläufig den letzten abgeschlossenen Stundenwert. Bewertungsbasis, Abdeckung sowie Warn- und Gefahrenschwellen stehen direkt unter der Ampel.",
+"Die vierte Kennzahl zeigt statt eines schwer interpretierbaren Gesamtmittels das beobachtete Maximum der letzten 24 Stunden mit Zeitpunkt und Datenabdeckung. Dokumentierte Ereignisse erscheinen als Markierungen im Verlauf; Datenlücken werden als Unterbrechungen und nicht als verbindende Linie dargestellt.",
+"Der Home-Assistant-Standort zeigt je nach Datenschutzmodus Adresse und genaue Koordinaten, nur Ortsname und gerundete Koordinaten oder gar keine Standortkachel. Koordinaten enthalten Gradzeichen und Himmelsrichtungen, zum Beispiel 51,60176° N, 7,45410° E. Die Daten stammen ausschließlich aus der lokalen Home-Assistant-Core-Konfiguration; es findet keine externe Geokodierung statt."
 ]),
 ("4. Analyse und Statistik", [
-"Die Grundauswertung enthält Mittelwert, Median, Minimum, Maximum, Quantile, Datenabdeckung, Qualitätsklasse, Schwellenzeiten und robuste Streuungsmaße. Die erweiterte Statistik ergänzt effektive Stichprobengröße, Moving-Block-Bootstrap-Konfidenzintervalle, Mann-Kendall-Diagnostik, Sen-Steigung, Autokorrelation, Verteilungskennwerte, gleitenden Median, Interquartilsband und zusammenhängende Schwellenereignisse.",
+"Die Analyse beginnt mit einer verständlichen Zusammenfassung von Trendrichtung, Warn- und Gefahrenschwellenanteil sowie Datenabdeckung. Die Grundauswertung enthält Mittelwert, Median, Minimum, Maximum, Quantile und Schwellenzeiten. Effektive Stichprobengröße, Moving-Block-Bootstrap-Konfidenzintervalle, Autokorrelation, Verteilungsdiagnostik und Sensitivitätsanalyse sind standardmäßig in einem eingeklappten erweiterten Bereich zusammengefasst.",
 "Fehlende Messwerte werden nicht imputiert. Auffällige Werte werden nicht automatisch gelöscht. Qualitätsflags kennzeichnen unter anderem nicht dokumentierte Faktoren, nicht primäre Datenquellen, unplausible Werte und doppelte Zeitstempel.",
 "Die Strukturbruchanalyse ist explorativ. Bei sehr langen Reihen wird ausschließlich diese Diagnose auf eine gleichmäßig verteilte, zeitlich geordnete Stichprobe begrenzt. Deskriptive Kennwerte, Schwellenberechnungen und Datenprüfsummen verwenden weiterhin alle ausgewählten Datensätze.",
 "Eine statistische Signifikanz beweist weder eine Ursache noch eine praktisch relevante Wirkung. Ereignisse und Maßnahmen müssen zusätzlich fachlich interpretiert werden."
@@ -59,11 +59,11 @@ CONTENT = {
 "Kalibrierungen können mit Datum, Labor, Zertifikatsreferenz, Faktor, Unsicherheit, Folgetermin und Notizen dokumentiert werden. Ein Eintrag verändert vorhandene Messwerte nicht automatisch."
 ]),
 ("6. Messorte, Sitzungen und Ereignisse", [
-"Messorte, Messsitzungen und Ereignisse sind lokale Metadaten. Sie dokumentieren Gebäude, Raum, Aufstellung, Messhöhe, Lüftung, Maßnahmen, Gerätewechsel oder Ausfälle, ohne die Originalmesswerte zu verändern.",
+"Messorte, Messsitzungen und Ereignisse besitzen eine eigene Ansicht und sind von der externen World-Map-Funktion getrennt. Sie dokumentieren Gebäude, Raum, Aufstellung, Messhöhe, Lüftung, Maßnahmen, Gerätewechsel oder Ausfälle, ohne die Originalmesswerte zu verändern. Passende Ereignisse werden zusätzlich in Übersichts- und Analysediagrammen markiert.",
 "Für wissenschaftliche Vergleiche sollten Beginn, Ende, Fragestellung und relevante Randbedingungen einer Kampagne vollständig eingetragen werden."
 ]),
 ("7. GQ Radiation World Map", [
-"Der Upload ist optional und standardmäßig deaktiviert. Account-ID und Geräte-ID werden in den App-Optionen hinterlegt. Die Oberfläche zeigt diese Kennungen nur maskiert.",
+"Der Upload ist optional und standardmäßig deaktiviert. Ist gmcmap_enabled ausgeschaltet, wird die World-Map-Ansicht vollständig aus der Seitenleiste ausgeblendet. Bei Aktivierung enthält sie ausschließlich externe Upload-, Warteschlangen- und Verlaufsfunktionen; lokale Messorte und Ereignisse verbleiben in ihrer eigenen Ansicht. Account-ID und Geräte-ID werden nur maskiert angezeigt.",
 "Eine persistente Warteschlange verhindert Doppelübertragungen, wiederholt temporäre Fehler mit zunehmendem Abstand und kann zu alte Werte nach einer konfigurierbaren Grenze verwerfen. Der manuelle Upload ist eine geschützte POST-Aktion.",
 "Die öffentliche Position wird im GQ-Konto verwaltet. Radon Monitoring übermittelt keine eigenen GPS-Koordinaten."
 ]),
@@ -81,7 +81,7 @@ CONTENT = {
 ("10. Bedienung, Mobilansicht und Barrierefreiheit", [
 "Die Seitenleiste wird auf kleinen Bildschirmen als Menü eingeblendet. Tabellen und Wochen-Heatmap bleiben innerhalb ihrer Kachel horizontal scrollbar; die restliche Seite darf keinen horizontalen Überstand erzeugen.",
 "Die Oberfläche unterstützt Tastaturbedienung, sichtbare Fokusmarkierungen, einen Sprunglink zum Hauptinhalt, Escape zum Schließen des Menüs, reduzierte Animationen und Schriftvergrößerung bis 200 Prozent.",
-"Version 5.1.0 wurde in Chromium bei 320, 390, 768 und 1440 Pixeln, in allen acht Sprachen und mit langen Testbezeichnungen geprüft."
+"Version 5.2.0 wurde in Chromium bei 320, 390, 768 und 1440 Pixeln, in allen acht Sprachen und mit langen Testbezeichnungen geprüft."
 ]),
 ("11. Fehlerbehebung", [
 "Kein Gerät: USB-Zuordnung, Berechtigungen, konfigurierten Port und konkurrierende Prozesse prüfen.",
@@ -92,11 +92,11 @@ CONTENT = {
 "Wiederherstellung abgelehnt: Nur lesbare SQLite-Sicherungen mit kompatiblem Schema werden übernommen. Die aktive Datenbank bleibt bei Fehlern unverändert."
 ]),
 ("12. Datenschutz und verantwortungsvolle Nutzung", [
-"Messwerte und Metadaten bleiben standardmäßig lokal. Nur aktivierte externe Funktionen übertragen Daten. Die Standortkachel liest ihre Angaben ausschließlich über die lokale Home-Assistant-Core-API und verwendet keinen externen Geokodierungsdienst. Prüfen Sie vor World-Map-Uploads, ob Veröffentlichung und Standortangaben Ihren Datenschutzanforderungen entsprechen.",
+"Messwerte und Metadaten bleiben standardmäßig lokal. Nur aktivierte externe Funktionen übertragen Daten. Die Standortkachel liest ihre Angaben ausschließlich über die lokale Home-Assistant-Core-API und verwendet keinen externen Geokodierungsdienst. Mit location_display_mode kann die Anzeige vollständig, reduziert oder ausgeblendet erfolgen. Prüfen Sie vor Bildschirmfotos, Berichten und World-Map-Uploads, ob die sichtbaren Standortangaben Ihren Datenschutzanforderungen entsprechen.",
 "Bewahren Sie Backups und Berichte geschützt auf. Sie können Gerätekennungen, Messorte, Zeiträume und Gebäudedaten enthalten."
 ]),
-("13. Neu in Version 5.1.0", [
-"Die Übersicht enthält jetzt eine responsive Kachel für den Home-Assistant-Standort und eine Radonampel, die den aktuellen Stundenwert anhand der konfigurierten Schwellen einordnet. Die frühere Expertenansicht wurde vollständig aus Oberfläche und Seitenleiste entfernt, weil die benötigten Betriebsdaten bereits unter Geräte & System und Einstellungen verfügbar sind. Es findet keine externe Geokodierung statt. Versionsangaben, Tests sowie das deutsche und englische Benutzerhandbuch wurden auf Version 5.1.0 aktualisiert."
+("13. Neu in Version 5.2.0", [
+"Version 5.2.0 ergänzt eine filterkohärente Übersicht für Gerät, Messort und Kampagne, eine auf dem 24-Stunden-Mittelwert basierende Radonampel mit vorläufigem Stundenwert-Rückfall, das 24-Stunden-Maximum, Ereignismarkierungen und eine verständliche Analysezusammenfassung. Messorte und Ereignisse wurden aus der World-Map-Ansicht herausgelöst, die bei deaktiviertem Upload nicht mehr in der Seitenleiste erscheint. Standortdaten können vollständig, reduziert oder ausgeblendet werden; Koordinaten zeigen Gradzeichen und Himmelsrichtungen. Datenbankschema und bestehende Messdaten bleiben kompatibel."
 ])
 ],
 "options": [
@@ -104,6 +104,7 @@ CONTENT = {
 ("factor_bq_m3_per_cph", "Aktuell verwendeter Umrechnungsfaktor"),
 ("minimum_data_coverage_percent", "Mindestabdeckung für Zeitfenster und Qualitätsstatus"),
 ("analysis_timezone", "Zeitzone für Tages- und Wochenprofile"),
+("location_display_mode", "Standort vollständig, reduziert oder ausgeblendet anzeigen"),
 ("data_management_enabled", "Datenverwaltung in Navigation und API aktivieren"),
 ("homeassistant_access_token", "Optionaler Administrator-Token für Recorder-Aktionen"),
 ("gmcmap_enabled", "GQ Radiation World Map aktivieren"),
@@ -124,17 +125,17 @@ CONTENT = {
 ]),
 ("2. Installation, upgrade and first start", [
 "Connect the RadonScan by USB, make MQTT available to Home Assistant and start the app. Leave serial_port empty or set to auto for discovery. For a stable fixed assignment, prefer a path under /dev/serial/by-id/.",
-"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.1.0. If an old Ingress view remains open, close the panel and reopen it.",
+"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.2.0. If an old Ingress view remains open, close the panel and reopen it.",
 "Only completed hours are imported. A newly connected device can therefore remain without a current value until a complete record is available."
 ]),
 ("3. Overview", [
-"Overview shows the latest completed hourly value, data age, raw value, measurement site, stored hours, device connection and MQTT state. It also shows 24-hour, 7-day and 30-day summaries.",
-"A period result is displayed only after the required duration and minimum coverage have been reached. Otherwise the card explains why the value is not yet meaningful.",
-"The Home Assistant location card shows the location name or an address supplied in the general Home Assistant settings together with coordinates, elevation, country and time zone. Radon Monitoring performs no external reverse geocoding and does not send the location data to a geocoding service. The Radon traffic light classifies the current hourly value as green, amber or red using the configured warning and danger thresholds.",
-"Refresh loads the compact system state first. History, catalogue and analysis follow separately so that slower requests do not hide newly imported USB data."
+"The Overview context bar selects a device, measurement site and campaign. Current value, period windows, selected sample count, 24-hour maximum and chart are then derived from one coherent filtered dataset. The choice is retained locally in the browser.",
+"The Radon traffic light primarily assesses the 24-hour mean. Until duration or coverage is sufficient, it provisionally uses the latest completed hourly value. The assessment basis, coverage and configured warning/danger thresholds are displayed directly below the signal.",
+"The fourth metric shows the observed maximum within the latest 24-hour window, including its time and coverage, instead of a potentially mixed overall mean. Documented events appear as chart markers and gaps are shown as breaks rather than connected lines.",
+"Depending on the privacy mode, the Home Assistant location card shows an address and precise coordinates, only the location name and rounded coordinates, or no location card. Coordinates include degree units and cardinal directions, for example 51.60176° N, 7.45410° E. Values come only from the local Home Assistant Core configuration and no external geocoding is performed."
 ]),
 ("4. Analysis and statistics", [
-"Basic analysis includes mean, median, minimum, maximum, quantiles, coverage, quality class, threshold time and robust dispersion measures. Advanced analysis adds effective sample size, moving-block-bootstrap confidence intervals, Mann-Kendall diagnostics, Sen slope, autocorrelation, distribution diagnostics, rolling median, interquartile band and continuous threshold events.",
+"Analysis starts with a plain-language summary of trend direction, warning/danger threshold share and data coverage. Basic analysis contains mean, median, minimum, maximum, quantiles and threshold time. Effective sample size, moving-block-bootstrap confidence intervals, autocorrelation, distribution diagnostics and sensitivity analysis are grouped in an advanced section that is collapsed by default.",
 "Missing measurements are not imputed. Unusual observations are not deleted automatically. Quality flags identify undocumented factors, non-primary sources, implausible values and duplicate timestamps.",
 "Change-point analysis is exploratory. For very long series, only this diagnostic is bounded to an evenly distributed, time-ordered sample. Descriptive statistics, threshold calculations and data checksums continue to use every selected record.",
 "Statistical significance proves neither causality nor practical importance. Events and interventions still require professional interpretation."
@@ -145,11 +146,11 @@ CONTENT = {
 "Calibration records can include date, laboratory, certificate reference, factor, uncertainty, next due date and notes. A calibration entry does not silently alter existing measurements."
 ]),
 ("6. Sites, sessions and events", [
-"Measurement sites, sessions and events are local metadata. They document building, room, placement, height, ventilation, interventions, device changes and outages without changing original measurements.",
+"Measurement sites, sessions and events have their own view and are separated from the external World Map feature. They document building, room, placement, height, ventilation, interventions, device changes and outages without changing original measurements. Matching events are also marked in Overview and Analysis charts.",
 "For scientific comparisons, record the campaign question, start, end and relevant environmental conditions."
 ]),
 ("7. GQ Radiation World Map", [
-"Upload is optional and disabled by default. Account ID and device ID are stored in app options and shown only in masked form in the interface.",
+"Upload is optional and disabled by default. When gmcmap_enabled is off, the World Map view is omitted from the sidebar. When enabled it contains only external upload, queue and history functions; local sites and events remain in their dedicated view. Account ID and device ID are shown only in masked form.",
 "A persistent queue prevents duplicates, retries temporary failures with increasing delay and can discard measurements older than a configured limit. Manual upload is a protected POST action.",
 "The public position is managed in the GQ account. Radon Monitoring does not transmit its own GPS coordinates."
 ]),
@@ -167,7 +168,7 @@ CONTENT = {
 ("10. Operation, mobile layout and accessibility", [
 "On small screens the sidebar opens as a menu. Tables and the weekly heatmap remain horizontally scrollable inside their own cards; the rest of the page must not create horizontal page overflow.",
 "The interface supports keyboard operation, visible focus, a skip link, Escape to close the menu, reduced motion and text scaling to 200 percent.",
-"Version 5.1.0 was checked in Chromium at 320, 390, 768 and 1440 pixels, in all eight languages and with deliberately long labels."
+"Version 5.2.0 was checked in Chromium at 320, 390, 768 and 1440 pixels, in all eight languages and with deliberately long labels."
 ]),
 ("11. Troubleshooting", [
 "No device: check USB mapping, permissions, configured port and competing processes.",
@@ -178,11 +179,11 @@ CONTENT = {
 "Restore rejected: only readable SQLite backups with a compatible schema are accepted. The active database remains unchanged after validation failure."
 ]),
 ("12. Privacy and responsible use", [
-"Measurements and metadata remain local by default. Only enabled external functions transmit data. The location card reads its values only through the local Home Assistant Core API and uses no external geocoding service. Before World Map publication, confirm that location and publication settings meet your privacy requirements.",
+"Measurements and metadata remain local by default. Only enabled external functions transmit data. The location card reads its values only through the local Home Assistant Core API and uses no external geocoding service. location_display_mode can show full, reduced or no location details. Before screenshots, reports and World Map publication, confirm that visible location data meets your privacy requirements.",
 "Protect backups and reports because they may contain device identifiers, sites, periods and building information."
 ]),
-("13. New in version 5.1.0", [
-"Overview now contains a responsive Home Assistant location card and a Radon traffic light that classifies the current hourly value using the configured thresholds. The former Expert view was removed completely from the interface and sidebar because the required operating information is already available under Devices & System and Settings. No external geocoding is performed. Version metadata, tests and the German and English user manuals were updated to version 5.1.0."
+("13. New in version 5.2.0", [
+"Version 5.2.0 adds a filter-coherent Overview for device, site and campaign, a 24-hour-mean Radon traffic light with a provisional hourly fallback, a 24-hour peak, event markers and a plain-language Analysis summary. Sites and events are separated from the World Map, which is hidden when upload is disabled. Location details can be full, reduced or hidden, and coordinates include degree units and cardinal directions. The database schema and existing measurements remain compatible."
 ])
 ],
 "options": [
@@ -190,6 +191,7 @@ CONTENT = {
 ("factor_bq_m3_per_cph", "Currently configured conversion factor"),
 ("minimum_data_coverage_percent", "Minimum coverage for period results and quality"),
 ("analysis_timezone", "Time zone for daily and weekly profiles"),
+("location_display_mode", "Show full, reduced or no location details"),
 ("data_management_enabled", "Enable Data management navigation and API"),
 ("homeassistant_access_token", "Optional administrator token for Recorder actions"),
 ("gmcmap_enabled", "Enable GQ Radiation World Map"),

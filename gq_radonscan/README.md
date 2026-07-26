@@ -1,43 +1,55 @@
-# Radon Monitoring 5.1.0
+# Radon Monitoring 5.2.0
 
 Radon Monitoring is a local Home Assistant app for read-only monitoring of compatible GQ RadonScan devices. It imports completed hourly values, stores raw and converted measurements in SQLite, publishes Home Assistant entities through MQTT, provides scientific time-series analysis, generates PDF reports and can optionally upload measurements to the GQ Radiation World Map.
 
 ## Main capabilities
 
 - read-only SPIR device communication
-- completed hourly values with raw CPH and the factor used for each record
-- Overview and Analysis views plus consolidated Devices & System status
-- Home Assistant location summary using the local Core configuration
-- Radon traffic light based on the configured warning and danger thresholds
+- completed hourly values with raw CPH and the factor stored for each record
+- filter-aware Overview for device, measurement site and campaign
+- Radon traffic light based primarily on the 24-hour mean, with an explicitly provisional hourly fallback
+- Home Assistant location summary with configurable privacy level and no external geocoding
+- coordinate display with degree units and cardinal directions
 - real 24-hour, 7-day and 30-day windows with duration and completeness checks
+- 24-hour peak, event markers and visible time-series gaps
+- plain-language Analysis summary plus collapsible advanced scientific diagnostics
 - robust descriptive statistics, confidence intervals, trend diagnostics and threshold-event analysis
-- measurement sites, sessions, events, calibration records and factor history
+- dedicated Measurement sites & events view
 - scientific PDF reports with method metadata and data checksum
-- optional GQ Radiation World Map queue with retry and duplicate protection
+- optional GQ Radiation World Map queue with retry and duplicate protection; hidden from navigation when disabled
 - local backup, validated restore and complete local database reset
 - optional complete Home Assistant Recorder purge for RadonScan entities, plus verification through the History API
 - interface and Home Assistant option translations in German, English, Spanish, French, Croatian, Italian, Dutch and Polish
 
-## Version 5.1.0
+## Version 5.2.0
 
-The Overview now contains a compact, responsive **Home Assistant location** card. It displays the location name or address provided by Home Assistant together with latitude, longitude, elevation, country and time zone. The data is read from Home Assistant through the local Core API; the app does not perform reverse geocoding and does not send the coordinates to an external geocoding service.
+The Overview now keeps all displayed values in one selected context. Device, measurement site and campaign can be chosen directly, and the selection is retained in the browser. The current value, period statistics, sample count, peak and chart then use the same filter.
 
-A new **Radon traffic light** classifies the latest completed hourly measurement as green, amber or red using the warning and danger thresholds configured in Settings. The former Expert view has been removed completely from the interface and sidebar because the required operational information is already available under Devices & System and Settings.
+The Radon traffic light uses the **24-hour mean** once that period has sufficient duration and data coverage. Until then it falls back to the latest completed hourly value and marks the assessment as **provisional**. Its basis and coverage are shown below the signal. The former overall-average tile has been replaced by the maximum observed value within the latest 24-hour window, including time and coverage.
 
-When a Home Assistant version does not expose a postal address, the configured Home Assistant location name is shown instead. Coordinates and the remaining available fields continue to be displayed.
+Documented events such as ventilation, interventions or device changes appear as markers in the Overview and Analysis charts. Data gaps remain visible as breaks rather than being connected by a misleading line. Analysis opens with a readable result sentence; extended scientific quality, uncertainty, autocorrelation and distribution details are collapsed by default.
 
-Automated checks cover the local configuration mapping, Radon traffic-light thresholds, removal of the Expert view, the real web server, database reset, Recorder purge and verification, USB reconnect state, token redaction, three years of hourly report data, all remaining views at multiple viewport sizes, all eight languages, 200% text scaling and keyboard operation.
+Measurement sites, assignments and events have moved to a dedicated **Measurement sites & events** view. The GQ Radiation World Map view now contains only external upload functions and is omitted from the sidebar when the feature is disabled.
+
+The Home Assistant location card supports three modes through `location_display_mode`:
+
+- `full`: address or location name and precise coordinates
+- `reduced`: location name and coordinates rounded to two decimals
+- `hidden`: no location card on the Overview
+
+Coordinates include the angular unit and direction, for example `51,60176° N, 7,45410° E`. Location values are read from Home Assistant's local Core configuration. Radon Monitoring does not reverse-geocode or send those values to an external geocoding service.
 
 ## Upgrade notes
 
-The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.1.0 does not introduce a database-schema change. Existing 4.x and 5.0.0 databases open in place.
+The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.2.0 does not introduce a database-schema change. Existing 4.x, 5.0.0 and 5.1.0 databases open in place.
 
 Before upgrading:
 
 1. Create a Home Assistant backup and, where appropriate, an app database backup.
 2. Stop the app before replacing a local repository package.
-3. Start the updated app and confirm that the sidebar or Help view reports version 5.1.0.
+3. Start the updated app and confirm that the sidebar or Help view reports version 5.2.0.
 4. Reopen the Ingress panel if an old iframe remains visible.
+5. Review `location_display_mode` if the Overview is shown in screenshots or shared displays.
 
 ## Important limitations
 

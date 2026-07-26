@@ -86,3 +86,6 @@ configuration:
   homeassistant_access_token:
     name: Home Assistant-beheerderstoken
     description: Optioneel langlevend toegangstoken van een Home Assistant-beheerder, uitsluitend gebruikt om Recorder-geschiedenis te verwijderen.
+  location_display_mode:
+    name: Privacyniveau van locatie
+    description: Bepaalt of het overzicht het adres en nauwkeurige coördinaten, alleen de locatienaam en afgeronde coördinaten, of geen locatiekaart toont.

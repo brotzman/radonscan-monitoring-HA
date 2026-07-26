@@ -606,6 +606,92 @@ class Storage:
                 return int(con.execute("SELECT COUNT(*) FROM measurements WHERE device_id=?", (device_id,)).fetchone()[0])
             return int(con.execute("SELECT COUNT(*) FROM measurements").fetchone()[0])
 
+    def overview_selection(
+        self,
+        *,
+        minimum_coverage_percent: float = 95.0,
+        device_id: str | None = None,
+        location_id: int | None = None,
+        campaign_id: int | None = None,
+    ) -> dict[str, object]:
+        """Return one coherent, filter-aware dataset for the Overview view.
+
+        All period statistics, the latest value and the sample count are derived
+        from the same selected records. This prevents mixed-device or mixed-site
+        values from appearing together after the user changes the overview
+        context.
+        """
+        records = self.history(
+            limit=100000,
+            location_id=location_id,
+            campaign_id=campaign_id,
+            device_id=device_id,
+            ascending=True,
+        )
+        latest = records[-1] if records else None
+        latest_dt = parse_dt(latest.get("completed_at")) if latest else None
+
+        def observed_peak(rows: list[dict[str, object]]) -> tuple[float | None, str | None]:
+            candidates = [row for row in rows if row.get("bq_m3") is not None]
+            if not candidates:
+                return None, None
+            peak = max(candidates, key=lambda row: float(row["bq_m3"]))
+            return float(peak["bq_m3"]), str(peak.get("completed_at") or "") or None
+
+        statistics: dict[str, dict[str, object]] = {}
+        for key, hours in (("24h", 24), ("7d", 168), ("30d", 720)):
+            summary = window_summary(
+                records,
+                hours=hours,
+                end=latest_dt,
+                minimum_coverage_percent=minimum_coverage_percent,
+            )
+            period_start = parse_dt(summary.get("period_start"))
+            period_end = parse_dt(summary.get("period_end"))
+            period_rows = [
+                row for row in records
+                if (dt := parse_dt(row.get("completed_at"))) is not None
+                and (period_start is None or dt >= period_start)
+                and (period_end is None or dt <= period_end)
+            ]
+            peak_value, peak_at = observed_peak(period_rows)
+            summary["observed_maximum_bq_m3"] = peak_value
+            summary["observed_maximum_at"] = peak_at
+            statistics[key] = summary
+
+        all_stats = analyse_records(
+            records, minimum_coverage_percent=minimum_coverage_percent
+        )["statistics"]
+        all_peak, all_peak_at = observed_peak(records)
+        statistics["all"] = {
+            "available": bool(all_stats["samples"]),
+            "reason": None if all_stats["samples"] else "no_data",
+            "mean_bq_m3": all_stats["mean_bq_m3"],
+            "minimum_bq_m3": all_stats["minimum_bq_m3"],
+            "maximum_bq_m3": all_stats["maximum_bq_m3"],
+            "median_bq_m3": all_stats["median_bq_m3"],
+            "samples": all_stats["samples"],
+            "required_samples": None,
+            "missing_samples": 0,
+            "coverage_percent": 100.0 if all_stats["samples"] else 0.0,
+            "period_start": all_stats["actual_start"],
+            "period_end": all_stats["actual_end"],
+            "data_span_hours": all_stats["data_span_hours"],
+            "quality": all_stats["quality"],
+            "observed_maximum_bq_m3": all_peak,
+            "observed_maximum_at": all_peak_at,
+        }
+        return {
+            "latest": latest,
+            "statistics": statistics,
+            "sample_count": len(records),
+            "selection": {
+                "device_id": device_id,
+                "location_id": location_id,
+                "campaign_id": campaign_id,
+            },
+        }
+
     def history(
         self,
         *,
