@@ -1,4 +1,4 @@
-# Radon Monitoring 4.9.0 - App documentation
+# Radon Monitoring 5.0.0 - App documentation
 
 ## Purpose
 
@@ -28,7 +28,7 @@ Contains basic and advanced statistics, distribution and trend diagnostics, dail
 
 ### Expert
 
-Shows protocol, decoder, firmware, port, checksums, database details, runtime state and factor history. The currently configured conversion factor is intentionally separate from the factor stored with a historical measurement.
+Shows protocol and decoder details, firmware, serial port, measurement data, database integrity and factor history. Block checksums and the raw runtime-state card were removed from the interface in version 5.0.0; the downloadable diagnostics remain available. The currently configured conversion factor is intentionally separate from the factor stored with a historical measurement.
 
 ### GQ Radiation World Map
 
@@ -133,6 +133,6 @@ From the repository root:
 python3 -m pytest
 ```
 
-Version 4.9.0 includes tests for web assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
+Version 5.0.0 includes tests for web assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
 
 Real-device and real-Home-Assistant field testing remains necessary for USB hardware variations, Home Assistant upgrades and Recorder backends.

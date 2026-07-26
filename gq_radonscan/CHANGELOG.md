@@ -2,6 +2,14 @@
 
 All notable changes to Radon Monitoring are documented here. Versions follow semantic versioning.
 
+## 5.0.0 - Streamlined Expert view
+
+- Removed the Block checksums and Runtime status cards from the Expert view.
+- Removed the associated clipboard control and frontend render handlers.
+- Kept detailed technical information available through the diagnostics download.
+- Updated release metadata, automated integrity checks and the German and English user manuals to version 5.0.0.
+- No database-schema change; existing 4.x databases remain compatible.
+
 ## 4.9.0 - Reliability, verification and maintainability
 
 - Split destructive-data workflows into `operations.py` and the browser code into `data-management.js`.

@@ -1,8 +1,8 @@
-# Radon Monitoring Home Assistant Repository 4.9.0
+# Radon Monitoring Home Assistant Repository 5.0.0
 
 This repository contains the `gq_radonscan` Home Assistant app for local, read-only monitoring of compatible GQ RadonScan devices.
 
-Version 4.9.0 focuses on reliability and verification: modular destructive-data workflows, token redaction, Recorder purge verification, multi-year report performance, native option translations, browser end-to-end tests and updated German and English manuals.
+Version 5.0.0 streamlines the Expert view by removing the Block checksums and Runtime status cards together with their unused frontend handlers. Release metadata, tests and the German and English manuals were updated accordingly.
 
 ## Test from the repository root
 

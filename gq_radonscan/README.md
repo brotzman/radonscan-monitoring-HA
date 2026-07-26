@@ -1,4 +1,4 @@
-# Radon Monitoring 4.9.0
+# Radon Monitoring 5.0.0
 
 Radon Monitoring is a local Home Assistant app for read-only monitoring of compatible GQ RadonScan devices. It imports completed hourly values, stores raw and converted measurements in SQLite, publishes Home Assistant entities through MQTT, provides scientific time-series analysis, generates PDF reports and can optionally upload measurements to the GQ Radiation World Map.
 
@@ -16,21 +16,21 @@ Radon Monitoring is a local Home Assistant app for read-only monitoring of compa
 - optional complete Home Assistant Recorder purge for RadonScan entities, plus verification through the History API
 - interface and Home Assistant option translations in German, English, Spanish, French, Croatian, Italian, Dutch and Polish
 
-## Version 4.9.0
+## Version 5.0.0
 
-The release concentrates on maintainability and real workflows rather than adding another large feature set. Destructive operations are isolated in backend and frontend modules, sensitive values are redacted centrally, browser storage is handled safely, the actual web server serves all split assets, Recorder cleanup can be verified, and multi-year reports use a bounded chart representation without changing the underlying descriptive statistics or checksums.
+This release simplifies the Expert view. The Block checksums and Runtime status cards, their clipboard action and their frontend rendering code have been removed. Technical device, protocol, measurement and database information remains visible, while the downloadable diagnostics continue to provide the detailed diagnostic payload when required.
 
 Automated checks cover the real web server, database reset, Recorder purge and verification, USB reconnect state, token redaction, three years of hourly report data, all main views at multiple viewport sizes, all eight languages, 200% text scaling and keyboard operation.
 
 ## Upgrade notes
 
-The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 4.9.0 does not introduce a database-schema change. Existing 4.x databases open in place.
+The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.0.0 does not introduce a database-schema change. Existing 4.x databases open in place.
 
 Before upgrading:
 
 1. Create a Home Assistant backup and, where appropriate, an app database backup.
 2. Stop the app before replacing a local repository package.
-3. Start the updated app and confirm that the sidebar or Help view reports version 4.9.0.
+3. Start the updated app and confirm that the sidebar or Help view reports version 5.0.0.
 4. Reopen the Ingress panel if an old iframe remains visible.
 
 ## Important limitations

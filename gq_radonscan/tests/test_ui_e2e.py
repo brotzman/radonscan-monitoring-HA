@@ -13,7 +13,7 @@ LOCALE_CODES = ("de", "en", "es", "fr", "hr", "it", "nl", "pl")
 
 def _state(language="de"):
     return {
-        "app": {"version": "4.9.0"},
+        "app": {"version": "5.0.0"},
         "settings": {"preferred_unit":"Bq/m3","factor_bq_m3_per_cph":1.54,"scan_interval":300,"language":language,"warning_threshold_bq_m3":100,"danger_threshold_bq_m3":300,"minimum_data_coverage_percent":95,"backfill_history":True,"history_retention_days":1095,"serial_port":"auto","data_management_enabled":True,"diagnostic_logging":False,"report_author":"A very long scientific author name used to test wrapping","report_organisation":"Institute for Long Environmental Measurement Names","analysis_timezone":"Europe/Berlin","gmcmap_enabled":False,"gmcmap_auto_upload":False,"gmcmap_upload_interval_minutes":60,"gmcmap_account_id_masked":"12••••90","gmcmap_device_id_masked":"AB••••YZ","homeassistant_access_token_configured":False},
         "connection":{"connected":True,"last_scan":"2026-07-25T16:00:00+00:00"},
         "device":{"model":"GQ RadonScan","firmware":"RadonScanRe2.02","serial_number":"LONG-SERIAL-1234567890-ABCDEFGHIJKLMNOPQRSTUVWXYZ","serial_port":"/dev/serial/by-id/usb-GQ_Electronics_RadonScan_very_long_identifier"},
@@ -30,10 +30,10 @@ def _fixture_html(locale="de") -> str:
     tr=json.loads((LOCALES/f'{locale}.json').read_text())
     locale_names={code: code.upper() for code in LOCALE_CODES}
     html=(STATIC/'index.html').read_text()
-    html=html.replace('__LOCALE__',locale).replace('__TRANSLATIONS__',json.dumps(tr)).replace('__LOCALE_NAMES__',json.dumps(locale_names)).replace('__VERSION__','4.9.0').replace('__ACTION_TOKEN__','test-token')
-    html=html.replace('<link rel="stylesheet" href="assets/app.css?v=4.9.0">', '<style>'+ (STATIC/'app.css').read_text() +'</style>')
+    html=html.replace('__LOCALE__',locale).replace('__TRANSLATIONS__',json.dumps(tr)).replace('__LOCALE_NAMES__',json.dumps(locale_names)).replace('__VERSION__','5.0.0').replace('__ACTION_TOKEN__','test-token')
+    html=html.replace('<link rel="stylesheet" href="assets/app.css?v=5.0.0">', '<style>'+ (STATIC/'app.css').read_text() +'</style>')
     for script in ('core.js','accessibility.js','data-management.js','app.js'):
-        html=html.replace(f'<script src="assets/{script}?v=4.9.0"></script>', '<script>'+ (STATIC/script).read_text() +'</script>')
+        html=html.replace(f'<script src="assets/{script}?v=5.0.0"></script>', '<script>'+ (STATIC/script).read_text() +'</script>')
     return html
 
 

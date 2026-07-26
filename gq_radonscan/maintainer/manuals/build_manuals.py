@@ -11,7 +11,7 @@ from reportlab.platypus import (
     Paragraph, Spacer, Table, TableStyle,
 )
 
-VERSION = "4.9.0"
+VERSION = "5.0.0"
 ORANGE = colors.HexColor("#F47B20")
 DARK = colors.HexColor("#172033")
 MUTED = colors.HexColor("#667085")
@@ -38,7 +38,7 @@ CONTENT = {
 ]),
 ("2. Installation, Upgrade und erster Start", [
 "Verbinden Sie das RadonScan Gerät per USB, stellen Sie MQTT für Home Assistant bereit und starten Sie die App. Für die automatische Erkennung kann serial_port leer beziehungsweise auf auto bleiben. Für eine feste Zuordnung ist ein Pfad unter /dev/serial/by-id/ vorzuziehen.",
-"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 4.9.0 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
+"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.0.0 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
 "Nur abgeschlossene Stunden werden übernommen. Nach dem ersten Anschließen kann deshalb zunächst noch kein aktueller Messwert verfügbar sein."
 ]),
 ("3. Übersicht", [
@@ -53,7 +53,7 @@ CONTENT = {
 "Eine statistische Signifikanz beweist weder eine Ursache noch eine praktisch relevante Wirkung. Ereignisse und Maßnahmen müssen zusätzlich fachlich interpretiert werden."
 ]),
 ("5. Expertenansicht, Faktor und Kalibrierung", [
-"Die Expertenansicht zeigt Firmware, Serienanschluss, Decoder, SPIR-Prüfsummen, Datenbankstatus, Rohzählwerte, Laufzeitdiagnostik und Faktorhistorie.",
+"Die Expertenansicht zeigt Firmware, Serienanschluss, Decoder- und Protokolldaten, Rohzählwerte, Datenbankintegrität und Faktorhistorie. Die Kacheln „Block-Prüfsummen“ und „Laufzeitstatus“ wurden in Version 5.0.0 entfernt; ausführliche technische Daten bleiben über den Diagnose-Download verfügbar.",
 "Der aktuell konfigurierte Faktor wird getrennt vom Faktor des ausgewählten historischen Messwerts dargestellt. Dadurch bleiben ältere Werte reproduzierbar, auch wenn die Konfiguration später geändert wird.",
 "Kalibrierungen können mit Datum, Labor, Zertifikatsreferenz, Faktor, Unsicherheit, Folgetermin und Notizen dokumentiert werden. Ein Eintrag verändert vorhandene Messwerte nicht automatisch."
 ]),
@@ -80,7 +80,7 @@ CONTENT = {
 ("10. Bedienung, Mobilansicht und Barrierefreiheit", [
 "Die Seitenleiste wird auf kleinen Bildschirmen als Menü eingeblendet. Tabellen und Wochen-Heatmap bleiben innerhalb ihrer Kachel horizontal scrollbar; die restliche Seite darf keinen horizontalen Überstand erzeugen.",
 "Die Oberfläche unterstützt Tastaturbedienung, sichtbare Fokusmarkierungen, einen Sprunglink zum Hauptinhalt, Escape zum Schließen des Menüs, reduzierte Animationen und Schriftvergrößerung bis 200 Prozent.",
-"Version 4.9.0 wurde in Chromium bei 320, 390, 768 und 1440 Pixeln, in allen acht Sprachen und mit langen Testbezeichnungen geprüft."
+"Version 5.0.0 wurde in Chromium bei 320, 390, 768 und 1440 Pixeln, in allen acht Sprachen und mit langen Testbezeichnungen geprüft."
 ]),
 ("11. Fehlerbehebung", [
 "Kein Gerät: USB-Zuordnung, Berechtigungen, konfigurierten Port und konkurrierende Prozesse prüfen.",
@@ -94,8 +94,8 @@ CONTENT = {
 "Messwerte und Metadaten bleiben standardmäßig lokal. Nur aktivierte externe Funktionen übertragen Daten. Prüfen Sie vor World-Map-Uploads, ob Veröffentlichung und Standortangaben Ihren Datenschutzanforderungen entsprechen.",
 "Bewahren Sie Backups und Berichte geschützt auf. Sie können Gerätekennungen, Messorte, Zeiträume und Gebäudedaten enthalten."
 ]),
-("13. Neu in Version 4.9.0", [
-"Modulare Datenverwaltung im Backend und Frontend; zentrale Token-Redaktion; Recorder-Purge-Verifikation; sichere Browser-Speicherzugriffe; korrigierte World-Map-POST-Route; vollständige Auslieferung aller JavaScript-Module; USB-Wiederverbindungstests; schnelle mehrjährige PDF-Berichte; Root-Testkonfiguration; native Konfigurationsübersetzungen und erweiterte Browser-End-to-End-Tests."
+("13. Neu in Version 5.0.0", [
+"Die Expertenansicht wurde vereinfacht: Die Kacheln „Block-Prüfsummen“ und „Laufzeitstatus“ sowie die zugehörigen Frontend-Funktionen wurden entfernt. Versionsangaben, Tests sowie das deutsche und englische Benutzerhandbuch wurden auf Version 5.0.0 aktualisiert."
 ])
 ],
 "options": [
@@ -123,7 +123,7 @@ CONTENT = {
 ]),
 ("2. Installation, upgrade and first start", [
 "Connect the RadonScan by USB, make MQTT available to Home Assistant and start the app. Leave serial_port empty or set to auto for discovery. For a stable fixed assignment, prefer a path under /dev/serial/by-id/.",
-"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 4.9.0. If an old Ingress view remains open, close the panel and reopen it.",
+"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.0.0. If an old Ingress view remains open, close the panel and reopen it.",
 "Only completed hours are imported. A newly connected device can therefore remain without a current value until a complete record is available."
 ]),
 ("3. Overview", [
@@ -138,7 +138,7 @@ CONTENT = {
 "Statistical significance proves neither causality nor practical importance. Events and interventions still require professional interpretation."
 ]),
 ("5. Expert view, factor and calibration", [
-"Expert view shows firmware, serial port, decoder, SPIR checksums, database state, raw counts, runtime diagnostics and factor history.",
+"Expert view shows firmware, serial port, decoder and protocol data, raw counts, database integrity and factor history. The Block checksums and Runtime status cards were removed in version 5.0.0; detailed technical data remains available through the diagnostics download.",
 "The currently configured factor is displayed separately from the factor stored with the selected historical measurement. Historical results therefore remain reproducible after later configuration changes.",
 "Calibration records can include date, laboratory, certificate reference, factor, uncertainty, next due date and notes. A calibration entry does not silently alter existing measurements."
 ]),
@@ -165,7 +165,7 @@ CONTENT = {
 ("10. Operation, mobile layout and accessibility", [
 "On small screens the sidebar opens as a menu. Tables and the weekly heatmap remain horizontally scrollable inside their own cards; the rest of the page must not create horizontal page overflow.",
 "The interface supports keyboard operation, visible focus, a skip link, Escape to close the menu, reduced motion and text scaling to 200 percent.",
-"Version 4.9.0 was checked in Chromium at 320, 390, 768 and 1440 pixels, in all eight languages and with deliberately long labels."
+"Version 5.0.0 was checked in Chromium at 320, 390, 768 and 1440 pixels, in all eight languages and with deliberately long labels."
 ]),
 ("11. Troubleshooting", [
 "No device: check USB mapping, permissions, configured port and competing processes.",
@@ -179,8 +179,8 @@ CONTENT = {
 "Measurements and metadata remain local by default. Only enabled external functions transmit data. Before World Map publication, confirm that location and publication settings meet your privacy requirements.",
 "Protect backups and reports because they may contain device identifiers, sites, periods and building information."
 ]),
-("13. New in version 4.9.0", [
-"Modular backend and frontend data management; central token redaction; Recorder purge verification; safe browser storage; corrected World Map POST route; complete delivery of split JavaScript assets; USB reconnect tests; fast multi-year reports; root test configuration; native option translations and expanded browser end-to-end tests."
+("13. New in version 5.0.0", [
+"The Expert view was simplified: the Block checksums and Runtime status cards and their related frontend functions were removed. Version metadata, tests and the German and English user manuals were updated to version 5.0.0."
 ])
 ],
 "options": [

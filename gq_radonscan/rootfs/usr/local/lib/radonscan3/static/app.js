@@ -149,12 +149,10 @@
   }
 
   function renderExpert() {
-    const d=state.device||{},p=state.protocol||{},m=state.measurement||{},c=state.connection||{};
+    const d=state.device||{},p=state.protocol||{},m=state.measurement||{};
     $('expertDeviceFacts').innerHTML=[fact(tr('model'),d.model),fact(tr('firmware'),fmtFirmware(d.firmware)),fact(tr('serial_number'),d.serial_number),fact(tr('serial_port'),d.serial_port),fact(tr('first_seen'),fmtDate(d.first_seen)),fact(tr('last_seen'),fmtDate(d.last_seen))].join('');
     $('expertProtocolFacts').innerHTML=[fact(tr('decoder'),p.decoder),fact(tr('protocol'),p.transport),fact(tr('raw_start_offset'),p.raw_start_offset),fact(tr('raw_end_offset'),p.raw_end_offset),fact('FD 0x270',p.fd_value_0x270),fact(tr('time_records'),p.time_record_count),fact(tr('hourly_records'),p.hourly_record_count)].join('');
     $('expertDataFacts').innerHTML=[fact(tr('hour_index'),m.hour_index),fact(tr('raw_cph'),m.raw_cph),fact(tr('conversion_factor'),m.factor_bq_m3_per_cph),fact(tr('source'),m.source),fact(tr('campaign'),p.imported?.latest_hour_index??'–'),fact(tr('database_integrity'),state.database?.integrity),fact(tr('data_age'),m.age_hours===null?'–':`${fmtNumber(m.age_hours,2)} h`)].join('');
-    $('hashes').textContent=JSON.stringify(p.block_sha256||{},null,2);
-    $('runtimeSummary').textContent=JSON.stringify({connection:c,mqtt:state.mqtt,protocol_import:p.imported,database:state.database,catalog:state.catalog},null,2);
   }
 
   function renderOverviewChart() {
@@ -391,7 +389,6 @@
     $$('#rangeSwitch button').forEach(button=>button.addEventListener('click',()=>{chartDays=Number(button.dataset.days);$$('#rangeSwitch button').forEach(x=>x.classList.toggle('active',x===button));renderOverviewChart();}));
     $('analysisApply')?.addEventListener('click',loadAnalysis);$('analysisPreset')?.addEventListener('change',()=>{const custom=$('analysisPreset')?.value==='custom';if($('analysisStart'))$('analysisStart').disabled=!custom;if($('analysisEnd'))$('analysisEnd').disabled=!custom;});
     $('analysisCsvButton').addEventListener('click',()=>{const params=analysisQuery();location.href=`export/history.csv?${params}`;});
-    $('copyHashes').addEventListener('click',async()=>{await navigator.clipboard.writeText($('hashes').textContent);toast(tr('copied'));});
     $('locationForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;const payload={id:$('locationId').value||null,name:$('locationName').value,building:$('locationBuilding').value,floor:$('locationFloor').value,room_type:$('locationRoomType').value,map_id:null,x_percent:null,y_percent:null,measurement_height_m:$('locationHeight').value||null,notes:$('locationNotes').value,active:true};try{await api('api/locations',{method:'POST',body:payload});toast(tr('saved'));form.reset();$('locationId').value='';await reloadCatalog();}catch(err){toast(err.message,true);}});
     $('assignForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;try{const result=await api('api/locations/assign',{method:'POST',body:{device_id:$('assignDevice').value,location_id:$('assignLocation').value,title:$('assignTitle').value,start:toIso($('assignStart').value),end:toIso($('assignEnd').value),purpose:$('assignPurpose').value,notes:$('assignNotes').value}});toast(`${tr('assigned')}: ${result.assigned}`);form.reset();await loadAll();}catch(err){toast(err.message,true);}});
     $('eventForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;try{await api('api/events',{method:'POST',body:{event_type:$('eventType').value,occurred_at:toIso($('eventTime').value),location_id:$('eventLocation').value||null,title:$('eventTitle').value,notes:$('eventNotes').value}});toast(tr('saved'));form.reset();$('eventTime').value=toInput(new Date());await reloadCatalog();}catch(err){toast(err.message,true);}});
