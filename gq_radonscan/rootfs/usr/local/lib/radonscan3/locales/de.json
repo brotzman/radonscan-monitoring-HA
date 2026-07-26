@@ -279,7 +279,7 @@
   "main_navigation": "Hauptnavigation",
   "mann_kendall_tau": "Mann–Kendall-Tau",
   "manual": "Manuell",
-  "manual_note_v3": "Das Benutzerhandbuch entspricht Version 5.3.1. Die separate SPIR-Protokollreferenz trägt weiterhin Version 3.0.0, da sie das Geräteprotokoll und nicht die App-Version beschreibt.",
+  "manual_note_v3": "Das Benutzerhandbuch entspricht Version 5.3.2. Die separate SPIR-Protokollreferenz trägt weiterhin Version 3.0.0, da sie das Geräteprotokoll und nicht die App-Version beschreibt.",
   "manual_upload": "Manueller Upload",
   "manual_upload_hint": "Es wird ausschließlich der letzte abgeschlossene lokale Stundenwert hochgeladen. Historische Zeitstempel können über das veröffentlichte Protokoll nicht übertragen werden.",
   "map_click_hint": "Klicken Sie auf den Grundriss, um die Position des Raumes festzulegen.",

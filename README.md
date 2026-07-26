@@ -1,8 +1,8 @@
-# Radon Monitoring Home Assistant Repository 5.3.1
+# Radon Monitoring Home Assistant Repository 5.3.2
 
 This repository contains the Home Assistant app **Radon Monitoring** for compatible GQ RadonScan devices.
 
-Version 5.3.1 fixes reliable room saving through Home Assistant Ingress and keeps the simplified location model. The Overview now selects only device and campaign; the current room is determined automatically from the time-based room assignment and is shown beneath the Home Assistant location together with the measurement height. Place/address, building or location name, coordinates, elevation, country and time zone come from Home Assistant's local Core configuration. Only room and measurement height are entered manually in Radon Monitoring. Room names are validated and normalised, and newly saved rooms appear immediately in the room list.
+Version 5.3.2 fixes room saving through Home Assistant Ingress when the proxy forwards POST data with chunked transfer encoding or unexpectedly omits the request body. The server now decodes chunked requests correctly and the browser supplies an encoded fallback header. The simplified location model remains unchanged: place/address and building come from Home Assistant, while only room and measurement height are entered manually.
 
 The former Measurement sites area is now **Rooms & events**. It manages rooms, measurement campaigns, time-based assignments and documented events without duplicating Home Assistant location or building data. Coordinates include degree units and cardinal directions, for example `51,60176° N, 7,45410° E`. No external geocoding service is used.
 

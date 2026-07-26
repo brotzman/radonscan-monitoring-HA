@@ -148,15 +148,53 @@ class WebServer:
 
             def read_body(self, max_bytes: int | None = None) -> bytes:
                 limit = max_bytes or 2 * 1024 * 1024
+                transfer_encoding = self.headers.get("Transfer-Encoding", "").lower()
+                if "chunked" in {part.strip() for part in transfer_encoding.split(",")}:
+                    body = bytearray()
+                    while True:
+                        size_line = self.rfile.readline(8192)
+                        if not size_line:
+                            raise StorageError("Incomplete chunked request body")
+                        try:
+                            size_token = size_line.split(b";", 1)[0].strip()
+                            chunk_size = int(size_token, 16)
+                        except ValueError as exc:
+                            raise StorageError("Invalid chunked request body") from exc
+                        if chunk_size < 0:
+                            raise StorageError("Invalid chunked request body")
+                        if chunk_size == 0:
+                            # Consume optional trailer headers up to the terminating blank line.
+                            while True:
+                                trailer = self.rfile.readline(8192)
+                                if trailer in (b"\r\n", b"\n", b""):
+                                    break
+                            break
+                        if len(body) + chunk_size > limit:
+                            raise StorageError("Request body is too large")
+                        chunk = self.rfile.read(chunk_size)
+                        if len(chunk) != chunk_size:
+                            raise StorageError("Incomplete chunked request body")
+                        body.extend(chunk)
+                        ending = self.rfile.readline(3)
+                        if ending not in (b"\r\n", b"\n"):
+                            raise StorageError("Invalid chunked request body")
+                    return bytes(body)
+
+                raw_length = self.headers.get("Content-Length")
+                if raw_length is None:
+                    return b""
                 try:
-                    length = int(self.headers.get("Content-Length", "0"))
-                except ValueError:
-                    raise StorageError("Invalid content length")
+                    length = int(raw_length)
+                except ValueError as exc:
+                    raise StorageError("Invalid content length") from exc
                 if length <= 0:
                     return b""
                 if length > limit:
                     raise StorageError("Request body is too large")
-                return self.rfile.read(length)
+                body = self.rfile.read(length)
+                if len(body) != length:
+                    raise StorageError("Incomplete request body")
+                return body
 
             def read_json(self) -> dict[str, object]:
                 body = self.read_body(4 * 1024 * 1024)
@@ -429,7 +467,7 @@ class WebServer:
 
                     if path in {"/docs/user-manual.pdf", "/docs/protocol-reference.pdf"}:
                         locale = self.locale(query)
-                        prefix = "Radon_Monitoring_User_Manual_5.3.1" if "user-manual" in path else "GQ_RadonScan_Protocol_Reference_3.0.0"
+                        prefix = "Radon_Monitoring_User_Manual_5.3.2" if "user-manual" in path else "GQ_RadonScan_Protocol_Reference_3.0.0"
                         candidates = [app.docs_dir / f"{prefix}_{locale}.pdf", app.docs_dir / f"{prefix}_en.pdf"]
                         manual = next((candidate for candidate in candidates if candidate.is_file()), None)
                         if manual is None:
@@ -449,6 +487,7 @@ class WebServer:
             def do_POST(self) -> None:
                 parsed = urlparse(self.path)
                 path = parsed.path.rstrip("/") or "/"
+                query = parse_qs(parsed.query)
                 if not self.require_write_token():
                     return
                 try:
@@ -469,6 +508,28 @@ class WebServer:
 
                     if path == "/api/locations":
                         payload = self.read_json()
+                        # Home Assistant Ingress may forward a browser request with chunked
+                        # transfer encoding. read_body handles that directly. The encoded
+                        # fallback headers below also keep room creation functional if an
+                        # intermediary unexpectedly drops an otherwise valid JSON body.
+                        if not (payload.get("room") or payload.get("name") or payload.get("room_name")):
+                            header_room = unquote(self.headers.get("X-Radon-Room", "")).strip()
+                            query_room = str((query.get("room") or query.get("name") or [""])[0]).strip()
+                            fallback_room = header_room or query_room
+                            if fallback_room:
+                                payload["room"] = fallback_room
+                        if payload.get("measurement_height_m") in (None, ""):
+                            header_height = self.headers.get("X-Radon-Measurement-Height", "").strip()
+                            query_height = str((query.get("measurement_height_m") or [""])[0]).strip()
+                            fallback_height = header_height or query_height
+                            if fallback_height:
+                                payload["measurement_height_m"] = fallback_height
+                        if payload.get("id") in (None, ""):
+                            header_id = self.headers.get("X-Radon-Location-Id", "").strip()
+                            query_id = str((query.get("id") or [""])[0]).strip()
+                            fallback_id = header_id or query_id
+                            if fallback_id:
+                                payload["id"] = fallback_id
                         # Home Assistant remains the authoritative source for place/address
                         # and building details. Room data therefore stays writable even when
                         # Core is temporarily unavailable and no HA location value is copied

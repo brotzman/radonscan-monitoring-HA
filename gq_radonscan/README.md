@@ -1,4 +1,4 @@
-# Radon Monitoring 5.3.1
+# Radon Monitoring 5.3.2
 
 Radon Monitoring is a local Home Assistant app for read-only monitoring of compatible GQ RadonScan devices. It imports completed hourly values, stores raw and converted measurements in SQLite, publishes Home Assistant entities through MQTT, provides scientific time-series analysis, generates PDF reports and can optionally upload measurements to the GQ Radiation World Map.
 
@@ -21,9 +21,9 @@ Radon Monitoring is a local Home Assistant app for read-only monitoring of compa
 - optional complete Home Assistant Recorder purge for RadonScan entities, plus verification through the History API
 - interface and Home Assistant option translations in German, English, Spanish, French, Croatian, Italian, Dutch and Polish
 
-## Version 5.3.1
+## Version 5.3.2
 
-Version 5.3.1 is a reliability update for **Rooms & events**. Room names are trimmed and validated before transmission, the form includes stable field names, and the request carries a compatibility alias so room creation also works during a short Home Assistant Ingress cache/version mismatch. After a successful save, the new room is inserted into the visible room list immediately and then confirmed from the catalogue API. The save operation no longer depends on a successful Home Assistant status refresh.
+Version 5.3.2 is a reliability update for **Rooms & events**. Room names are trimmed and validated before transmission, the form includes stable field names, and the request carries a compatibility alias so room creation also works during a short Home Assistant Ingress cache/version mismatch. After a successful save, the new room is inserted into the visible room list immediately and then confirmed from the catalogue API. The save operation no longer depends on a successful Home Assistant status refresh.
 
 The Overview context contains only **device** and **campaign**. The current room is resolved automatically from the time-based room assignment, so there is no separate room or measurement-site selector on the Overview. The current value, period statistics, sample count, peak and chart use the same resolved context. Beneath the Home Assistant location card, the interface shows only the room and, when available, the measurement height.
 
@@ -43,13 +43,13 @@ Coordinates include the angular unit and direction, for example `51,60176° N, 7
 
 ## Upgrade notes
 
-The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.3.1 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
+The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.3.2 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
 
 Before upgrading:
 
 1. Create a Home Assistant backup and, where appropriate, an app database backup.
 2. Stop the app before replacing a local repository package.
-3. Start the updated app and confirm that the sidebar or Help view reports version 5.3.1.
+3. Start the updated app and confirm that the sidebar or Help view reports version 5.3.2.
 4. Reopen the Ingress panel if an old iframe remains visible.
 5. Review `location_display_mode` if the Overview is shown in screenshots or shared displays.
 

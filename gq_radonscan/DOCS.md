@@ -1,4 +1,4 @@
-# Radon Monitoring 5.3.1 - App documentation
+# Radon Monitoring 5.3.2 - App documentation
 
 ## Purpose
 
@@ -16,11 +16,9 @@ The app is an orientation and documentation tool. It does not turn a consumer mo
 
 Only completed hours are imported. A newly connected device may therefore remain without a current value until a completed record is available.
 
-## Room-save reliability in 5.3.1
+## Room-save reliability in 5.3.2
 
-The room form sends only local room metadata: room name, measurement height and an optional existing room ID. The room name is whitespace-normalised and validated in the browser. For upgrade compatibility the same room text is also sent under the legacy `name` alias; the backend still stores only one canonical room name and never duplicates Home Assistant place or building data.
-
-A successful response is rendered immediately before the catalogue is refreshed. This prevents a transient catalogue or Home Assistant Core status delay from making a successfully created room look unsaved. Home Assistant location metadata remains read-only and its availability is not a prerequisite for saving a room.
+Room creation now supports both regular requests with `Content-Length` and chunked requests forwarded by Home Assistant Ingress. The HTTP server decodes chunked request bodies with strict size limits and validation. The browser also sends the room and measurement height in encoded fallback headers. This avoids the misleading “A room name is required” response when an intermediary forwards an empty body. Only room and measurement height are stored locally; place/address and building remain read-only Home Assistant metadata.
 
 ## Views
 
@@ -181,6 +179,6 @@ From the repository root:
 python3 -m pytest
 ```
 
-Version 5.3.1 includes tests for filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, automatic room resolution, read-only Home Assistant place/building data and separation of local rooms from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
+Version 5.3.2 includes tests for filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, automatic room resolution, read-only Home Assistant place/building data and separation of local rooms from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
 
 Real-device and real-Home-Assistant field testing remains necessary for USB hardware variations, Home Assistant upgrades and Recorder backends.

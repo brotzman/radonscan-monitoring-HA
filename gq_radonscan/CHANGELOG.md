@@ -1,5 +1,13 @@
 # Changelog
 
+## 5.3.2 - Home Assistant Ingress request-body fix
+
+- Fixed room creation when Home Assistant Ingress forwards the POST request with `Transfer-Encoding: chunked` and no `Content-Length`.
+- Added standards-compliant bounded decoding for chunked request bodies.
+- Added an encoded-header fallback for room, measurement height and edit ID so an intermediary cannot silently discard the room value.
+- Added real HTTP regression tests for both chunked Ingress requests and an empty-body proxy fallback.
+- Kept the local metadata model unchanged: only room and measurement height are stored locally.
+
 ## 5.3.1 - Reliable room saving
 
 - Fixed room creation through Home Assistant Ingress when frontend and backend assets briefly differ during an upgrade.

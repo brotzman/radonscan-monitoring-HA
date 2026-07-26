@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import socket
 from pathlib import Path
 from urllib.request import Request, urlopen
 
@@ -37,6 +38,62 @@ def _post(url: str, token: str, payload: dict):
     )
     with urlopen(request, timeout=5) as response:
         return response.status, json.loads(response.read())
+
+
+def _chunked_post(port: int, path: str, token: str, payload: dict):
+    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    chunks = (body[:7], body[7:19], body[19:])
+    request = bytearray(
+        (
+            f"POST {path} HTTP/1.1\r\n"
+            f"Host: 127.0.0.1:{port}\r\n"
+            "Content-Type: application/json\r\n"
+            "Transfer-Encoding: chunked\r\n"
+            f"X-Radon-Action: {token}\r\n"
+            "Connection: close\r\n\r\n"
+        ).encode("ascii")
+    )
+    for chunk in chunks:
+        if not chunk:
+            continue
+        request.extend(f"{len(chunk):X}\r\n".encode("ascii"))
+        request.extend(chunk)
+        request.extend(b"\r\n")
+    request.extend(b"0\r\n\r\n")
+    with socket.create_connection(("127.0.0.1", port), timeout=5) as sock:
+        sock.sendall(request)
+        response = bytearray()
+        while True:
+            data = sock.recv(65536)
+            if not data:
+                break
+            response.extend(data)
+    headers, raw_body = bytes(response).split(b"\r\n\r\n", 1)
+    status = int(headers.split(b"\r\n", 1)[0].split()[1])
+    return status, json.loads(raw_body.decode("utf-8"))
+
+
+def _header_fallback_post(port: int, token: str, room: str, height: str):
+    request = (
+        f"POST /api/locations HTTP/1.1\r\n"
+        f"Host: 127.0.0.1:{port}\r\n"
+        "Content-Length: 0\r\n"
+        f"X-Radon-Action: {token}\r\n"
+        f"X-Radon-Room: {room}\r\n"
+        f"X-Radon-Measurement-Height: {height}\r\n"
+        "Connection: close\r\n\r\n"
+    ).encode("ascii")
+    with socket.create_connection(("127.0.0.1", port), timeout=5) as sock:
+        sock.sendall(request)
+        response = bytearray()
+        while True:
+            data = sock.recv(65536)
+            if not data:
+                break
+            response.extend(data)
+    headers, raw_body = bytes(response).split(b"\r\n\r\n", 1)
+    status = int(headers.split(b"\r\n", 1)[0].split()[1])
+    return status, json.loads(raw_body.decode("utf-8"))
 
 
 def test_real_http_server_serves_all_frontend_modules_and_secure_diagnostics(tmp_path: Path, monkeypatch):
@@ -97,5 +154,30 @@ def test_real_http_server_serves_all_frontend_modules_and_secure_diagnostics(tmp
         assert saved["item"]["measurement_height_m"] == 1.2
         assert saved["item"]["building"] == ""
         assert saved["item"]["homeassistant_location"]["connected"] is False
+
+        # Home Assistant Ingress can forward fetch requests using chunked transfer
+        # encoding and therefore without Content-Length. The full room payload must
+        # still reach the storage layer.
+        status, chunked_saved = _chunked_post(
+            port,
+            "/api/locations",
+            web.csrf_token,
+            {"room": "Arbeitszimmer", "measurement_height_m": 1.0},
+        )
+        assert status == 201
+        assert chunked_saved["item"]["room"] == "Arbeitszimmer"
+        assert chunked_saved["item"]["measurement_height_m"] == 1.0
+
+        # A safe encoded-header fallback protects room saving even if an
+        # intermediary forwards an empty request body.
+        status, fallback_saved = _header_fallback_post(
+            port,
+            web.csrf_token,
+            "G%C3%A4stezimmer",
+            "1.3",
+        )
+        assert status == 201
+        assert fallback_saved["item"]["room"] == "Gästezimmer"
+        assert fallback_saved["item"]["measurement_height_m"] == 1.3
     finally:
         web.stop()

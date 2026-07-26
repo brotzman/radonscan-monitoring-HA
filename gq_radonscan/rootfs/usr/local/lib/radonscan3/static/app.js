@@ -594,7 +594,6 @@
       const room=String(roomInput?.value??'').replace(/\s+/g,' ').trim();
       if(!room) {
         roomInput?.setCustomValidity(tr('room_name_required'));
-        roomInput?.reportValidity();
         roomInput?.focus();
         toast(tr('room_name_required'),true);
         return;
@@ -612,7 +611,12 @@
       const button=$('saveRoomButton');
       if(button) {button.disabled=true;button.textContent=tr('saving_room');}
       try {
-        const result=await api('api/locations',{method:'POST',body:payload});
+        const fallbackHeaders={
+          'X-Radon-Room':encodeURIComponent(room),
+          'X-Radon-Measurement-Height':rawHeight,
+        };
+        if(payload.id) fallbackHeaders['X-Radon-Location-Id']=String(payload.id);
+        const result=await api('api/locations',{method:'POST',headers:fallbackHeaders,body:payload});
         if(result?.item) {
           const index=catalog.locations.findIndex(item=>Number(item.id)===Number(result.item.id));
           if(index>=0) catalog.locations[index]=result.item; else catalog.locations.push(result.item);
