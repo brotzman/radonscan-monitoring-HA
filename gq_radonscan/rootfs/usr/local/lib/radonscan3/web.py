@@ -429,7 +429,7 @@ class WebServer:
 
                     if path in {"/docs/user-manual.pdf", "/docs/protocol-reference.pdf"}:
                         locale = self.locale(query)
-                        prefix = "Radon_Monitoring_User_Manual_5.3.0" if "user-manual" in path else "GQ_RadonScan_Protocol_Reference_3.0.0"
+                        prefix = "Radon_Monitoring_User_Manual_5.3.1" if "user-manual" in path else "GQ_RadonScan_Protocol_Reference_3.0.0"
                         candidates = [app.docs_dir / f"{prefix}_{locale}.pdf", app.docs_dir / f"{prefix}_en.pdf"]
                         manual = next((candidate for candidate in candidates if candidate.is_file()), None)
                         if manual is None:
@@ -473,14 +473,17 @@ class WebServer:
                         # and building details. Room data therefore stays writable even when
                         # Core is temporarily unavailable and no HA location value is copied
                         # into the local room record.
-                        ha_location = app.ha.status()
-                        item = app.storage.save_location({
-                            "id": payload.get("id"),
-                            "room": payload.get("room") or payload.get("name"),
-                            "measurement_height_m": payload.get("measurement_height_m"),
-                            "building": "",
-                            "active": True,
-                        })
+                        location_payload = dict(payload)
+                        location_payload.update({"building": "", "active": True})
+                        item = app.storage.save_location(location_payload)
+                        # Room saving must not depend on a successful Home Assistant
+                        # status request. The read-only HA metadata is added only as a
+                        # best-effort response convenience.
+                        try:
+                            ha_location = app.ha.status()
+                        except Exception as exc:
+                            LOGGER.warning("Home Assistant metadata refresh after room save failed: %s", exc)
+                            ha_location = {"connected": False, "error": str(exc)}
                         item["homeassistant_location"] = ha_location
                         self.json_response({"ok": True, "item": item}, 201)
                         return

@@ -41,3 +41,11 @@ def test_room_name_and_measurement_height_are_validated(tmp_path):
         assert "between 0 and 10" in str(exc)
     else:
         raise AssertionError("invalid measurement height was accepted")
+
+
+def test_room_storage_accepts_legacy_and_nested_room_aliases(tmp_path):
+    storage = Storage(tmp_path / "radon.sqlite3")
+    legacy = storage.save_location({"name": "  Arbeitszimmer  ", "measurement_height_m": 1})
+    nested = storage.save_location({"location": {"room_name": " Gäste   Zimmer "}})
+    assert legacy["room"] == "Arbeitszimmer"
+    assert nested["room"] == "Gäste Zimmer"

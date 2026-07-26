@@ -13,7 +13,7 @@ VISIBLE_VIEWS = ("overview", "analysis", "sites", "history", "reports", "data", 
 
 def _state(language="de"):
     return {
-        "app": {"version": "5.3.0"},
+        "app": {"version": "5.3.1"},
         "settings": {
             "preferred_unit": "Bq/m3",
             "factor_bq_m3_per_cph": 1.54,
@@ -134,10 +134,10 @@ def _fixture_html(locale="de") -> str:
     tr = json.loads((LOCALES / f"{locale}.json").read_text())
     locale_names = {code: code.upper() for code in LOCALE_CODES}
     html = (STATIC / "index.html").read_text()
-    html = html.replace("__LOCALE__", locale).replace("__TRANSLATIONS__", json.dumps(tr)).replace("__LOCALE_NAMES__", json.dumps(locale_names)).replace("__VERSION__", "5.3.0").replace("__ACTION_TOKEN__", "test-token")
-    html = html.replace('<link rel="stylesheet" href="assets/app.css?v=5.3.0">', "<style>" + (STATIC / "app.css").read_text() + "</style>")
+    html = html.replace("__LOCALE__", locale).replace("__TRANSLATIONS__", json.dumps(tr)).replace("__LOCALE_NAMES__", json.dumps(locale_names)).replace("__VERSION__", "5.3.1").replace("__ACTION_TOKEN__", "test-token")
+    html = html.replace('<link rel="stylesheet" href="assets/app.css?v=5.3.1">', "<style>" + (STATIC / "app.css").read_text() + "</style>")
     for script in ("core.js", "accessibility.js", "data-management.js", "app.js"):
-        html = html.replace(f'<script src="assets/{script}?v=5.3.0"></script>', "<script>" + (STATIC / script).read_text() + "</script>")
+        html = html.replace(f'<script src="assets/{script}?v=5.3.1"></script>', "<script>" + (STATIC / script).read_text() + "</script>")
     return html
 
 
@@ -363,14 +363,16 @@ def test_room_form_submits_only_room_and_measurement_height(shared_browser):
     page, errors = _new_page(shared_browser, 390, 844, "de")
     page.locator('[data-view="sites"]').evaluate("el=>el.click()")
     page.evaluate("window.__TEST_CALLS__=[]")
-    page.locator("#locationRoom").fill("Arbeitszimmer")
+    assert page.locator("#locationRoom").get_attribute("name") == "room"
+    assert page.locator("#locationHeight").get_attribute("name") == "measurement_height_m"
+    page.locator("#locationRoom").fill("  Arbeitszimmer  ")
     page.locator("#locationHeight").fill("1.2")
     page.locator("#locationForm button[type=submit]").click()
     page.wait_for_timeout(250)
     calls = page.evaluate("window.__TEST_CALLS__.filter(call=>call.url.includes('api/locations') && call.method==='POST')")
     assert len(calls) == 1
     body = json.loads(calls[0]["body"])
-    assert body == {"id": None, "room": "Arbeitszimmer", "measurement_height_m": "1.2"}
+    assert body == {"id": None, "room": "Arbeitszimmer", "name": "Arbeitszimmer", "measurement_height_m": 1.2}
     assert not errors
     page.close()
 
@@ -380,5 +382,24 @@ def test_analysis_starts_with_summary_and_collapsed_scientific_details(shared_br
     page.wait_for_timeout(200)
     assert page.locator("#analysisSummaryText").inner_text()
     assert not page.locator("#analysisAdvanced").evaluate("el=>el.open")
+    assert not errors
+    page.close()
+
+
+def test_empty_room_is_rejected_locally_without_post(shared_browser):
+    page, errors = _new_page(shared_browser, 390, 844, "de")
+    page.locator('[data-view="sites"]').evaluate("el=>el.click()")
+    page.evaluate("window.__TEST_CALLS__=[]")
+    page.locator("#locationRoom").fill("   ")
+    page.locator("#locationForm button[type=submit]").click()
+    page.wait_for_timeout(100)
+    calls = page.evaluate("window.__TEST_CALLS__.filter(call=>call.url.includes('api/locations') && call.method==='POST')")
+    assert calls == []
+    assert "Raum" in page.locator("#toast").inner_text()
+    page.locator("#locationRoom").fill("Arbeitszimmer")
+    page.locator("#locationForm button[type=submit]").click()
+    page.wait_for_timeout(200)
+    calls = page.evaluate("window.__TEST_CALLS__.filter(call=>call.url.includes('api/locations') && call.method==='POST')")
+    assert len(calls) == 1
     assert not errors
     page.close()

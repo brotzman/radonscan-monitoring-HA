@@ -11,7 +11,7 @@ from reportlab.platypus import (
     Paragraph, Spacer, Table, TableStyle,
 )
 
-VERSION = "5.3.0"
+VERSION = "5.3.1"
 ORANGE = colors.HexColor("#F47B20")
 DARK = colors.HexColor("#172033")
 MUTED = colors.HexColor("#667085")
@@ -38,7 +38,7 @@ CONTENT = {
 ]),
 ("2. Installation, Upgrade und erster Start", [
 "Verbinden Sie das RadonScan Gerät per USB, stellen Sie MQTT für Home Assistant bereit und starten Sie die App. Für die automatische Erkennung kann serial_port leer beziehungsweise auf auto bleiben. Für eine feste Zuordnung ist ein Pfad unter /dev/serial/by-id/ vorzuziehen.",
-"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.3.0 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
+"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.3.1 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
 "Nur abgeschlossene Stunden werden übernommen. Nach dem ersten Anschließen kann deshalb zunächst noch kein aktueller Messwert verfügbar sein."
 ]),
 ("3. Übersicht", [
@@ -81,7 +81,7 @@ CONTENT = {
 ("10. Bedienung, Mobilansicht und Barrierefreiheit", [
 "Die Seitenleiste wird auf kleinen Bildschirmen als Menü eingeblendet. Tabellen und Wochen-Heatmap bleiben innerhalb ihrer Kachel horizontal scrollbar; die restliche Seite darf keinen horizontalen Überstand erzeugen.",
 "Die Oberfläche unterstützt Tastaturbedienung, sichtbare Fokusmarkierungen, einen Sprunglink zum Hauptinhalt, Escape zum Schließen des Menüs, reduzierte Animationen und Schriftvergrößerung bis 200 Prozent.",
-"Version 5.3.0 wurde in Chromium bei 320, 390, 768 und 1440 Pixeln, in allen acht Sprachen und mit langen Testbezeichnungen geprüft."
+"Version 5.3.1 wurde in Chromium bei 320, 390, 768 und 1440 Pixeln, in allen acht Sprachen und mit langen Testbezeichnungen geprüft."
 ]),
 ("11. Fehlerbehebung", [
 "Kein Gerät: USB-Zuordnung, Berechtigungen, konfigurierten Port und konkurrierende Prozesse prüfen.",
@@ -95,8 +95,8 @@ CONTENT = {
 "Messwerte und Metadaten bleiben standardmäßig lokal. Nur aktivierte externe Funktionen übertragen Daten. Die Standortkachel liest ihre Angaben ausschließlich über die lokale Home-Assistant-Core-API und verwendet keinen externen Geokodierungsdienst. Mit location_display_mode kann die Anzeige vollständig, reduziert oder ausgeblendet erfolgen. Prüfen Sie vor Bildschirmfotos, Berichten und World-Map-Uploads, ob die sichtbaren Standortangaben Ihren Datenschutzanforderungen entsprechen.",
 "Bewahren Sie Backups und Berichte geschützt auf. Sie können Gerätekennungen, Räume, Zeiträume und Gebäudedaten enthalten."
 ]),
-("13. Neu in Version 5.3.0", [
-"Version 5.3.0 vereinfacht die Standortverwaltung grundlegend: Ort beziehungsweise Adresse und Gebäude werden direkt aus Home Assistant übernommen; manuell werden nur Raum und Messhöhe gepflegt. Die Übersicht enthält keinen separaten Raumfilter mehr, ermittelt den aktuellen Raum automatisch und zeigt ihn direkt unter dem Home-Assistant-Standort. Die Ansicht Lokale Metadaten wurde vollständig auf Räume, zeitliche Zuordnungen, Messkampagnen und Ereignisse ausgerichtet. Bestehende Datenbanken und Messwerte bleiben kompatibel."
+("13. Neu in Version 5.3.1", [
+"Version 5.3.1 behebt das Speichern neuer Räume über Home Assistant Ingress. Der Raumname wird vor dem Senden geprüft und normalisiert, die Raumliste wird nach erfolgreichem Speichern sofort aktualisiert und ein kurzzeitiger Versionsversatz zwischen Browser und App wird abgefangen. Die Standortverwaltung bleibt unverändert: Ort beziehungsweise Adresse und Gebäude kommen direkt aus Home Assistant; manuell werden nur Raum und Messhöhe gepflegt. Die Übersicht enthält keinen separaten Raumfilter, ermittelt den aktuellen Raum automatisch und zeigt ihn direkt unter dem Home-Assistant-Standort. Bestehende Datenbanken und Messwerte bleiben kompatibel."
 ])
 ],
 "options": [
@@ -125,7 +125,7 @@ CONTENT = {
 ]),
 ("2. Installation, upgrade and first start", [
 "Connect the RadonScan by USB, make MQTT available to Home Assistant and start the app. Leave serial_port empty or set to auto for discovery. For a stable fixed assignment, prefer a path under /dev/serial/by-id/.",
-"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.3.0. If an old Ingress view remains open, close the panel and reopen it.",
+"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.3.1. If an old Ingress view remains open, close the panel and reopen it.",
 "Only completed hours are imported. A newly connected device can therefore remain without a current value until a complete record is available."
 ]),
 ("3. Overview", [
@@ -168,7 +168,7 @@ CONTENT = {
 ("10. Operation, mobile layout and accessibility", [
 "On small screens the sidebar opens as a menu. Tables and the weekly heatmap remain horizontally scrollable inside their own cards; the rest of the page must not create horizontal page overflow.",
 "The interface supports keyboard operation, visible focus, a skip link, Escape to close the menu, reduced motion and text scaling to 200 percent.",
-"Version 5.3.0 was checked in Chromium at 320, 390, 768 and 1440 pixels, in all eight languages and with deliberately long labels."
+"Version 5.3.1 was checked in Chromium at 320, 390, 768 and 1440 pixels, in all eight languages and with deliberately long labels."
 ]),
 ("11. Troubleshooting", [
 "No device: check USB mapping, permissions, configured port and competing processes.",
@@ -182,8 +182,8 @@ CONTENT = {
 "Measurements and metadata remain local by default. Only enabled external functions transmit data. Location, address and building name are read only through the local Home Assistant Core API and are not manually duplicated. No external geocoding service is used. location_display_mode can show full, reduced or no location details. Before screenshots, reports and World Map publication, confirm that visible location data meets your privacy requirements.",
 "Protect backups and reports because they may contain device identifiers, rooms, periods and building information."
 ]),
-("13. New in version 5.3.0", [
-"Version 5.3.0 fundamentally simplifies location management: place or address and building are taken directly from Home Assistant, while only room and measurement height are maintained manually. Overview no longer has a separate room filter, resolves the current room automatically and shows it directly below the Home Assistant location. Local metadata is fully focused on rooms, time-based assignments, measurement campaigns and events. Existing databases and measurements remain compatible."
+("13. New in version 5.3.1", [
+"Version 5.3.1 fixes room creation through Home Assistant Ingress. The room name is validated and normalised before submission, the room list updates immediately after a successful save, and a brief browser/app version mismatch during upgrades is handled safely. The location model remains unchanged: place or address and building come directly from Home Assistant, while only room and measurement height are maintained manually. Overview has no separate room filter, resolves the current room automatically and shows it below the Home Assistant location. Existing databases and measurements remain compatible."
 ])
 ],
 "options": [

@@ -204,10 +204,10 @@
               <h3 data-i18n="room"></h3>
               <p class="field-help" data-i18n="room_form_hint"></p>
               <form id="locationForm" class="form-stack">
-                <input type="hidden" id="locationId">
-                <label><span data-i18n="room"></span><input id="locationRoom" required autocomplete="off"></label>
-                <label><span data-i18n="measurement_height"></span><input id="locationHeight" type="number" min="0" max="10" step="0.1" inputmode="decimal"></label>
-                <button class="button primary" type="submit" data-i18n="save_site"></button>
+                <input type="hidden" id="locationId" name="id">
+                <label><span data-i18n="room"></span><input id="locationRoom" name="room" required autocomplete="off" maxlength="120"></label>
+                <label><span data-i18n="measurement_height"></span><input id="locationHeight" name="measurement_height_m" type="number" min="0" max="10" step="0.1" inputmode="decimal"></label>
+                <button id="saveRoomButton" class="button primary" type="submit" data-i18n="save_site"></button>
               </form>
             </article>
             <article class="panel">

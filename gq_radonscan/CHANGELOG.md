@@ -1,5 +1,12 @@
 # Changelog
 
+## 5.3.1 - Reliable room saving
+
+- Fixed room creation through Home Assistant Ingress when frontend and backend assets briefly differ during an upgrade.
+- Added named form fields, whitespace normalisation, local validation and a legacy `name` alias without storing duplicate location metadata.
+- Room creation now updates the visible room list immediately and no longer depends on a successful Home Assistant status refresh.
+- Removed compiled Python caches from the release archive to prevent stale bytecode after updates.
+
 All notable changes to Radon Monitoring are documented here. Versions follow semantic versioning.
 
 ## 5.3.0 - Home Assistant sourced location and room-only metadata

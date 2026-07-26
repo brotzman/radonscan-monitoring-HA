@@ -279,7 +279,7 @@
   "main_navigation": "Navigation principale",
   "mann_kendall_tau": "Tau de Mann-Kendall",
   "manual": "Manual",
-  "manual_note_v3": "Le manuel utilisateur correspond à la version 5.3.0. La référence séparée du protocole SPIR reste en version 3.0.0, car elle décrit le protocole de l’appareil et non la version de l’application.",
+  "manual_note_v3": "Le manuel utilisateur correspond à la version 5.3.1. La référence séparée du protocole SPIR reste en version 3.0.0, car elle décrit le protocole de l’appareil et non la version de l’application.",
   "manual_upload": "Envoi manuel",
   "manual_upload_hint": "Envoie uniquement le dernier relevé horaire local terminé. Le protocole publié ne permet pas d’envoyer des horodatages historiques.",
   "map_click_hint": "Cliquez sur le plan pour définir la position de la pièce.",
@@ -514,5 +514,8 @@
   "weekend_mean": "Moyenne du week-end",
   "weekly_heatmap": "Carte thermique hebdomadaire",
   "window": "Fenêtre",
-  "yes": "Oui"
+  "yes": "Oui",
+  "room_name_required": "Veuillez saisir une pièce.",
+  "saving_room": "Enregistrement de la pièce…",
+  "room_saved": "Pièce enregistrée."
 }

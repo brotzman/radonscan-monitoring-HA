@@ -9,21 +9,22 @@ LOCALES = LIB / 'locales'
 
 
 def test_release_versions_are_consistent():
-    assert 'version: 5.3.0' in (ROOT / 'config.yaml').read_text(encoding='utf-8')
-    assert 'BUILD_VERSION="5.3.0"' in (ROOT / 'Dockerfile').read_text(encoding='utf-8')
-    assert '__version__ = "5.3.0"' in (LIB / '__init__.py').read_text(encoding='utf-8')
-    assert 'Radon Monitoring 5.3.0' in (ROOT / 'README.md').read_text(encoding='utf-8')
+    assert 'version: 5.3.1' in (ROOT / 'config.yaml').read_text(encoding='utf-8')
+    assert 'BUILD_VERSION="5.3.1"' in (ROOT / 'Dockerfile').read_text(encoding='utf-8')
+    assert '__version__ = "5.3.1"' in (LIB / '__init__.py').read_text(encoding='utf-8')
+    assert 'Radon Monitoring 5.3.1' in (ROOT / 'README.md').read_text(encoding='utf-8')
 
 
 def test_current_manuals_exist_and_obsolete_manuals_are_removed():
     docs = ROOT / 'rootfs/usr/local/share/radonscan3/docs'
     for lang in ('de', 'en'):
-        path = docs / f'Radon_Monitoring_User_Manual_5.3.0_{lang}.pdf'
+        path = docs / f'Radon_Monitoring_User_Manual_5.3.1_{lang}.pdf'
         assert path.is_file() and path.stat().st_size > 10_000
     assert not list(docs.glob('Radon_Monitoring_User_Manual_4.2.1_*.pdf'))
     assert not list(docs.glob('Radon_Monitoring_User_Manual_4.9.0_*.pdf'))
     assert not list(docs.glob('Radon_Monitoring_User_Manual_5.1.0_*.pdf'))
-    assert 'Radon_Monitoring_User_Manual_5.3.0' in (LIB / 'web.py').read_text(encoding='utf-8')
+    assert not list(docs.glob('Radon_Monitoring_User_Manual_5.3.0_*.pdf'))
+    assert 'Radon_Monitoring_User_Manual_5.3.1' in (LIB / 'web.py').read_text(encoding='utf-8')
 
 
 def test_frontend_assets_and_ids_are_consistent():
@@ -40,6 +41,9 @@ def test_frontend_assets_and_ids_are_consistent():
         assert f'id="{required_id}"' in html
     assert 'data-view="sites"' in html
     assert 'id="overviewLocation"' not in html
+    assert 'id="saveRoomButton"' in html
+    assert 'id="locationRoom" name="room"' in html
+    assert 'id="locationHeight" name="measurement_height_m"' in html
     assert 'id="currentLocation"' not in html
     assert 'data-view="map"' in html
     sites_section = html.split('id="view-sites"', 1)[1].split('id="view-map"', 1)[0]
@@ -72,6 +76,8 @@ def test_all_html_translation_keys_exist_in_all_locales():
         data = json.loads(locale_path.read_text(encoding='utf-8'))
         missing = sorted(keys - data.keys())
         assert not missing, f'{locale_path.name}: missing {missing}'
+        for room_key in ('room_name_required', 'saving_room', 'room_saved'):
+            assert data.get(room_key), f'{locale_path.name}: missing {room_key}'
 
 
 def test_analysis_hierarchy_is_translated():

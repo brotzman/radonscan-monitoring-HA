@@ -584,7 +584,51 @@
     $('overviewCampaign')?.addEventListener('change',renderOverviewSelectionSummary);
     $('analysisApply')?.addEventListener('click',loadAnalysis);$('analysisPreset')?.addEventListener('change',()=>{const custom=$('analysisPreset')?.value==='custom';if($('analysisStart'))$('analysisStart').disabled=!custom;if($('analysisEnd'))$('analysisEnd').disabled=!custom;});
     $('analysisCsvButton').addEventListener('click',()=>{const params=analysisQuery();location.href=`export/history.csv?${params}`;});
-    $('locationForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;const payload={id:$('locationId').value||null,room:$('locationRoom').value,measurement_height_m:$('locationHeight').value||null};try{await api('api/locations',{method:'POST',body:payload});toast(tr('saved'));form.reset();$('locationId').value='';await reloadCatalog();await loadOverviewSelection(false);}catch(err){toast(err.message,true);}});
+    $('locationRoom')?.addEventListener('input',event=>event.currentTarget.setCustomValidity(''));
+    $('locationForm').addEventListener('submit',async event=>{
+      event.preventDefault();
+      const form=event.currentTarget;
+      const roomInput=form.elements.namedItem('room')||$('locationRoom');
+      const heightInput=form.elements.namedItem('measurement_height_m')||$('locationHeight');
+      const idInput=form.elements.namedItem('id')||$('locationId');
+      const room=String(roomInput?.value??'').replace(/\s+/g,' ').trim();
+      if(!room) {
+        roomInput?.setCustomValidity(tr('room_name_required'));
+        roomInput?.reportValidity();
+        roomInput?.focus();
+        toast(tr('room_name_required'),true);
+        return;
+      }
+      roomInput?.setCustomValidity('');
+      const rawHeight=String(heightInput?.value??'').trim();
+      const payload={
+        id:String(idInput?.value??'').trim()||null,
+        room,
+        // Keep the legacy alias during upgrades so a cached 5.3.0 backend or
+        // frontend cannot lose the room value across an Ingress version skew.
+        name:room,
+        measurement_height_m:rawHeight===''?null:Number(rawHeight),
+      };
+      const button=$('saveRoomButton');
+      if(button) {button.disabled=true;button.textContent=tr('saving_room');}
+      try {
+        const result=await api('api/locations',{method:'POST',body:payload});
+        if(result?.item) {
+          const index=catalog.locations.findIndex(item=>Number(item.id)===Number(result.item.id));
+          if(index>=0) catalog.locations[index]=result.item; else catalog.locations.push(result.item);
+          renderCatalog();
+        }
+        toast(tr('room_saved'));
+        form.reset();
+        if(idInput) idInput.value='';
+        await reloadCatalog();
+        await loadOverviewSelection(false);
+      } catch(err) {
+        toast(err?.message==='A room name is required'?tr('room_name_required'):err?.message,true);
+      } finally {
+        if(button) {button.disabled=false;button.textContent=tr('save_site');}
+      }
+    });
     $('assignForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;try{const result=await api('api/locations/assign',{method:'POST',body:{device_id:$('assignDevice').value,location_id:$('assignLocation').value,title:$('assignTitle').value,start:toIso($('assignStart').value),end:toIso($('assignEnd').value),purpose:$('assignPurpose').value,notes:$('assignNotes').value}});toast(`${tr('assigned')}: ${result.assigned}`);form.reset();await loadAll();}catch(err){toast(err.message,true);}});
     $('eventForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;try{await api('api/events',{method:'POST',body:{event_type:$('eventType').value,occurred_at:toIso($('eventTime').value),location_id:$('eventLocation').value||null,title:$('eventTitle').value,notes:$('eventNotes').value}});toast(tr('saved'));form.reset();$('eventTime').value=toInput(new Date());await reloadCatalog();}catch(err){toast(err.message,true);}});
     $('gmcmapUploadButton').addEventListener('click',uploadGmcmap);$('gmcmapRetryButton').addEventListener('click',retryGmcmap);$('refreshGmcmap').addEventListener('click',loadGmcmap);

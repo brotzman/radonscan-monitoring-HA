@@ -983,7 +983,15 @@ class Storage:
     def save_location(self, payload: dict[str, object]) -> dict[str, object]:
         now = iso(utc_now())
         location_id = payload.get("id")
-        room = str(payload.get("room") or payload.get("name") or "").strip()
+        room_value = payload.get("room") or payload.get("name") or payload.get("room_name")
+        if not room_value:
+            for container_key in ("location", "item", "data", "form"):
+                nested = payload.get(container_key)
+                if isinstance(nested, dict):
+                    room_value = nested.get("room") or nested.get("name") or nested.get("room_name")
+                    if room_value:
+                        break
+        room = " ".join(str(room_value or "").split())
         if not room:
             raise StorageError("A room name is required")
         measurement_height = None
