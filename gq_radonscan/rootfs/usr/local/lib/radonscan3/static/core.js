@@ -25,6 +25,16 @@
     if(typeof error === 'string') return error;
     try { return JSON.stringify(error); } catch (_) { return tr('unknown_error'); }
   };
+  const storageArea = kind => kind === 'session' ? window.sessionStorage : window.localStorage;
+  const storageGet = (kind, key) => {
+    try { return storageArea(kind).getItem(key); } catch (_) { return null; }
+  };
+  const storageSet = (kind, key, value) => {
+    try { storageArea(kind).setItem(key, String(value)); return true; } catch (_) { return false; }
+  };
+  const storageRemove = (kind, key) => {
+    try { storageArea(kind).removeItem(key); return true; } catch (_) { return false; }
+  };
   async function api(path, options={}) {
     const opts={cache:'no-store',...options,headers:{...(options.headers||{})}};
     if(opts.method && opts.method !== 'GET') opts.headers['X-Radon-Action']=boot.actionToken;
@@ -47,5 +57,5 @@
     clearTimeout(toast.timer);
     toast.timer=setTimeout(()=>{ if(el) el.className='toast'; },3500);
   }
-  window.RMCore={boot,translations,byId,all,tr,locale,escapeHtml,fmtNumber,fmtInteger,fmtDate,fmtDateOnly,fmtFirmware,fmtBytes,toIso,toInput,errorMessage,api,toast};
+  window.RMCore={boot,translations,byId,all,tr,locale,escapeHtml,fmtNumber,fmtInteger,fmtDate,fmtDateOnly,fmtFirmware,fmtBytes,toIso,toInput,errorMessage,storageGet,storageSet,storageRemove,api,toast};
 })();

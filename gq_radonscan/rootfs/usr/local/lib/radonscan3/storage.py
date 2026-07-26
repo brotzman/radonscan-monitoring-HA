@@ -1349,30 +1349,50 @@ class Storage:
         return details
 
     def reset_all_data(self) -> dict[str, object]:
-        """Remove all locally managed Radon Monitoring data while retaining the empty schema."""
-        report_files: list[str] = []
-        deleted_measurements = 0
+        """Atomically remove all locally managed data and return a verifiable result.
+
+        A safety backup is created before the transaction. The empty schema remains
+        usable and one-time history backfill is suppressed so deleted device history
+        is not immediately imported again.
+        """
+        import time
+
+        started = time.monotonic()
         tables = (
             "campaign_protocols", "calibrations", "factor_history", "worldmap_queue",
             "worldmap_uploads", "audit_log", "reports", "events", "sessions",
             "locations", "maps", "measurements", "campaigns", "devices", "runtime",
         )
+        backup_name = self.create_backup_file(prefix="before-complete-reset")
+        size_before = self.path.stat().st_size if self.path.exists() else 0
+        report_files: list[str] = []
+        deleted_by_table: dict[str, int] = {}
+
         with self._lock:
-            con = sqlite3.connect(self.path, timeout=20)
+            con = sqlite3.connect(self.path, timeout=30)
             try:
+                con.execute("PRAGMA busy_timeout=30000")
                 con.execute("PRAGMA foreign_keys=OFF")
-                row = con.execute("SELECT COUNT(*) FROM measurements").fetchone()
-                deleted_measurements = int(row[0] if row else 0)
-                report_files = [str(row[0]) for row in con.execute("SELECT filename FROM reports")]
+                existing = {str(row[0]) for row in con.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'"
+                )}
+                report_files = [str(row[0]) for row in con.execute("SELECT filename FROM reports")] if "reports" in existing else []
                 con.execute("BEGIN IMMEDIATE")
                 for table in tables:
+                    if table not in existing:
+                        deleted_by_table[table] = 0
+                        continue
+                    row = con.execute(f"SELECT COUNT(*) FROM {table}").fetchone()
+                    deleted_by_table[table] = int(row[0] if row else 0)
                     con.execute(f"DELETE FROM {table}")
-                con.execute("DELETE FROM sqlite_sequence")
+                if "sqlite_sequence" in existing:
+                    con.execute("DELETE FROM sqlite_sequence")
                 con.execute(
                     "INSERT INTO runtime(key,value_json,updated_at) VALUES(?,?,?)",
                     ("skip_history_backfill_once", "true", iso(utc_now())),
                 )
                 con.commit()
+                integrity = str(con.execute("PRAGMA integrity_check").fetchone()[0])
                 con.execute("PRAGMA wal_checkpoint(TRUNCATE)")
                 con.execute("VACUUM")
             except Exception:
@@ -1380,13 +1400,37 @@ class Storage:
                 raise
             finally:
                 con.close()
+
+        removed_files = 0
+        removed_bytes = 0
         for filename in report_files:
-            (self.reports_dir / filename).unlink(missing_ok=True)
+            path = self.reports_dir / filename
+            if path.is_file():
+                removed_bytes += path.stat().st_size
+                path.unlink(missing_ok=True)
+                removed_files += 1
         for directory in (self.maps_dir,):
             for path in directory.glob("*"):
                 if path.is_file():
+                    removed_bytes += path.stat().st_size
                     path.unlink(missing_ok=True)
-        return {"deleted_measurements": deleted_measurements, "database_reset": True}
+                    removed_files += 1
+
+        size_after = self.path.stat().st_size if self.path.exists() else 0
+        duration_ms = round((time.monotonic() - started) * 1000)
+        return {
+            "database_reset": True,
+            "backup": backup_name,
+            "deleted_measurements": deleted_by_table.get("measurements", 0),
+            "deleted_total_records": sum(deleted_by_table.values()),
+            "deleted_by_table": deleted_by_table,
+            "removed_files": removed_files,
+            "removed_file_bytes": removed_bytes,
+            "database_size_before": size_before,
+            "database_size_after": size_after,
+            "integrity": integrity,
+            "duration_ms": duration_ms,
+        }
 
     def _sqlite_backup_to(self, destination: Path) -> None:
         destination.parent.mkdir(parents=True, exist_ok=True)

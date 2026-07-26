@@ -254,26 +254,52 @@ def _autocorrelation(values: Sequence[float], max_lag: int = 24) -> list[dict[st
     return out
 
 
-def _change_point(points: Sequence[tuple[datetime,float]], minimum_segment: int = 24) -> dict[str, object]:
-    if len(points) < minimum_segment*2:
-        return {"available": False, "reason": "insufficient_samples", "minimum_samples": minimum_segment*2}
-    values=[v for _,v in points]
-    best=None
-    overall_mad=_median_absolute_deviation(values) or 1.0
-    for i in range(minimum_segment, len(values)-minimum_segment+1):
-        before=statistics.median(values[:i]); after=statistics.median(values[i:])
-        score=abs(after-before)/max(overall_mad,1e-9)
-        if best is None or score>best[0]: best=(score,i,before,after)
-    score,i,before,after=best
+def _change_point(
+    points: Sequence[tuple[datetime, float]],
+    minimum_segment: int = 24,
+    max_points: int = 1200,
+) -> dict[str, object]:
+    """Return an exploratory single change-point candidate.
+
+    Exhaustively recomputing two medians for every split is quadratic and becomes
+    impractical for multi-year hourly series.  Long series are therefore reduced
+    deterministically to an evenly spaced, order-preserving diagnostic sample.
+    Descriptive statistics, thresholds and report checksums still use every record.
+    """
+    if len(points) < minimum_segment * 2:
+        return {"available": False, "reason": "insufficient_samples", "minimum_samples": minimum_segment * 2}
+    original_count = len(points)
+    sample = list(points)
+    if original_count > max_points:
+        indices = [round(i * (original_count - 1) / (max_points - 1)) for i in range(max_points)]
+        sample = [points[index] for index in indices]
+    values = [value for _, value in sample]
+    scaled_minimum = max(12, min(minimum_segment, len(values) // 4))
+    best = None
+    overall_mad = _median_absolute_deviation(values) or 1.0
+    # Evaluate a bounded set of candidate splits.  With at most 1,200 sampled
+    # points this remains responsive while retaining the overall temporal shape.
+    for index in range(scaled_minimum, len(values) - scaled_minimum + 1):
+        before = statistics.median(values[:index])
+        after = statistics.median(values[index:])
+        score = abs(after - before) / max(overall_mad, 1e-9)
+        if best is None or score > best[0]:
+            best = (score, index, before, after)
+    if best is None:
+        return {"available": False, "reason": "insufficient_samples", "minimum_samples": minimum_segment * 2}
+    score, index, before, after = best
     return {
         "available": True,
-        "detected_at": iso(points[i][0]),
+        "detected_at": iso(sample[index][0]),
         "median_before_bq_m3": before,
         "median_after_bq_m3": after,
-        "absolute_change_bq_m3": after-before,
-        "relative_change_percent": ((after-before)/before*100.0) if before else None,
+        "absolute_change_bq_m3": after - before,
+        "relative_change_percent": ((after - before) / before * 100.0) if before else None,
         "robust_score": score,
         "interpretation": "candidate_only",
+        "observed_samples": original_count,
+        "diagnostic_samples": len(sample),
+        "downsampled": len(sample) < original_count,
     }
 
 

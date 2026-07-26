@@ -293,9 +293,55 @@ code,pre{overflow-wrap:anywhere;word-break:break-word}
 @media(max-width:620px){#view-analysis .filter-grid{grid-template-columns:1fr}#view-analysis .analysis-metrics{grid-template-columns:1fr 1fr}#view-analysis .facts-grid div{grid-template-columns:1fr;gap:3px}#view-analysis .facts-grid dd{text-align:left}}
 @media(max-width:400px){#view-analysis .analysis-metrics{grid-template-columns:1fr}#view-analysis .metric-card{padding:16px}#view-analysis .chart{min-height:230px}#view-analysis .panel{padding:16px}}
 
-/* Analysis hierarchy and consolidation release (4.6.0) */
+/* Analysis hierarchy and consolidation release (4.9.0) */
 .analysis-level-heading{margin:1.4rem 0 .7rem;display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap}
 .analysis-level-heading h3{margin:0;font-size:1.05rem;line-height:1.25}
 .analysis-level-heading p{margin:0;max-width:58rem;color:var(--muted);line-height:1.5}
 .analysis-level-heading.advanced{margin-top:1.8rem;padding-top:1.15rem;border-top:1px solid var(--line)}
 @media(max-width:640px){.analysis-level-heading{display:block;margin-top:1.1rem}.analysis-level-heading p{margin-top:.35rem}.analysis-level-heading.advanced{margin-top:1.35rem}}
+
+/* Reliability, accessibility and responsive consolidation (4.9.0) */
+.skip-link{position:fixed;left:12px;top:12px;z-index:10000;transform:translateY(-180%);padding:10px 14px;border-radius:10px;background:var(--surface);color:var(--text);box-shadow:var(--shadow);font-weight:800;text-decoration:none}
+.skip-link:focus{transform:translateY(0)}
+:where(button,a,input,select,textarea):focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+main:focus{outline:none}
+.settings-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
+.settings-group{margin:0;min-width:0}
+.settings-group-heading{margin-bottom:12px}
+.settings-group-heading h3{margin:0;line-height:1.25}
+.settings-group-heading p{margin:.45rem 0 0;color:var(--muted);line-height:1.5}
+.settings-group .settings-grid{display:block}
+.settings-group .setting-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(10rem,1fr);gap:16px;padding:12px 0;border-top:1px solid var(--line)}
+.settings-group .setting-row:first-child{border-top:0}
+.settings-group .setting-row span,.settings-group .setting-row strong{min-width:0;overflow-wrap:anywhere}
+.settings-group .setting-row strong{text-align:right;line-height:1.4}
+.button,.icon-button,.nav-item{touch-action:manipulation}
+@media(max-width:980px){.settings-groups{grid-template-columns:1fr}}
+@media(max-width:560px){
+  .settings-groups{gap:14px}
+  .settings-group{padding:17px}
+  .settings-group .setting-row{grid-template-columns:1fr;gap:4px;padding:11px 0}
+  .settings-group .setting-row strong{text-align:left}
+  .topbar{min-height:68px}
+  .top-actions select{max-width:7.5rem}
+}
+@media(max-width:360px){
+  main{padding-left:12px;padding-right:12px}
+  .panel,.primary-card,.system-card,.help-card,.settings-group{padding:14px}
+  .top-actions select{max-width:6.5rem}
+  .page-brand p{max-width:13rem}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+html[data-reduced-motion="true"] *,html[data-reduced-motion="true"] *::before,html[data-reduced-motion="true"] *::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
+
+.operation-result{margin-top:1rem;padding:1rem;border:1px solid var(--border);border-radius:14px;background:var(--surface-soft);overflow:hidden}.operation-result>strong{display:block;margin-bottom:.7rem;line-height:1.35}.operation-result dl{display:grid;grid-template-columns:minmax(0,1fr);gap:.55rem;margin:0}.operation-result dl>div{display:grid;grid-template-columns:minmax(9rem,.8fr) minmax(0,1.2fr);gap:.75rem;align-items:start;padding-top:.55rem;border-top:1px solid var(--border)}.operation-result dt{font-weight:600;overflow-wrap:anywhere}.operation-result dd{margin:0;text-align:right;overflow-wrap:anywhere;word-break:break-word}@media(max-width:520px){.operation-result{padding:.85rem}.operation-result dl>div{grid-template-columns:1fr;gap:.2rem}.operation-result dd{text-align:left}}
+
+/* Data-management verification and layout consolidation (4.9.0) */
+.operation-result{background:var(--surface-2)}
+.purge-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:2px}
+.purge-actions .button{flex:1 1 210px;min-width:0;white-space:normal;line-height:1.25;text-align:center}
+.field-help{margin:9px 0 0;color:var(--muted);font-size:.78rem;line-height:1.5;overflow-wrap:anywhere}
+@media(max-width:560px){
+  .purge-actions{display:grid;grid-template-columns:1fr;width:100%}
+  .purge-actions .button{width:100%;flex:auto}
+}

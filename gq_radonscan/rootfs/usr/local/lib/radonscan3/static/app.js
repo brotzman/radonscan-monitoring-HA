@@ -1,11 +1,11 @@
 (() => {
   'use strict';
-  const {boot,translations:t,byId:$,all:$$,tr,locale,escapeHtml,fmtNumber,fmtInteger,fmtDate,fmtDateOnly,fmtFirmware,fmtBytes,toIso,toInput,api,toast} = window.RMCore;
+  const {boot,translations:t,byId:$,all:$$,tr,locale,escapeHtml,fmtNumber,fmtInteger,fmtDate,fmtDateOnly,fmtFirmware,fmtBytes,toIso,toInput,storageGet,storageSet,api,toast} = window.RMCore;
   let state = null;
   let records = [];
   let catalog = {locations:[],sessions:[],campaigns:[],devices:[],events:[],reports:[]};
   let analysisData = null;
-  let dataSummary = null;
+  let dataManagement = null;
   let chartDays = 7;
   let catalogInitialised = false;
   let loadInProgress = false;
@@ -42,8 +42,8 @@
     const enabled=dataManagementEnabled();
     const nav=$('dataManagementNav'); if(nav) nav.hidden=!enabled;
     const view=$('view-data'); if(view) view.hidden=!enabled;
-    if(!enabled && (location.hash==='#data' || localStorage.getItem('radonMonitoringView')==='data')) {
-      localStorage.setItem('radonMonitoringView','overview');
+    if(!enabled && (location.hash==='#data' || storageGet('local','radonMonitoringView')==='data')) {
+      storageSet('local','radonMonitoringView','overview');
       if(location.hash==='#data') history.replaceState(null,'','#overview');
     }
   }
@@ -53,10 +53,10 @@
     $$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
     $$('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${name}`));
     history.replaceState(null,'',`#${name}`);
-    localStorage.setItem('radonMonitoringView',name);
+    storageSet('local','radonMonitoringView',name);
     closeSidebar();
     if(name==='analysis'&&!analysisData) loadAnalysis();
-    if(name==='data') {loadDataSummary();loadAudit();}
+    if(name==='data') {dataManagement?.loadDataSummary();dataManagement?.loadAudit();}
     if(name==='map') loadGmcmap();
   }
 
@@ -137,8 +137,15 @@
 
   function renderSettings() {
     const s=state.settings||{};
-    const rows=[[tr('scan_interval'),`${s.scan_interval} ${tr('seconds')}`],[tr('preferred_unit'),s.preferred_unit],[tr('language'),s.language==='auto'?tr('automatic'):s.language],[tr('conversion_factor'),`${s.factor_bq_m3_per_cph} ${tr('factor_unit')}`],[tr('warning_threshold'),`${s.warning_threshold_bq_m3} Bq/m³`],[tr('danger_threshold'),`${s.danger_threshold_bq_m3} Bq/m³`],[tr('minimum_coverage'),`${s.minimum_data_coverage_percent} %`],[tr('backfill'),bool(s.backfill_history)],[tr('retention'),`${s.history_retention_days} ${tr('days')}`],[tr('serial_port'),s.serial_port],[tr('data_management'),bool(s.data_management_enabled)],[tr('diagnostic_logging'),bool(s.diagnostic_logging)],[tr('report_author'),s.report_author||tr('not_set')],[tr('report_organisation'),s.report_organisation||tr('not_set')]];
-    $('settingsGrid').innerHTML=rows.map(([a,b])=>`<div class="setting-row"><span>${escapeHtml(a)}</span><strong>${escapeHtml(b)}</strong></div>`).join('');
+    const groups=[
+      [tr('settings_group_device'),[[tr('scan_interval'),`${s.scan_interval} ${tr('seconds')}`],[tr('preferred_unit'),s.preferred_unit],[tr('language'),s.language==='auto'?tr('automatic'):s.language],[tr('conversion_factor'),`${s.factor_bq_m3_per_cph} ${tr('factor_unit')}`],[tr('serial_port'),s.serial_port]]],
+      [tr('settings_group_statistics'),[[tr('warning_threshold'),`${s.warning_threshold_bq_m3} Bq/m³`],[tr('danger_threshold'),`${s.danger_threshold_bq_m3} Bq/m³`],[tr('minimum_coverage'),`${s.minimum_data_coverage_percent} %`],[tr('backfill'),bool(s.backfill_history)],[tr('retention'),`${s.history_retention_days} ${tr('days')}`]]],
+      [tr('settings_group_worldmap'),[[tr('gmcmap_enabled'),bool(s.gmcmap_enabled)],[tr('gmcmap_auto_upload'),bool(s.gmcmap_auto_upload)],[tr('gmcmap_upload_interval_minutes'),`${s.gmcmap_upload_interval_minutes||'–'} min`],[tr('gmcmap_account_id'),s.gmcmap_account_id_masked||tr('not_set')],[tr('gmcmap_device_id'),s.gmcmap_device_id_masked||tr('not_set')]]],
+      [tr('settings_group_reports'),[[tr('report_author'),s.report_author||tr('not_set')],[tr('report_organisation'),s.report_organisation||tr('not_set')]]],
+      [tr('settings_group_data'),[[tr('data_management'),bool(s.data_management_enabled)],[tr('admin_token_status'),s.homeassistant_access_token_configured?tr('configured_securely'):tr('not_configured')]]],
+      [tr('settings_group_diagnostics'),[[tr('diagnostic_logging'),bool(s.diagnostic_logging)],[tr('analysis_timezone'),s.analysis_timezone||tr('automatic')]]]
+    ];
+    $('settingsGrid').innerHTML=groups.map(([title,rows],index)=>`<section class="settings-group panel" aria-labelledby="settings-group-${index}"><div class="settings-group-heading"><h3 id="settings-group-${index}">${escapeHtml(title)}</h3>${title===tr('settings_group_data')?`<p>${escapeHtml(tr('security_note'))}</p>`:''}</div><div class="settings-grid">${rows.map(([a,b])=>`<div class="setting-row"><span>${escapeHtml(a)}</span><strong>${escapeHtml(b??tr('not_available'))}</strong></div>`).join('')}</div></section>`).join('');
   }
 
   function renderExpert() {
@@ -303,54 +310,6 @@
   async function loadHistoryFiltered() {try{const payload=await api(`api/history?${historyQuery()}`);records=payload.items||[];renderHistory();renderOverviewChart();const exportParams=historyQuery();exportParams.delete('limit');$('historyCsv').href=`export/history.csv?${exportParams}`;}catch(err){toast(err.message,true);}}
   function renderHistory() {const body=$('historyBody');$('historySummary').textContent=`${fmtInteger(records.length)} ${tr('samples')}`;if(!records.length){body.innerHTML=`<tr><td colspan="7" class="empty-cell">${tr('history_empty')}</td></tr>`;return;}body.innerHTML=records.slice(0,1000).map(row=>`<tr><td>${fmtDate(row.completed_at)}</td><td>${radon(row.bq_m3)}</td><td>${row.raw_cph}</td><td>${escapeHtml([row.model,row.serial_number||row.device_id].filter(Boolean).join(' · '))}</td><td>${escapeHtml(row.location_name||tr('not_assigned'))}</td><td>#${row.campaign_id}</td><td>${tr('source_spir')}</td></tr>`).join('');}
 
-  async function loadDataSummary() {try{dataSummary=await api('api/data/summary');renderDataSummary();}catch(err){toast(err.message,true);}}
-  function renderDataSummary() {if(!dataSummary)return;$('dataMeasurements').textContent=fmtInteger(dataSummary.measurements);$('dataRange').textContent=`${fmtDate(dataSummary.first_measurement)} – ${fmtDate(dataSummary.last_measurement)}`;$('dataDbSize').textContent=fmtBytes(dataSummary.database_size_bytes);$('dataIntegrity').textContent=`${tr('integrity')}: ${dataSummary.integrity}`;$('dataFiles').textContent=fmtInteger(dataSummary.reports);$('dataFileSize').textContent=fmtBytes(Number(dataSummary.report_size_bytes||0));$('dataSchema').textContent=`v${dataSummary.schema_version}`;}
-
-  async function deleteData(event) {
-    event.preventDefault();
-    const confirmation=($('deleteConfirmation').value||'').trim().toUpperCase().replace(/\s+/g,'');
-    if(!['LÖSCHEN','LOESCHEN','DELETE'].includes(confirmation)){
-      toast(tr('confirmation_delete_database_invalid'),true);$('deleteConfirmation').focus();return;
-    }
-    if(!confirm(tr('confirm_delete_entire_database')))return;
-    const button=$('deleteDatabaseNow'); button.disabled=true;
-    try{
-      const result=await api('api/data/reset',{method:'POST',body:{confirmed:true},confirmation});
-      $('deleteConfirmation').value='';
-      records=[]; catalog={locations:[],sessions:[],campaigns:[],devices:[],events:[],reports:[]}; analysisData=null; dataSummary=null; catalogInitialised=false;
-      setView('overview');
-      await loadAll();
-      toast(`${tr('database_deleted')}: ${fmtInteger(result.deleted_measurements||0)} ${tr('measurements')}`);
-    }catch(err){toast(err.message,true);}finally{button.disabled=false;}
-  }
-
-  async function loadAudit() {try{const payload=await api('api/audit?limit=200');const body=$('auditBody'),items=payload.items||[];body.innerHTML=items.length?items.map(item=>`<tr><td>${fmtDate(item.created_at)}</td><td>${escapeHtml(item.action)}</td><td>${escapeHtml(item.target||'–')}</td><td>${escapeHtml(item.user_name||'–')}</td><td><code>${escapeHtml(JSON.stringify(item.details||{}))}</code></td></tr>`).join(''):`<tr><td colspan="5" class="empty-cell">${tr('no_data')}</td></tr>`;}catch(err){toast(err.message,true);}}
-
-  async function purgeHa(event) {
-    if(event) event.preventDefault();
-    const input=$('haConfirmation');
-    const confirmation=(input.value||'').trim().toUpperCase().replace(/\s+/g,'');
-    if(!['PURGE','LÖSCHEN','LOESCHEN','DELETE'].includes(confirmation)){
-      toast(tr('confirmation_invalid'),true);input.focus();return;
-    }
-    const button=$('purgeHaHistory');
-    const status=$('haStatus');
-    button.disabled=true;
-    status.textContent=tr('ha_purge_running');
-    try{
-      const result=await api('api/homeassistant/purge-all',{method:'POST',body:{confirmed:true,confirmation},confirmation});
-      input.value='';
-      status.textContent=tr('ha_purge_started');
-      setView('overview');
-      await loadStateFast();
-      const total=(result.entity_ids?.length||0)+(result.entity_globs?.length||0);
-      toast(`${tr('purge_requested')}: ${fmtInteger(total)} ${tr('purge_targets')}`);
-    }catch(err){
-      status.textContent=err.message;toast(err.message,true);
-    }finally{button.disabled=false;}
-  }
-
-
   async function loadGmcmap() {
     try {
       const payload=await api('api/gmcmap?limit=100'); const st=payload.status||{};
@@ -366,6 +325,15 @@
   async function uploadGmcmap() {const button=$('gmcmapUploadButton');button.disabled=true;try{await api('api/gmcmap/upload',{method:'POST',body:{confirmation:$('gmcmapConfirmation').value}});toast(tr('upload_successful'));$('gmcmapConfirmation').value='';await loadGmcmap();loadAudit();}catch(err){toast(err.message,true);}finally{button.disabled=false;}}
 
   async function reloadCatalog() {catalog=await api('api/catalog');renderCatalog();}
+  async function loadStateFast() {
+    const refreshed=await api('api/state');
+    state=refreshed;
+    renderState();
+    const ha=state.homeassistant||{};
+    const haStatus=$('haStatus');
+    if(haStatus)haStatus.textContent=ha.connected?`${tr('connected')} · ${ha.location_name||''} · ${ha.version||''}`:(ha.error||tr('offline'));
+    return state;
+  }
   async function loadAll() {
     if(loadInProgress) return;
     loadInProgress=true;
@@ -382,8 +350,8 @@
 
       // If an Ingress iframe survived an add-on update, reload once so HTML,
       // JavaScript and backend use the same release.
-      if(state.app?.version && boot.version && state.app.version!==boot.version && !sessionStorage.getItem('radonVersionReloaded')) {
-        sessionStorage.setItem('radonVersionReloaded','1');
+      if(state.app?.version && boot.version && state.app.version!==boot.version && !storageGet('session','radonVersionReloaded')) {
+        storageSet('session','radonVersionReloaded','1');
         location.reload();
         return;
       }
@@ -430,11 +398,22 @@
     $('gmcmapUploadButton').addEventListener('click',uploadGmcmap);$('gmcmapRetryButton').addEventListener('click',retryGmcmap);$('refreshGmcmap').addEventListener('click',loadGmcmap);
     $('historyApply').addEventListener('click',loadHistoryFiltered);
     $('reportForm').addEventListener('submit',async event=>{event.preventDefault();const button=$('createReportButton');button.disabled=true;button.textContent=tr('generating');try{const result=await api('api/reports',{method:'POST',body:{title:$('reportTitle').value,profile:$('reportProfile').value,locale:$('reportLocale').value,device_id:$('reportDevice').value,location_id:$('reportLocation').value||null,days:Number($('reportDays').value),start:toIso($('reportStart').value),end:toIso($('reportEnd').value)}});toast(tr('report_created'));await reloadCatalog();window.open(`reports/${encodeURIComponent(result.item.report_id)}`,'_blank');}catch(err){toast(err.message,true);}finally{button.disabled=false;button.textContent=tr('generate_pdf');}});
-    $('deleteDataForm').addEventListener('submit',deleteData);
+    $('deleteDataForm').addEventListener('submit',dataManagement.deleteData);
     $('restoreForm').addEventListener('submit',async event=>{event.preventDefault();if(!confirm(tr('confirm_restore')))return;const formElement=event.currentTarget;const form=new FormData(formElement);form.set('file',$('restoreFile').files[0]);form.set('confirmation',$('restoreConfirmation').value);try{await api('api/data/restore',{method:'POST',body:form});toast(tr('restored'));formElement.reset();await loadAll();}catch(err){toast(err.message,true);}});
-    $('purgeHaHistory').addEventListener('click',purgeHa);$('refreshAudit').addEventListener('click',loadAudit);
+    $('purgeHaHistory').addEventListener('click',dataManagement.purgeHa);$('verifyHaPurge').addEventListener('click',dataManagement.verifyHaPurge);$('refreshAudit').addEventListener('click',dataManagement.loadAudit);
     $('modalClose').addEventListener('click',()=> $('modal').classList.add('hidden'));
   }
+
+  function resetClientData() {
+    records=[];
+    catalog={locations:[],sessions:[],campaigns:[],devices:[],events:[],reports:[]};
+    analysisData=null;
+    catalogInitialised=false;
+  }
+
+  dataManagement=window.RMDataManagement.create({
+    $,tr,fmtInteger,fmtDate,fmtBytes,escapeHtml,api,toast,setView,loadAll,loadStateFast,resetClientData,
+  });
 
   function initializeDefaults() {
     if($('analysisStart')) $('analysisStart').disabled=true;
@@ -446,7 +425,7 @@
   }
 
   applyTranslations();bindEvents();initializeDefaults();
-  const requested=(location.hash||'').slice(1)||localStorage.getItem('radonMonitoringView')||'overview';setView($(`view-${requested}`)?requested:'overview');
+  const requested=(location.hash||'').slice(1)||storageGet('local','radonMonitoringView')||'overview';setView($(`view-${requested}`)?requested:'overview');
   loadAll().then(initializeDefaults);
   // Retry quickly during startup; after the first successful state response use a
   // shorter regular refresh so newly imported USB measurements appear promptly.

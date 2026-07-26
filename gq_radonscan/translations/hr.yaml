@@ -1,16 +1,16 @@
 configuration:
   device_name:
     name: Naziv uređaja
-    description: Naziv RadonScana prikazan u Home Assistantu i web-sučelju.
+    description: Naziv RadonScan uređaja prikazan u Home Assistantu i web-sučelju.
   scan_interval:
     name: Interval očitanja
-    description: Broj sekundi između SPIR očitanja samo za čitanje.
+    description: Sekunde između SPIR očitanja samo za čitanje.
   preferred_unit:
     name: Željena jedinica
     description: Jedinica koja se koristi u Home Assistantu i web-sučelju.
   language:
     name: Jezik
-    description: Jezik ingress sučelja i povezanog priručnika.
+    description: Jezik Ingress sučelja i povezanog priručnika.
   warning_threshold_bq_m3:
     name: Prag upozorenja
     description: Vrijednost radona u Bq/m³ od koje se prikazuje stanje upozorenja.
@@ -18,78 +18,71 @@ configuration:
     name: Prag opasnosti
     description: Vrijednost radona u Bq/m³ od koje se prikazuje stanje opasnosti.
   factor_bq_m3_per_cph:
-    name: Faktor pretvorbe CPH
-    description: Eksperimentalni faktor u Bq/m³ po count/h; sprema se uz svako mjerenje.
+    name: CPH faktor pretvorbe
+    description: Eksperimentalni faktor Bq/m³ po count/h; sprema se uz svako mjerenje.
   backfill_history:
     name: Uvezi povijest uređaja
-    description: Nakon prvog uspješnog očitanja uvozi dovršene satne vrijednosti već
-      spremljene u uređaju.
+    description: Uvozi dovršene satne vrijednosti već spremljene u uređaju nakon prvog uspješnog očitanja.
   history_retention_days:
     name: Razdoblje čuvanja
-    description: Uklanja lokalna mjerenja iz SQLitea nakon navedenog broja dana.
+    description: Uklanja lokalna mjerenja iz SQLitea nakon ovog broja dana.
   serial_port:
     name: Serijski priključak
-    description: Ostavite prazno za automatsko otkrivanje ili unesite fiksnu putanju
-      uređaja.
+    description: Ostavite prazno za automatsko otkrivanje ili unesite stalnu putanju uređaja.
   serial_timeout_seconds:
-    name: Vremensko ograničenje serijske veze
-    description: Najdulje čekanje odgovora uređaja, u sekundama.
+    name: Vremensko ograničenje serijskog priključka
+    description: Najveći broj sekundi čekanja na odgovor uređaja.
   mqtt_topic_prefix:
     name: Prefiks MQTT tema
     description: Osnovna tema za poruke stanja i dostupnosti.
   discovery_prefix:
     name: Prefiks otkrivanja
-    description: Prefiks za Home Assistant MQTT Discovery teme.
+    description: Prefiks Home Assistant MQTT Discovery tema.
   diagnostic_logging:
     name: Detaljno dijagnostičko bilježenje
-    description: Bilježi dodatne tehničke podatke o priključcima, SPIR očitanjima
-      i dekodiranju.
+    description: Bilježi dodatne detalje o otkrivanju priključaka, SPIR očitanjima i dekodiranju.
   log_level:
     name: Razina bilježenja
     description: Količina detalja u zapisniku aplikacije.
   minimum_data_coverage_percent:
-    name: Minimum data coverage
-    description: Required percentage of available hourly values before a period average
-      is considered calculable.
+    name: Najmanja pokrivenost podataka
+    description: Potreban postotak dostupnih satnih vrijednosti prije nego što se prosjek smatra izračunljivim.
   report_author:
-    name: Report author
-    description: Optional author name for scientific PDF reports.
+    name: Autor izvješća
+    description: Neobavezno ime autora znanstvenih PDF izvješća.
   report_organisation:
-    name: Organisation
-    description: Optional organisation or institution for PDF reports.
+    name: Organizacija
+    description: Neobavezna organizacija ili ustanova za PDF izvješća.
   report_disclaimer:
-    name: Additional report notice
-    description: Optional custom notice included in scientific PDF reports.
+    name: Dodatna napomena izvješća
+    description: Neobavezna prilagođena napomena uključena u znanstvena PDF izvješća.
   gmcmap_max_age_hours:
-    name: World Map maximum data age
-    description: Maximum age of readings queued for upload.
+    name: Najveća starost podataka World Map
+    description: Najveća starost mjerenja u redu čekanja za prijenos.
   gmcmap_retry_limit:
-    name: World Map retry limit
-    description: Maximum number of upload attempts before a reading is marked failed.
+    name: Ograničenje ponavljanja World Map
+    description: Najveći broj pokušaja prije označavanja mjerenja kao neuspjelog.
   analysis_timezone:
-    name: Analysis time zone
-    description: IANA time zone used for day, weekday and hourly profiles; auto uses
-      Home Assistant.
+    name: Vremenska zona analize
+    description: IANA vremenska zona za dnevne, tjedne i satne profile; auto koristi Home Assistant.
   gmcmap_enabled:
-    name: Enable GQ World Map
-    description: Enable transmission to the GQ Radiation World Map.
+    name: Omogući GQ World Map
+    description: Omogućuje prijenos na GQ Radiation World Map.
   gmcmap_auto_upload:
-    name: Automatic World Map upload
-    description: Automatically queue completed hourly values for upload.
+    name: Automatski prijenos World Map
+    description: Automatski stavlja dovršene satne vrijednosti u red za prijenos.
   gmcmap_account_id:
-    name: GQ World Map account ID
-    description: Account ID used by the GQ Radiation World Map upload endpoint.
+    name: ID računa GQ World Map
+    description: ID računa koji koristi usluga prijenosa GQ Radiation World Map.
   gmcmap_device_id:
-    name: GQ World Map device ID
-    description: Device ID used by the GQ Radiation World Map upload endpoint.
+    name: ID uređaja GQ World Map
+    description: ID uređaja koji koristi usluga prijenosa GQ Radiation World Map.
   gmcmap_upload_interval_minutes:
-    name: World Map upload interval
-    description: Minimum interval in minutes between automatic uploads.
+    name: Interval prijenosa World Map
+    description: Najmanji razmak u minutama između automatskih prijenosa.
   data_management_enabled:
-    name: Enable data management
-    description: Show data management in the sidebar and enable its protected API
-      functions.
+    name: Omogući upravljanje podacima
+    description: Prikazuje upravljanje podacima u bočnoj traci i omogućuje zaštićene API funkcije.
   homeassistant_access_token:
-    name: Administratorski token za Home Assistant
-    description: Neobavezni dugotrajni pristupni token administratora Home Assistanta,
-      potreban samo za brisanje Recorder povijesti.
+    name: Administratorski token Home Assistanta
+    description: Neobavezni dugotrajni pristupni token administratora Home Assistanta, koristi se samo za brisanje Recorder povijesti.

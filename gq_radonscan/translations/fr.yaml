@@ -1,99 +1,88 @@
 configuration:
   device_name:
     name: Nom de l’appareil
-    description: Nom affiché du RadonScan dans Home Assistant et dans l’interface
-      web.
+    description: Nom du RadonScan affiché dans Home Assistant et l’interface web.
   scan_interval:
     name: Intervalle d’interrogation
-    description: Nombre de secondes entre deux lectures SPIR en lecture seule.
+    description: Secondes entre deux interrogations SPIR en lecture seule.
   preferred_unit:
     name: Unité préférée
-    description: Unité utilisée dans Home Assistant et dans l’interface web.
+    description: Unité utilisée dans Home Assistant et l’interface web.
   language:
     name: Langue
-    description: Langue de l’interface ingress et du manuel associé.
+    description: Langue de l’interface Ingress et du manuel associé.
   warning_threshold_bq_m3:
     name: Seuil d’avertissement
-    description: Valeur de radon en Bq/m³ à partir de laquelle l’état d’avertissement
-      est affiché.
+    description: Valeur de radon en Bq/m³ à partir de laquelle l’état d’avertissement est affiché.
   danger_threshold_bq_m3:
     name: Seuil de danger
-    description: Valeur de radon en Bq/m³ à partir de laquelle l’état de danger est
-      affiché.
+    description: Valeur de radon en Bq/m³ à partir de laquelle l’état de danger est affiché.
   factor_bq_m3_per_cph:
     name: Facteur de conversion CPH
-    description: Facteur expérimental en Bq/m³ par count/h, enregistré avec chaque
-      mesure.
+    description: Facteur expérimental en Bq/m³ par count/h, enregistré avec chaque mesure.
   backfill_history:
     name: Importer l’historique de l’appareil
-    description: Importe les valeurs horaires achevées déjà enregistrées après la
-      première lecture réussie.
+    description: Importe les valeurs horaires terminées déjà stockées dans l’appareil après la première lecture réussie.
   history_retention_days:
     name: Durée de conservation
-    description: Supprime de SQLite les mesures locales après ce nombre de jours.
+    description: Supprime les mesures locales de SQLite après ce nombre de jours.
   serial_port:
     name: Port série
-    description: Laisser vide pour la détection automatique ou saisir un chemin d’appareil
-      fixe.
+    description: Laisser vide pour la détection automatique ou indiquer un chemin fixe.
   serial_timeout_seconds:
     name: Délai série
-    description: Durée maximale, en secondes, d’attente d’une réponse de l’appareil.
+    description: Nombre maximal de secondes d’attente d’une réponse de l’appareil.
   mqtt_topic_prefix:
     name: Préfixe des sujets MQTT
-    description: Sujet de base des messages d’état et de disponibilité.
+    description: Sujet de base pour les messages d’état et de disponibilité.
   discovery_prefix:
-    name: Préfixe Discovery
-    description: Préfixe utilisé pour les sujets Home Assistant MQTT Discovery.
+    name: Préfixe de découverte
+    description: Préfixe utilisé pour les sujets MQTT Discovery de Home Assistant.
   diagnostic_logging:
-    name: Journalisation diagnostique détaillée
-    description: Consigne des détails techniques supplémentaires sur les ports, les
-      lectures SPIR et le décodage.
+    name: Journalisation de diagnostic détaillée
+    description: Consigne des détails supplémentaires sur la détection des ports, les lectures SPIR et le décodage.
   log_level:
     name: Niveau de journalisation
-    description: Niveau de détail du journal de l’app.
+    description: Niveau de détail du journal de l’application.
   minimum_data_coverage_percent:
-    name: Minimum data coverage
-    description: Required percentage of available hourly values before a period average
-      is considered calculable.
+    name: Couverture minimale des données
+    description: Pourcentage requis de valeurs horaires disponibles avant qu’une moyenne soit considérée calculable.
   report_author:
-    name: Report author
-    description: Optional author name for scientific PDF reports.
+    name: Auteur du rapport
+    description: Nom facultatif de l’auteur des rapports scientifiques PDF.
   report_organisation:
     name: Organisation
-    description: Optional organisation or institution for PDF reports.
+    description: Organisation ou établissement facultatif pour les rapports PDF.
   report_disclaimer:
-    name: Additional report notice
-    description: Optional custom notice included in scientific PDF reports.
+    name: Mention supplémentaire du rapport
+    description: Mention personnalisée facultative incluse dans les rapports scientifiques PDF.
   gmcmap_max_age_hours:
-    name: World Map maximum data age
-    description: Maximum age of readings queued for upload.
+    name: Âge maximal des données World Map
+    description: Âge maximal des mesures placées en file d’attente pour l’envoi.
   gmcmap_retry_limit:
-    name: World Map retry limit
-    description: Maximum number of upload attempts before a reading is marked failed.
+    name: Limite de tentatives World Map
+    description: Nombre maximal de tentatives avant qu’une mesure soit marquée en échec.
   analysis_timezone:
-    name: Analysis time zone
-    description: IANA time zone used for day, weekday and hourly profiles; auto uses
-      Home Assistant.
+    name: Fuseau horaire d’analyse
+    description: Fuseau IANA pour les profils journaliers, hebdomadaires et horaires ; auto utilise Home Assistant.
   gmcmap_enabled:
-    name: Enable GQ World Map
-    description: Enable transmission to the GQ Radiation World Map.
+    name: Activer GQ World Map
+    description: Active la transmission vers GQ Radiation World Map.
   gmcmap_auto_upload:
-    name: Automatic World Map upload
-    description: Automatically queue completed hourly values for upload.
+    name: Envoi automatique World Map
+    description: Place automatiquement en file d’attente les valeurs horaires terminées.
   gmcmap_account_id:
-    name: GQ World Map account ID
-    description: Account ID used by the GQ Radiation World Map upload endpoint.
+    name: ID de compte GQ World Map
+    description: ID de compte utilisé par le service d’envoi GQ Radiation World Map.
   gmcmap_device_id:
-    name: GQ World Map device ID
-    description: Device ID used by the GQ Radiation World Map upload endpoint.
+    name: ID d’appareil GQ World Map
+    description: ID d’appareil utilisé par le service d’envoi GQ Radiation World Map.
   gmcmap_upload_interval_minutes:
-    name: World Map upload interval
-    description: Minimum interval in minutes between automatic uploads.
+    name: Intervalle d’envoi World Map
+    description: Intervalle minimal en minutes entre les envois automatiques.
   data_management_enabled:
-    name: Enable data management
-    description: Show data management in the sidebar and enable its protected API
-      functions.
+    name: Activer la gestion des données
+    description: Affiche la gestion des données dans la barre latérale et active ses API protégées.
   homeassistant_access_token:
     name: Jeton administrateur Home Assistant
-    description: Jeton d’accès longue durée facultatif d’un administrateur Home Assistant,
-      requis uniquement pour purger l’historique Recorder.
+    description: Jeton d’accès longue durée facultatif d’un administrateur Home Assistant, utilisé uniquement pour supprimer l’historique Recorder.

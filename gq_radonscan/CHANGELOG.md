@@ -2,91 +2,68 @@
 
 All notable changes to Radon Monitoring are documented here. Versions follow semantic versioning.
 
-## 4.6.0 - Stability, documentation and maintainability
+## 4.9.0 - Reliability, verification and maintainability
 
-- Rebuilt the German and English user manuals for the current interface and feature set.
-- Cleaned and normalised the complete changelog so each change is assigned to one release only.
-- Split reusable browser utilities, API handling and toast/error normalisation into `static/core.js`.
-- Structured the Analysis view into clearly labelled core and advanced statistical sections.
-- Added translated section descriptions in all eight interface languages.
-- Added release-integrity, translation, HTML-ID, asset-loading and migration regression tests.
-- Added architecture, testing and release-checklist documentation for maintainers.
-- Clarified protocol-reference versioning: protocol reference 3.0.0 remains separate from the app version.
+- Split destructive-data workflows into `operations.py` and the browser code into `data-management.js`.
+- Added reusable security helpers that redact bearer tokens and other sensitive values from errors and diagnostics.
+- Added Home Assistant Recorder purge verification through the History API, with an explicit limitation notice for long-term statistics and asynchronous database maintenance.
+- Added deterministic USB disconnect/reconnect state handling and regression tests.
+- Fixed the manual GQ Radiation World Map upload route so it is handled as a protected POST request.
+- Fixed the static asset allow-list so `core.js`, `accessibility.js` and `data-management.js` are served by the real web server.
+- Added safe browser-storage access for Home Assistant WebViews and privacy-restricted browser contexts.
+- Added a missing fast-state refresh function used after destructive operations.
+- Added peak-preserving chart reduction for multi-year PDF reports while retaining all records for descriptive statistics, threshold calculations and checksums.
+- Bounded exploratory change-point diagnostics for multi-year datasets and documented the diagnostic sample size in results.
+- Added root-level `pyproject.toml` and `pytest.ini`; the complete test suite now runs from the repository root with `python3 -m pytest`.
+- Added browser end-to-end tests for database reset, Recorder purge and purge verification.
+- Added responsive Chromium checks at 320, 390, 768 and 1440 pixels, all eight interface languages, 200% text scaling, keyboard operation and accessible control names.
+- Added actual web-server integration tests, token-redaction tests, three-year report performance tests and World Map route tests.
+- Completed native Home Assistant option translations for German, English, Spanish, French, Croatian, Italian, Dutch and Polish.
+- Rebuilt the German and English user manuals for version 4.9.0.
 - No database-schema change; existing 4.x databases remain compatible.
+
+## 4.8.0 - Safer destructive operations and test configuration
+
+- Added result reports and operation IDs for complete local database deletion and Home Assistant Recorder purge.
+- Added automatic safety backup, transactional reset, post-reset integrity checks and backfill suppression.
+- Added responsive operation-result panels and standard test configuration.
+
+## 4.7.0 - Accessibility and responsive hardening
+
+- Reorganised settings into functional groups.
+- Added skip-to-content navigation, visible keyboard focus and reduced-motion support.
+- Added responsive browser checks and damaged-backup regression coverage.
+
+## 4.6.0 - Documentation and consolidation
+
+- Rebuilt the user manuals and normalised release documentation.
+- Split reusable browser utilities into `core.js`.
+- Structured Analysis into basic and advanced statistical sections.
 
 ## 4.5.0 - Statistical analysis expansion
 
-- Added effective sample size and estimated correlation duration.
-- Added moving-block-bootstrap confidence intervals for mean and median.
-- Added Mann-Kendall trend diagnostics and Sen slope.
-- Added skewness, excess kurtosis, mean-to-median ratio and Freedman-Diaconis histogram bins.
-- Added 10% trimmed mean and sensitivity comparison.
-- Added rolling 24-hour median and interquartile band.
-- Added continuous threshold-event metrics and concentration-class shares.
-- Hardened analysis spacing, wrapping and mobile layouts down to 320 px.
+- Added effective sample size, moving-block-bootstrap confidence intervals, Mann-Kendall diagnostics and Sen slope.
+- Added rolling robust statistics, concentration classes and continuous threshold-event metrics.
 
-## 4.4.7 - Recorder purge endpoint fix
+## 4.4.x - Data-management and Recorder reliability
 
-- Fixed an internal server error caused by an incorrect Home Assistant entity-method name.
-- Added regression coverage for the Recorder purge endpoint.
-
-## 4.4.6 - Refresh and status consistency
-
-- Made catalogue and filter rendering tolerant of missing or cached interface elements.
-- Prevented secondary data-loading failures from changing a valid device status to “Not connected”.
-- Kept connection indicators consistent after manual refreshes.
-
-## 4.4.5 - Home Assistant Recorder purge rebuild
-
-- Removed obsolete entity-selection controls.
-- Used the configured Home Assistant administrator token for administrator-only Recorder actions.
-- Connected long-lived access tokens directly to Home Assistant Core.
-- Added stable entity globs and visible progress/error status.
-- Kept navigation inside Radon Monitoring after accepted actions.
-
-## 4.4.4 - Loading and cache behaviour
-
-- Rendered dashboard state before slower catalogue and history requests.
-- Added startup retries and 30-second overview refresh.
-- Prevented overlapping background refreshes.
-- Added frontend/backend version mismatch reload protection.
-- Disabled long-lived caching of JavaScript and CSS assets.
-
-## 4.4.3 - Administrator token support
-
-- Added optional protected `homeassistant_access_token` configuration.
-- Added service discovery and actionable Recorder purge errors.
-
-## 4.4.2 - Simplified destructive data management
-
-- Rebuilt deletion as complete local database reset and complete RadonScan Recorder-history purge.
-- Removed selective deletion controls that produced malformed payloads.
-- Added complete Home Assistant option translations.
-
-## 4.4.1 - Confirmation and factor display
-
-- Simplified backend confirmation handling behind Home Assistant Ingress.
-- Expert view now distinguishes the configured conversion factor from the factor stored with historical measurements.
-
-## 4.4.0 - Data-management feature switch
-
-- Added `data_management_enabled` to hide the navigation item and disable the related endpoints server-side.
+- Added the data-management feature switch and administrator-token support.
+- Rebuilt complete local reset and complete RadonScan Recorder purge.
+- Corrected refresh, cache, confirmation and configured-factor behaviour.
 
 ## 4.3.x - Scientific workflow and interface hardening
 
 - Added scientific quality classes, count-statistical uncertainty, quality flags, autocorrelation and exploratory change-point analysis.
 - Added calibration history and structured campaign protocols.
-- Improved responsive layouts, spacing, long-label wrapping and form reliability.
-- Corrected firmware display and German hyphenation.
+- Improved responsive layouts, spacing, form reliability and terminology.
 
-## 4.2.x - Reliability and documentation
+## 4.2.x - Queueing, time zones and manuals
 
-- Added persistent World Map queue, duplicate protection and retry logic.
+- Added persistent World Map queueing, duplicate protection and retry logic.
 - Added local-time analysis, robust statistics and factor history.
-- Removed the Home Assistant experimental-stage marker.
-- Added revised German and English manuals.
+- Removed the Home Assistant experimental-stage marker and updated manuals.
 
-## 4.1.x - World Map and responsive interface
+## 4.1.x - GQ Radiation World Map
 
 - Replaced local floor-plan upload with optional GQ Radiation World Map upload.
 - Added upload history and responsive interface corrections.
@@ -95,6 +72,8 @@ All notable changes to Radon Monitoring are documented here. Versions follow sem
 
 - Renamed the app to Radon Monitoring.
 - Added Overview, Analysis and Expert views.
-- Added time-based averages with minimum-duration and coverage checks.
-- Added reports, measurement sites, events, backup/restore and controlled data management.
-- Preserved the existing slug, database path and MQTT identities for compatible upgrades.
+- Added real time-window averages, reports, measurement sites, events, backup/restore and controlled data management.
+
+## 3.0.x - Local RadonScan foundation
+
+- Added read-only SPIR history import, local SQLite storage, MQTT Discovery and a compact local web interface.

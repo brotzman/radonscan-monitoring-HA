@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="assets/app.css?v=__VERSION__">
 </head>
 <body>
+  <a class="skip-link" href="#mainContent" data-i18n="skip_to_content">Skip to content</a>
   <div class="app-layout">
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
@@ -49,7 +50,7 @@
         </div>
       </header>
 
-      <main>
+      <main id="mainContent" tabindex="-1">
         <section id="view-overview" class="view active">
           <div class="hero-grid">
             <article class="primary-card" id="currentCard">
@@ -250,7 +251,7 @@
               <form id="deleteDataForm" class="form-stack">
                 <div id="deletePreviewResult" class="notice warning" data-i18n="delete_database_complete_hint"></div>
                 <label><span data-i18n="confirmation"></span><input id="deleteConfirmation" autocomplete="off" data-i18n-placeholder="confirm_delete_word" placeholder="LÖSCHEN"></label>
-                <button id="deleteDatabaseNow" type="submit" class="button danger" data-i18n="delete_entire_database"></button>
+                <button id="deleteDatabaseNow" type="submit" class="button danger" data-i18n="delete_entire_database"></button><div id="deleteOperationResult" class="operation-result" hidden aria-live="polite"></div>
               </form>
             </article>
             <div class="stack">
@@ -259,7 +260,7 @@
                 <form id="restoreForm" class="form-stack"><label><span data-i18n="backup_file"></span><input type="file" id="restoreFile" accept=".zip,.sqlite3,.db" required></label><label><span data-i18n="confirmation"></span><input id="restoreConfirmation" data-i18n-placeholder="confirm_restore_word" placeholder="WIEDERHERSTELLEN"></label><button class="button danger" type="submit" data-i18n="restore"></button></form>
               </article>
               <article class="panel">
-                <h3 data-i18n="home_assistant_history"></h3><p data-i18n="ha_purge_all_hint"></p><div id="haStatus" class="status-message" data-i18n="ha_purge_ready"></div><label><span data-i18n="confirmation"></span><input id="haConfirmation" autocomplete="off" data-i18n-placeholder="confirm_purge_word" placeholder="PURGE"></label><button id="purgeHaHistory" type="button" class="button danger" data-i18n="purge_all_radonscan_history"></button>
+                <h3 data-i18n="home_assistant_history"></h3><p data-i18n="ha_purge_all_hint"></p><div id="haStatus" class="status-message" data-i18n="ha_purge_ready"></div><div id="haOperationResult" class="operation-result" hidden aria-live="polite"></div><label><span data-i18n="confirmation"></span><input id="haConfirmation" autocomplete="off" data-i18n-placeholder="confirm_purge_word" placeholder="PURGE"></label><div class="button-row purge-actions"><button id="purgeHaHistory" type="button" class="button danger" data-i18n="purge_all_radonscan_history"></button><button id="verifyHaPurge" type="button" class="button secondary" data-i18n="verify_purge"></button></div><p class="field-help" data-i18n="verify_purge_hint"></p>
               </article>
             </div>
           </div>
@@ -274,7 +275,7 @@
 
         <section id="view-settings" class="view">
           <div class="section-header"><div><span class="eyebrow" data-i18n="configuration"></span><h2 data-i18n="settings_title"></h2><p data-i18n="settings_hint"></p></div></div>
-          <article class="panel settings-grid" id="settingsGrid"></article>
+          <div id="settingsGrid" class="settings-groups" aria-live="polite"></div>
         </section>
 
         <section id="view-help" class="view">
@@ -291,10 +292,12 @@
     </div>
   </div>
   <button id="sidebarBackdrop" class="sidebar-backdrop" type="button" tabindex="-1" aria-hidden="true"></button>
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <div id="modal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card"><button id="modalClose" class="modal-close" data-i18n-aria-label="close" aria-label="Close">×</button><h3 id="modalTitle"></h3><div id="modalBody"></div></div></div>
   <script>window.RADONSCAN_BOOT={locale:"__LOCALE__",translations:__TRANSLATIONS__,locales:__LOCALE_NAMES__,version:"__VERSION__",actionToken:"__ACTION_TOKEN__"};</script>
   <script src="assets/core.js?v=__VERSION__"></script>
+  <script src="assets/accessibility.js?v=__VERSION__"></script>
+  <script src="assets/data-management.js?v=__VERSION__"></script>
   <script src="assets/app.js?v=__VERSION__"></script>
 </body>
 </html>

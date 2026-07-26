@@ -28,6 +28,7 @@ from reportlab.platypus import (
 from . import __version__
 from .analysis import parse_dt
 from .config import Settings
+from .report_utils import peak_preserving_downsample
 from .storage import Storage, StorageError, iso, utc_now
 
 ORANGE = colors.HexColor("#F47B20")
@@ -100,6 +101,7 @@ TEXT = {
         "quality_good": "Gut",
         "quality_limited": "Eingeschränkt",
         "quality_insufficient": "Nicht ausreichend",
+        "chart_downsampled": "Die Zeitreihengrafik wurde für eine lesbare und schnelle PDF-Darstellung auf {points} repräsentative Punkte reduziert. Alle statistischen Berechnungen und Prüfsummen verwenden weiterhin sämtliche {samples} Messwerte.",
     },
     "en": {
         "report": "Scientific radon measurement report",
@@ -160,6 +162,7 @@ TEXT = {
         "quality_good": "Good",
         "quality_limited": "Limited",
         "quality_insufficient": "Insufficient",
+        "chart_downsampled": "For a readable and efficient PDF, the time-series chart was reduced to {points} representative points. All statistical calculations and checksums still use all {samples} measurements.",
     },
 }
 
@@ -390,7 +393,14 @@ class ScientificReport:
         story.append(summary_table)
         story.append(Spacer(1, 4 * mm))
         story.append(Paragraph(tx["time_series"], styles["RMH2"]))
-        story.append(_timeseries(analysis["records"], self.settings))
+        plot_records = peak_preserving_downsample(analysis["records"], 1800)
+        story.append(_timeseries(plot_records, self.settings))
+        if len(plot_records) < len(analysis["records"]):
+            story.append(Spacer(1, 1.5 * mm))
+            story.append(Paragraph(
+                tx["chart_downsampled"].format(points=len(plot_records), samples=len(analysis["records"])),
+                styles["RMSmall"],
+            ))
 
         details = [
             [tx["samples"], str(stats.get("samples") or 0), tx["quality"], tx.get(f"quality_{stats.get('quality')}", str(stats.get("quality") or "–"))],
@@ -494,7 +504,9 @@ class ScientificReport:
             "minimum_bq_m3": stats.get("minimum_bq_m3"),
             "maximum_bq_m3": stats.get("maximum_bq_m3"),
             "app_version": __version__,
-            "analysis_model": "4.3.9",
+            "analysis_model": "4.9.0",
+            "chart_points": len(plot_records),
+            "chart_downsampled": len(plot_records) < len(analysis["records"]),
             "scientific_quality_class": stats.get("scientific_quality_class"),
             "quality_reasons": stats.get("quality_reasons"),
             "uncertainty": analysis.get("uncertainty"),

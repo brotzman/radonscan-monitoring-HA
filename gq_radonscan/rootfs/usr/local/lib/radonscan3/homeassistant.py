@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import datetime, timedelta, timezone
 from typing import Any
+from urllib.parse import quote, urlencode
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+
+from .security import safe_error_message
 
 
 class HomeAssistantError(RuntimeError):
@@ -45,9 +49,10 @@ class HomeAssistantClient:
                 return json.loads(raw.decode("utf-8")) if raw else {}
         except HTTPError as exc:
             body = exc.read().decode("utf-8", "replace")
-            raise HomeAssistantError(f"Home Assistant returned HTTP {exc.code}: {body[:500]}") from exc
+            message = safe_error_message(f"Home Assistant returned HTTP {exc.code}: {body[:500]}", self.token)
+            raise HomeAssistantError(message) from exc
         except URLError as exc:
-            raise HomeAssistantError(f"Home Assistant is not reachable: {exc.reason}") from exc
+            raise HomeAssistantError(safe_error_message(f"Home Assistant is not reachable: {exc.reason}", self.token)) from exc
 
     def status(self) -> dict[str, object]:
         if not self.available:
@@ -106,6 +111,70 @@ class HomeAssistantClient:
             raise HomeAssistantError("Invalid event type")
         return self._request("POST", f"events/{cleaned}", event_data or {})
 
+    def history_summary(
+        self,
+        entity_ids: list[str],
+        *,
+        start: datetime | None = None,
+        end: datetime | None = None,
+        chunk_size: int = 20,
+    ) -> dict[str, object]:
+        """Count historical rows for known entities using Home Assistant's public REST API.
+
+        The check deliberately ends five minutes before the request by default so a current
+        post-purge state does not look like old history. It verifies known entity IDs only.
+        """
+        cleaned = sorted({str(entity).strip() for entity in entity_ids if str(entity).strip()})
+        if not cleaned:
+            return {
+                "verified": False,
+                "status": "no_entities",
+                "remaining_rows": 0,
+                "entities_with_history": [],
+                "checked_at": datetime.now(timezone.utc).isoformat(),
+            }
+        now = datetime.now(timezone.utc)
+        period_start = start or datetime(2000, 1, 1, tzinfo=timezone.utc)
+        period_end = end or (now - timedelta(minutes=5))
+        if period_end <= period_start:
+            raise HomeAssistantError("History verification period is invalid")
+
+        counts: dict[str, int] = {entity: 0 for entity in cleaned}
+        for offset in range(0, len(cleaned), max(1, int(chunk_size))):
+            chunk = cleaned[offset : offset + max(1, int(chunk_size))]
+            params = urlencode(
+                {
+                    "filter_entity_id": ",".join(chunk),
+                    "end_time": period_end.isoformat(),
+                }
+            )
+            payload = self._request(
+                "GET",
+                f"history/period/{quote(period_start.isoformat(), safe='')}?{params}&minimal_response&no_attributes",
+            )
+            if not isinstance(payload, list):
+                continue
+            for series in payload:
+                if not isinstance(series, list) or not series:
+                    continue
+                first = series[0] if isinstance(series[0], dict) else {}
+                entity_id = str(first.get("entity_id") or "")
+                if entity_id in counts:
+                    counts[entity_id] += len(series)
+
+        remaining = sum(counts.values())
+        with_history = [entity for entity, count in counts.items() if count > 0]
+        return {
+            "verified": remaining == 0,
+            "status": "complete" if remaining == 0 else "history_remaining",
+            "remaining_rows": remaining,
+            "entities_with_history": with_history,
+            "per_entity": counts,
+            "period_start": period_start.isoformat(),
+            "period_end": period_end.isoformat(),
+            "checked_at": now.isoformat(),
+        }
+
     def purge_entities(
         self,
         entity_ids: list[str] | None = None,
@@ -132,5 +201,6 @@ class HomeAssistantClient:
             "entity_globs": globs,
             "keep_days": keep_days,
             "authentication": self.token_source,
+            "requested_at": datetime.now(timezone.utc).isoformat(),
             "response": response,
         }

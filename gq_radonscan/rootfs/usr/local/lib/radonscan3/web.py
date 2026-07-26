@@ -12,6 +12,7 @@ from pathlib import Path
 import re
 import secrets
 import threading
+import time
 import unicodedata
 from urllib.parse import parse_qs, unquote, urlparse
 
@@ -22,6 +23,8 @@ from .gmcmap import GmcMapClient, GmcMapError
 from .i18n import LOCALE_NAMES, load, resolve
 from .reports import ScientificReport
 from .state import build_state
+from .operations import DataManagementOperations
+from .security import redact_sensitive, safe_error_message
 from .storage import Storage, StorageError
 
 LOGGER = logging.getLogger(__name__)
@@ -60,6 +63,7 @@ class WebServer:
         self.ha = HomeAssistantClient(settings.homeassistant_access_token)
         self.reporter = ScientificReport(storage, settings)
         self.gmcmap = GmcMapClient(settings, storage)
+        self.operations = DataManagementOperations(storage, self.ha)
         self.csrf_token = secrets.token_urlsafe(24)
         self.server = ThreadingHTTPServer(("0.0.0.0", settings.web_port), self._handler())
         self.server.daemon_threads = True
@@ -126,7 +130,8 @@ class WebServer:
                 )
 
             def error_response(self, message: str, status: int = 400, **extra) -> None:
-                self.json_response({"ok": False, "error": message, **extra}, status)
+                safe = safe_error_message(message, app.settings.homeassistant_access_token)
+                self.json_response({"ok": False, "error": safe, **redact_sensitive(extra, extra_secrets=(app.settings.homeassistant_access_token,))}, status)
 
             def locale(self, query: dict[str, list[str]]) -> str:
                 requested = str((query.get("lang") or [app.settings.language])[0])
@@ -229,7 +234,7 @@ class WebServer:
 
                     if path.startswith("/assets/"):
                         name = path.split("/", 2)[-1]
-                        if name not in {"app.css", "app.js", "icon.png"}:
+                        if name not in {"app.css", "app.js", "core.js", "accessibility.js", "data-management.js", "icon.png"}:
                             self.send_bytes(b"Not found", "text/plain", 404)
                             return
                         file_path = app.static_dir / name
@@ -296,15 +301,6 @@ class WebServer:
                         })
                         return
 
-                    if path == "/api/gmcmap/upload":
-                        payload = self.read_json()
-                        confirmation = str(payload.get("confirmation") or "").strip().upper()
-                        if confirmation not in {"UPLOAD", "HOCHLADEN"}:
-                            raise GmcMapError("Upload confirmation is required")
-                        result = app.gmcmap.upload_latest(trigger="manual", user_name=self.user_name)
-                        self.json_response({"ok": True, "result": result})
-                        return
-
                     if path == "/api/locations":
                         self.json_response({"items": app.storage.locations()})
                         return
@@ -357,6 +353,14 @@ class WebServer:
                             "campaigns": app.storage.campaigns(),
                             "locations": app.storage.locations(),
                         }
+                        payload = redact_sensitive(
+                            payload,
+                            extra_secrets=(
+                                app.settings.homeassistant_access_token,
+                                app.settings.gmcmap_account_id,
+                                app.settings.gmcmap_device_id,
+                            ),
+                        )
                         self.json_response(payload, disposition='attachment; filename="radon-monitoring-diagnostics.json"')
                         return
 
@@ -413,7 +417,7 @@ class WebServer:
 
                     if path in {"/docs/user-manual.pdf", "/docs/protocol-reference.pdf"}:
                         locale = self.locale(query)
-                        prefix = "Radon_Monitoring_User_Manual_4.6.0" if "user-manual" in path else "GQ_RadonScan_Protocol_Reference_3.0.0"
+                        prefix = "Radon_Monitoring_User_Manual_4.9.0" if "user-manual" in path else "GQ_RadonScan_Protocol_Reference_3.0.0"
                         candidates = [app.docs_dir / f"{prefix}_{locale}.pdf", app.docs_dir / f"{prefix}_en.pdf"]
                         manual = next((candidate for candidate in candidates if candidate.is_file()), None)
                         if manual is None:
@@ -436,6 +440,15 @@ class WebServer:
                 if not self.require_write_token():
                     return
                 try:
+                    if path == "/api/gmcmap/upload":
+                        payload = self.read_json()
+                        confirmation = str(payload.get("confirmation") or "").strip().upper()
+                        if confirmation not in {"UPLOAD", "HOCHLADEN"}:
+                            raise GmcMapError("Upload confirmation is required")
+                        result = app.gmcmap.upload_latest(trigger="manual", user_name=self.user_name)
+                        self.json_response({"ok": True, "result": result})
+                        return
+
                     if path == "/api/gmcmap/retry":
                         count = app.storage.retry_worldmap_failures()
                         app.storage.audit("gmcmap_retry", "gmcmap", {"count": count}, self.user_name)
@@ -481,7 +494,7 @@ class WebServer:
 
                     if path == "/api/data/reset":
                         self.require_data_management()
-                        result = app.storage.reset_all_data()
+                        result = app.operations.reset_database(self.user_name)
                         self.json_response({"ok": True, **result})
                         return
 
@@ -503,19 +516,13 @@ class WebServer:
 
                     if path == "/api/homeassistant/purge-all":
                         self.require_data_management()
-                        entities = app.ha.radon_entities()
-                        entity_ids = [str(item.get("entity_id") or "") for item in entities]
-                        entity_globs = [
-                            "sensor.gq_radonscan_*",
-                            "binary_sensor.gq_radonscan_*",
-                            "update.gq_radonscan_*",
-                            "sensor.radon_monitoring_*",
-                            "binary_sensor.radon_monitoring_*",
-                            "update.radon_monitoring_*",
-                            "*.radonscan_*",
-                        ]
-                        result = app.ha.purge_entities(entity_ids, 0, entity_globs)
-                        app.storage.audit("homeassistant_purge_all", "recorder", result, self.user_name)
+                        result = app.operations.purge_home_assistant_history(self.user_name)
+                        self.json_response({"ok": True, **result})
+                        return
+
+                    if path == "/api/homeassistant/verify-purge":
+                        self.require_data_management()
+                        result = app.operations.verify_home_assistant_history(self.user_name)
                         self.json_response({"ok": True, **result})
                         return
 

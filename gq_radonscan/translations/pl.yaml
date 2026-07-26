@@ -1,16 +1,16 @@
 configuration:
   device_name:
     name: Nazwa urządzenia
-    description: Nazwa RadonScana wyświetlana w Home Assistant i w interfejsie WWW.
+    description: Nazwa RadonScan wyświetlana w Home Assistant i interfejsie internetowym.
   scan_interval:
     name: Interwał odczytu
-    description: Liczba sekund między odczytami SPIR wykonywanymi tylko do odczytu.
+    description: Liczba sekund między odczytami SPIR tylko do odczytu.
   preferred_unit:
     name: Preferowana jednostka
-    description: Jednostka używana w Home Assistant i w interfejsie WWW.
+    description: Jednostka używana w Home Assistant i interfejsie internetowym.
   language:
     name: Język
-    description: Język interfejsu ingress i powiązanego podręcznika.
+    description: Język interfejsu Ingress i połączonego podręcznika.
   warning_threshold_bq_m3:
     name: Próg ostrzegawczy
     description: Wartość radonu w Bq/m³, od której wyświetlany jest stan ostrzegawczy.
@@ -19,77 +19,70 @@ configuration:
     description: Wartość radonu w Bq/m³, od której wyświetlany jest stan zagrożenia.
   factor_bq_m3_per_cph:
     name: Współczynnik przeliczeniowy CPH
-    description: Eksperymentalny współczynnik w Bq/m³ na count/h; zapisywany z każdym
-      pomiarem.
+    description: Eksperymentalny współczynnik Bq/m³ na count/h, zapisywany z każdym pomiarem.
   backfill_history:
     name: Importuj historię urządzenia
-    description: Po pierwszym udanym odczycie importuje zapisane w urządzeniu ukończone
-      wartości godzinowe.
+    description: Importuje zakończone wartości godzinowe zapisane już w urządzeniu po pierwszym udanym odczycie.
   history_retention_days:
     name: Okres przechowywania
-    description: Usuwa lokalne pomiary z SQLite po podanej liczbie dni.
+    description: Usuwa lokalne pomiary z SQLite po tej liczbie dni.
   serial_port:
     name: Port szeregowy
-    description: Pozostaw puste, aby wykrywać automatycznie, albo podaj stałą ścieżkę
-      urządzenia.
+    description: Pozostaw puste dla automatycznego wykrywania lub podaj stałą ścieżkę urządzenia.
   serial_timeout_seconds:
-    name: Limit czasu portu szeregowego
-    description: Maksymalny czas oczekiwania na odpowiedź urządzenia, w sekundach.
+    name: Limit czasu portu
+    description: Maksymalna liczba sekund oczekiwania na odpowiedź urządzenia.
   mqtt_topic_prefix:
     name: Prefiks tematów MQTT
     description: Temat bazowy dla komunikatów stanu i dostępności.
   discovery_prefix:
-    name: Prefiks Discovery
+    name: Prefiks wykrywania
     description: Prefiks tematów Home Assistant MQTT Discovery.
   diagnostic_logging:
     name: Szczegółowe logowanie diagnostyczne
-    description: Zapisuje dodatkowe dane techniczne o portach, odczytach SPIR i dekodowaniu.
+    description: Zapisuje dodatkowe informacje o wykrywaniu portów, odczytach SPIR i dekodowaniu.
   log_level:
     name: Poziom logowania
     description: Szczegółowość dziennika aplikacji.
   minimum_data_coverage_percent:
-    name: Minimum data coverage
-    description: Required percentage of available hourly values before a period average
-      is considered calculable.
+    name: Minimalne pokrycie danych
+    description: Wymagany procent dostępnych wartości godzinowych, zanim średnia zostanie uznana za możliwą do obliczenia.
   report_author:
-    name: Report author
-    description: Optional author name for scientific PDF reports.
+    name: Autor raportu
+    description: Opcjonalna nazwa autora naukowych raportów PDF.
   report_organisation:
-    name: Organisation
-    description: Optional organisation or institution for PDF reports.
+    name: Organizacja
+    description: Opcjonalna organizacja lub instytucja dla raportów PDF.
   report_disclaimer:
-    name: Additional report notice
-    description: Optional custom notice included in scientific PDF reports.
+    name: Dodatkowa uwaga w raporcie
+    description: Opcjonalna własna uwaga dołączana do naukowych raportów PDF.
   gmcmap_max_age_hours:
-    name: World Map maximum data age
-    description: Maximum age of readings queued for upload.
+    name: Maksymalny wiek danych World Map
+    description: Maksymalny wiek pomiarów oczekujących na wysłanie.
   gmcmap_retry_limit:
-    name: World Map retry limit
-    description: Maximum number of upload attempts before a reading is marked failed.
+    name: Limit ponowień World Map
+    description: Maksymalna liczba prób przed oznaczeniem pomiaru jako nieudanego.
   analysis_timezone:
-    name: Analysis time zone
-    description: IANA time zone used for day, weekday and hourly profiles; auto uses
-      Home Assistant.
+    name: Strefa czasowa analizy
+    description: Strefa IANA dla profili dziennych, tygodniowych i godzinowych; auto używa Home Assistant.
   gmcmap_enabled:
-    name: Enable GQ World Map
-    description: Enable transmission to the GQ Radiation World Map.
+    name: Włącz GQ World Map
+    description: Włącza przesyłanie do GQ Radiation World Map.
   gmcmap_auto_upload:
-    name: Automatic World Map upload
-    description: Automatically queue completed hourly values for upload.
+    name: Automatyczne wysyłanie World Map
+    description: Automatycznie dodaje zakończone wartości godzinowe do kolejki.
   gmcmap_account_id:
-    name: GQ World Map account ID
-    description: Account ID used by the GQ Radiation World Map upload endpoint.
+    name: ID konta GQ World Map
+    description: ID konta używane przez usługę wysyłania GQ Radiation World Map.
   gmcmap_device_id:
-    name: GQ World Map device ID
-    description: Device ID used by the GQ Radiation World Map upload endpoint.
+    name: ID urządzenia GQ World Map
+    description: ID urządzenia używane przez usługę wysyłania GQ Radiation World Map.
   gmcmap_upload_interval_minutes:
-    name: World Map upload interval
-    description: Minimum interval in minutes between automatic uploads.
+    name: Interwał wysyłania World Map
+    description: Minimalny odstęp w minutach między automatycznymi wysyłkami.
   data_management_enabled:
-    name: Enable data management
-    description: Show data management in the sidebar and enable its protected API
-      functions.
+    name: Włącz zarządzanie danymi
+    description: Pokazuje zarządzanie danymi na pasku bocznym i włącza chronione funkcje API.
   homeassistant_access_token:
     name: Token administratora Home Assistant
-    description: Opcjonalny długotrwały token dostępu administratora Home Assistant,
-      wymagany tylko do usuwania historii Recorder.
+    description: Opcjonalny długoterminowy token dostępu administratora Home Assistant, używany wyłącznie do usuwania historii Recorder.

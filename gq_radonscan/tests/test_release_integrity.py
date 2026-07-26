@@ -9,19 +9,19 @@ LOCALES = LIB / 'locales'
 
 
 def test_release_versions_are_consistent():
-    assert 'version: 4.6.0' in (ROOT / 'config.yaml').read_text(encoding='utf-8')
-    assert 'BUILD_VERSION="4.6.0"' in (ROOT / 'Dockerfile').read_text(encoding='utf-8')
-    assert '__version__ = "4.6.0"' in (LIB / '__init__.py').read_text(encoding='utf-8')
-    assert 'Radon Monitoring 4.6.0' in (ROOT / 'README.md').read_text(encoding='utf-8')
+    assert 'version: 4.9.0' in (ROOT / 'config.yaml').read_text(encoding='utf-8')
+    assert 'BUILD_VERSION="4.9.0"' in (ROOT / 'Dockerfile').read_text(encoding='utf-8')
+    assert '__version__ = "4.9.0"' in (LIB / '__init__.py').read_text(encoding='utf-8')
+    assert 'Radon Monitoring 4.9.0' in (ROOT / 'README.md').read_text(encoding='utf-8')
 
 
 def test_current_manuals_exist_and_obsolete_manuals_are_removed():
     docs = ROOT / 'rootfs/usr/local/share/radonscan3/docs'
     for lang in ('de', 'en'):
-        path = docs / f'Radon_Monitoring_User_Manual_4.6.0_{lang}.pdf'
+        path = docs / f'Radon_Monitoring_User_Manual_4.9.0_{lang}.pdf'
         assert path.is_file() and path.stat().st_size > 10_000
     assert not list(docs.glob('Radon_Monitoring_User_Manual_4.2.1_*.pdf'))
-    assert 'Radon_Monitoring_User_Manual_4.6.0' in (LIB / 'web.py').read_text(encoding='utf-8')
+    assert 'Radon_Monitoring_User_Manual_4.9.0' in (LIB / 'web.py').read_text(encoding='utf-8')
 
 
 def test_frontend_assets_and_ids_are_consistent():
@@ -30,7 +30,8 @@ def test_frontend_assets_and_ids_are_consistent():
     assert 'assets/app.js?v=__VERSION__' in html
     ids = re.findall(r'\bid="([^"]+)"', html)
     assert len(ids) == len(set(ids))
-    for asset in ('core.js', 'app.js', 'app.css', 'icon.png'):
+    assert 'assets/data-management.js?v=__VERSION__' in html
+    for asset in ('core.js', 'accessibility.js', 'data-management.js', 'app.js', 'app.css', 'icon.png'):
         assert (STATIC / asset).is_file()
 
 
@@ -49,3 +50,65 @@ def test_analysis_hierarchy_is_translated():
         data = json.loads(locale_path.read_text(encoding='utf-8'))
         for key in ('basic_statistics', 'basic_statistics_hint', 'advanced_statistics', 'advanced_statistics_hint'):
             assert data.get(key)
+
+
+def test_javascript_translation_keys_exist_in_all_locales():
+    scripts = "\n".join((STATIC / name).read_text(encoding="utf-8") for name in ("app.js", "data-management.js"))
+    keys = set(re.findall(r"\btr\(['\"]([^'\"]+)['\"]\)", scripts))
+    assert keys
+    for locale_path in LOCALES.glob('*.json'):
+        data = json.loads(locale_path.read_text(encoding='utf-8'))
+        missing = sorted(keys - data.keys())
+        assert not missing, f'{locale_path.name}: missing dynamic keys {missing}'
+
+
+def test_home_assistant_configuration_translations_cover_schema():
+    import yaml
+    config = yaml.safe_load((ROOT / 'config.yaml').read_text(encoding='utf-8'))
+    schema_keys = set(config['schema'])
+    for translation_path in (ROOT / 'translations').glob('*.yaml'):
+        translation = yaml.safe_load(translation_path.read_text(encoding='utf-8')) or {}
+        entries = translation.get('configuration', {})
+        missing = sorted(schema_keys - set(entries))
+        assert not missing, f'{translation_path.name}: missing configuration entries {missing}'
+        for key in schema_keys:
+            assert str(entries[key].get('name') or '').strip()
+            assert str(entries[key].get('description') or '').strip()
+
+
+def test_repository_root_pytest_configuration_exists():
+    repository_root = ROOT.parent
+    pyproject = repository_root / 'pyproject.toml'
+    assert pyproject.is_file()
+    text = pyproject.read_text(encoding='utf-8')
+    assert 'gq_radonscan/rootfs/usr/local/lib' in text
+    assert 'gq_radonscan/tests' in text
+
+
+def test_critical_interface_text_is_localised_in_supported_languages():
+    english = json.loads((LOCALES / 'en.json').read_text(encoding='utf-8'))
+    critical = {
+        'analysis_title', 'data_title', 'data_hint', 'delete_entire_database',
+        'ha_purge_all_hint', 'verify_purge', 'settings_group_data', 'reports_title',
+    }
+    for code in ('es', 'fr', 'hr', 'it', 'nl', 'pl'):
+        data = json.loads((LOCALES / f'{code}.json').read_text(encoding='utf-8'))
+        fallback = sorted(key for key in critical if data.get(key) == english.get(key))
+        assert not fallback, f'{code}: English fallback remains for {fallback}'
+
+
+def test_non_english_locales_do_not_fall_back_to_english_at_scale():
+    html = (STATIC / 'index.html').read_text(encoding='utf-8')
+    used = set(re.findall(r'data-i18n(?:-title|-placeholder|-aria-label)?="([^"]+)"', html))
+    for name in ('app.js', 'data-management.js', 'core.js', 'accessibility.js'):
+        used.update(re.findall(r"\btr\(['\"]([^'\"]+)['\"]\)", (STATIC / name).read_text(encoding='utf-8')))
+    english = json.loads((LOCALES / 'en.json').read_text(encoding='utf-8'))
+    technical_or_shared = {
+        'Radon Monitoring', 'GQ Radiation World Map', 'GQ World Map', 'Home Assistant',
+        'MQTT', 'UTC', 'JSON', 'CSV', 'PDF', 'SHA-256', 'Bq/m³', 'pCi/L', 'SPIR',
+        'CPH', 'Firmware', 'Model', 'API', 'Online', 'Offline', 'RESTORE', 'UPLOAD',
+    }
+    for code in ('es', 'fr', 'hr', 'it', 'nl', 'pl'):
+        data = json.loads((LOCALES / f'{code}.json').read_text(encoding='utf-8'))
+        same = [key for key in used if data.get(key) == english.get(key) and english.get(key) not in technical_or_shared]
+        assert len(same) <= 25, f'{code}: too many English fallbacks ({len(same)}): {sorted(same)[:30]}'

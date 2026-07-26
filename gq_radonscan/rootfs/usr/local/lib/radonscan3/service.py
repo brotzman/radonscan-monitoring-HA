@@ -5,11 +5,13 @@ import signal
 import threading
 
 from .config import Settings
+from . import __version__
 from .device import Collector
 from .mqtt import MqttPublisher
 from .gmcmap import GmcMapClient, GmcMapError
 from .homeassistant import HomeAssistantClient, HomeAssistantError
 from .state import build_state
+from .polling import update_connection_runtime
 from .storage import Storage
 from .web import WebServer
 
@@ -49,7 +51,7 @@ def main() -> int:
 
     mqtt.start()
     web.start()
-    LOGGER.info("Radon Monitoring 4 web interface listening on port %s", settings.web_port)
+    LOGGER.info("Radon Monitoring %s web interface listening on port %s", __version__, settings.web_port)
     LOGGER.info("Read-only polling interval: %s seconds", settings.scan_interval)
 
     try:
@@ -73,17 +75,7 @@ def main() -> int:
                 )
                 if skip_backfill_once:
                     storage.set_runtime("skip_history_backfill_once", False)
-                storage.set_runtime(
-                    "connection",
-                    {
-                        "connected": True,
-                        "status": "connected",
-                        "last_scan": result.detected_at.isoformat(timespec="seconds"),
-                        "port": result.port,
-                        "error": None,
-                        "attempts": list(result.attempts),
-                    },
-                )
+                update_connection_runtime(storage, result)
                 protocol = result.snapshot.as_dict()
                 protocol.update(
                     {
@@ -124,17 +116,7 @@ def main() -> int:
                             except HomeAssistantError as event_exc:
                                 LOGGER.debug("Could not emit Home Assistant event: %s", event_exc)
             else:
-                storage.set_runtime(
-                    "connection",
-                    {
-                        "connected": False,
-                        "status": "disconnected",
-                        "last_scan": result.detected_at.isoformat(timespec="seconds"),
-                        "port": result.port,
-                        "error": result.error,
-                        "attempts": list(result.attempts),
-                    },
-                )
+                update_connection_runtime(storage, result)
                 LOGGER.warning("RadonScan not available: %s", result.error)
 
             storage.prune(settings.history_retention_days)
