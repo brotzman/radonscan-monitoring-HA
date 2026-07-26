@@ -98,6 +98,56 @@
     }
   }
 
+  function renderHomeAssistantLocation() {
+    const ha=state?.homeassistant||{};
+    const card=$('homeAssistantLocationCard');
+    if(!card) return;
+    const hasValue=value=>value!==null&&value!==undefined&&String(value).trim()!=='';
+    const latitude=Number(ha.latitude), longitude=Number(ha.longitude);
+    const address=hasValue(ha.address)?String(ha.address).trim():(hasValue(ha.location_name)?String(ha.location_name).trim():tr('ha_location_unavailable'));
+    $('homeAssistantLocationAddress').textContent=address;
+
+    const details=[];
+    if(hasValue(ha.latitude)&&hasValue(ha.longitude)&&Number.isFinite(latitude)&&Number.isFinite(longitude)) details.push(`${tr('ha_location_coordinates')}: ${fmtNumber(latitude,5)}, ${fmtNumber(longitude,5)}`);
+    if(hasValue(ha.elevation)&&Number.isFinite(Number(ha.elevation))) details.push(`${tr('ha_location_elevation')}: ${fmtNumber(Number(ha.elevation),0)} m`);
+    if(hasValue(ha.country)) details.push(`${tr('ha_location_country')}: ${String(ha.country).trim().toUpperCase()}`);
+    if(hasValue(ha.time_zone)) details.push(`${tr('ha_location_timezone')}: ${String(ha.time_zone).trim()}`);
+    $('homeAssistantLocationDetails').textContent=details.length?details.join(' · '):tr('ha_location_unavailable');
+    card.classList.toggle('unavailable',!ha.connected||details.length===0);
+  }
+
+  function renderRadonTraffic() {
+    const card=$('radonTrafficCard'), signal=$('radonTrafficSignal');
+    if(!card||!signal) return;
+    const measurement=state?.measurement||{}, settings=state?.settings||{};
+    const value=Number(measurement.bq_m3);
+    const warning=Number(settings.warning_threshold_bq_m3);
+    const danger=Number(settings.danger_threshold_bq_m3);
+    const available=Boolean(measurement.available)&&Number.isFinite(value);
+    let level='neutral';
+    if(available&&Number.isFinite(warning)&&Number.isFinite(danger)) level=value>=danger?'danger':value>=warning?'warning':'normal';
+
+    card.classList.remove('normal','warning','danger','neutral');
+    card.classList.add(level);
+    signal.dataset.level=level;
+    signal.querySelectorAll('[data-level]').forEach(light=>light.classList.toggle('active',light.dataset.level===level));
+
+    const label=available?tr(level):tr('unknown');
+    signal.setAttribute('aria-label',`${tr('radon_traffic_title')}: ${label}`);
+    const badge=$('radonTrafficStatus');
+    badge.className=`badge ${level}`;
+    badge.textContent=label;
+    $('radonTrafficValue').textContent=available?`${tr('radon_traffic_current')}: ${radon(value)}`:tr('radon_traffic_unavailable');
+
+    if(Number.isFinite(warning)&&Number.isFinite(danger)) {
+      const decimals=unit()==='pCi/L'?3:1;
+      const threshold=value=>fmtNumber(radonValue(value),decimals);
+      $('radonTrafficThresholds').textContent=`${tr('radon_traffic_green')}: < ${threshold(warning)} · ${tr('radon_traffic_yellow')}: ${threshold(warning)}–< ${threshold(danger)} · ${tr('radon_traffic_red')}: ≥ ${threshold(danger)} ${unit()}`;
+    } else {
+      $('radonTrafficThresholds').textContent=tr('not_available');
+    }
+  }
+
   function renderState() {
     if(!state) return;
     applyFeatureVisibility();
@@ -122,7 +172,7 @@
     const q=state.statistics?.['30d']?.quality||state.statistics?.all?.quality||'insufficient';
     const qBadge=$('qualityBadge');qBadge.className=`badge ${q}`;qBadge.textContent=tr(`quality_${q}`);
     $('overviewCoverage').textContent=`${fmtNumber(state.statistics?.['30d']?.coverage_percent||0,0)} %`;
-    renderFacts(); renderSettings(); renderExpert(); renderOverviewChart();
+    renderHomeAssistantLocation(); renderRadonTraffic(); renderFacts(); renderSettings(); renderOverviewChart();
     $('manualLink').href=`docs/user-manual.pdf?lang=${boot.locale}`; $('protocolLink').href=`docs/protocol-reference.pdf?lang=${boot.locale}`;
   }
 
@@ -146,13 +196,6 @@
       [tr('settings_group_diagnostics'),[[tr('diagnostic_logging'),bool(s.diagnostic_logging)],[tr('analysis_timezone'),s.analysis_timezone||tr('automatic')]]]
     ];
     $('settingsGrid').innerHTML=groups.map(([title,rows],index)=>`<section class="settings-group panel" aria-labelledby="settings-group-${index}"><div class="settings-group-heading"><h3 id="settings-group-${index}">${escapeHtml(title)}</h3>${title===tr('settings_group_data')?`<p>${escapeHtml(tr('security_note'))}</p>`:''}</div><div class="settings-grid">${rows.map(([a,b])=>`<div class="setting-row"><span>${escapeHtml(a)}</span><strong>${escapeHtml(b??tr('not_available'))}</strong></div>`).join('')}</div></section>`).join('');
-  }
-
-  function renderExpert() {
-    const d=state.device||{},p=state.protocol||{},m=state.measurement||{};
-    $('expertDeviceFacts').innerHTML=[fact(tr('model'),d.model),fact(tr('firmware'),fmtFirmware(d.firmware)),fact(tr('serial_number'),d.serial_number),fact(tr('serial_port'),d.serial_port),fact(tr('first_seen'),fmtDate(d.first_seen)),fact(tr('last_seen'),fmtDate(d.last_seen))].join('');
-    $('expertProtocolFacts').innerHTML=[fact(tr('decoder'),p.decoder),fact(tr('protocol'),p.transport),fact(tr('raw_start_offset'),p.raw_start_offset),fact(tr('raw_end_offset'),p.raw_end_offset),fact('FD 0x270',p.fd_value_0x270),fact(tr('time_records'),p.time_record_count),fact(tr('hourly_records'),p.hourly_record_count)].join('');
-    $('expertDataFacts').innerHTML=[fact(tr('hour_index'),m.hour_index),fact(tr('raw_cph'),m.raw_cph),fact(tr('conversion_factor'),m.factor_bq_m3_per_cph),fact(tr('source'),m.source),fact(tr('campaign'),p.imported?.latest_hour_index??'–'),fact(tr('database_integrity'),state.database?.integrity),fact(tr('data_age'),m.age_hours===null?'–':`${fmtNumber(m.age_hours,2)} h`)].join('');
   }
 
   function renderOverviewChart() {

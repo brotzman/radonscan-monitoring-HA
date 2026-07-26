@@ -1,4 +1,4 @@
-# Radon Monitoring 5.0.0 - App documentation
+# Radon Monitoring 5.1.0 - App documentation
 
 ## Purpose
 
@@ -22,13 +22,15 @@ Only completed hours are imported. A newly connected device may therefore remain
 
 Shows the latest completed value, age, measurement site, raw CPH, stored sample count, device/MQTT state and 24-hour, 7-day and 30-day summaries. A period card shows a reason instead of a number when duration or coverage is insufficient.
 
+The Home Assistant location card reads the location name or locally supplied address, latitude, longitude, elevation, country and time zone from the local Home Assistant Core configuration. It performs no reverse geocoding and sends no location data to an external geocoding service. If Home Assistant does not expose a postal address, the configured location name is shown instead. The Radon traffic light classifies the latest completed hourly measurement using the warning and danger thresholds configured in Settings.
+
 ### Analysis
 
 Contains basic and advanced statistics, distribution and trend diagnostics, daily and weekday profiles, rolling robust values, threshold events and a weekly heatmap. Missing values are not imputed and flagged observations are not silently deleted.
 
-### Expert
+### Devices & System
 
-Shows protocol and decoder details, firmware, serial port, measurement data, database integrity and factor history. Block checksums and the raw runtime-state card were removed from the interface in version 5.0.0; the downloadable diagnostics remain available. The currently configured conversion factor is intentionally separate from the factor stored with a historical measurement.
+Shows device, protocol, service and database status in one consolidated view. Configured thresholds and other operating parameters are shown under Settings. The former Expert view was removed completely from the interface and sidebar in version 5.1.0.
 
 ### GQ Radiation World Map
 
@@ -103,7 +105,7 @@ Use a dedicated long-lived Home Assistant token and remove it when Recorder main
 
 ### Device not connected
 
-Check USB mapping, permissions, configured port and whether another process has opened the serial device. Review the Expert view and app log.
+Check USB mapping, permissions, configured port and whether another process has opened the serial device. Review Devices & System and the app log.
 
 ### New USB data is not visible
 
@@ -133,6 +135,6 @@ From the repository root:
 python3 -m pytest
 ```
 
-Version 5.0.0 includes tests for web assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
+Version 5.1.0 includes tests for Home Assistant location mapping, Radon traffic-light thresholds, removal of the Expert view, web assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
 
 Real-device and real-Home-Assistant field testing remains necessary for USB hardware variations, Home Assistant upgrades and Recorder backends.

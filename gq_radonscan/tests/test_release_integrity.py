@@ -9,20 +9,20 @@ LOCALES = LIB / 'locales'
 
 
 def test_release_versions_are_consistent():
-    assert 'version: 5.0.0' in (ROOT / 'config.yaml').read_text(encoding='utf-8')
-    assert 'BUILD_VERSION="5.0.0"' in (ROOT / 'Dockerfile').read_text(encoding='utf-8')
-    assert '__version__ = "5.0.0"' in (LIB / '__init__.py').read_text(encoding='utf-8')
-    assert 'Radon Monitoring 5.0.0' in (ROOT / 'README.md').read_text(encoding='utf-8')
+    assert 'version: 5.1.0' in (ROOT / 'config.yaml').read_text(encoding='utf-8')
+    assert 'BUILD_VERSION="5.1.0"' in (ROOT / 'Dockerfile').read_text(encoding='utf-8')
+    assert '__version__ = "5.1.0"' in (LIB / '__init__.py').read_text(encoding='utf-8')
+    assert 'Radon Monitoring 5.1.0' in (ROOT / 'README.md').read_text(encoding='utf-8')
 
 
 def test_current_manuals_exist_and_obsolete_manuals_are_removed():
     docs = ROOT / 'rootfs/usr/local/share/radonscan3/docs'
     for lang in ('de', 'en'):
-        path = docs / f'Radon_Monitoring_User_Manual_5.0.0_{lang}.pdf'
+        path = docs / f'Radon_Monitoring_User_Manual_5.1.0_{lang}.pdf'
         assert path.is_file() and path.stat().st_size > 10_000
     assert not list(docs.glob('Radon_Monitoring_User_Manual_4.2.1_*.pdf'))
     assert not list(docs.glob('Radon_Monitoring_User_Manual_4.9.0_*.pdf'))
-    assert 'Radon_Monitoring_User_Manual_5.0.0' in (LIB / 'web.py').read_text(encoding='utf-8')
+    assert 'Radon_Monitoring_User_Manual_5.1.0' in (LIB / 'web.py').read_text(encoding='utf-8')
 
 
 def test_frontend_assets_and_ids_are_consistent():
@@ -32,13 +32,17 @@ def test_frontend_assets_and_ids_are_consistent():
     ids = re.findall(r'\bid="([^"]+)"', html)
     assert len(ids) == len(set(ids))
     assert 'assets/data-management.js?v=__VERSION__' in html
-    for removed_id in ('copyHashes', 'hashes', 'runtimeSummary'):
+    for removed_id in ('copyHashes', 'hashes', 'runtimeSummary', 'view-expert', 'expertDeviceFacts', 'expertProtocolFacts', 'expertDataFacts'):
         assert f'id="{removed_id}"' not in html
+    assert 'data-view="expert"' not in html
+    for required_id in ('homeAssistantLocationCard', 'radonTrafficCard', 'radonTrafficSignal', 'radonTrafficStatus'):
+        assert f'id="{required_id}"' in html
     assert 'block_hashes' not in html
     assert 'runtime_state' not in html
     app_js = (STATIC / 'app.js').read_text(encoding='utf-8')
-    for removed_id in ('copyHashes', 'hashes', 'runtimeSummary'):
+    for removed_id in ('copyHashes', 'hashes', 'runtimeSummary', 'renderExpert', 'expertDeviceFacts', 'expertProtocolFacts', 'expertDataFacts'):
         assert removed_id not in app_js
+    assert 'renderRadonTraffic' in app_js
     for asset in ('core.js', 'accessibility.js', 'data-management.js', 'app.js', 'app.css', 'icon.png'):
         assert (STATIC / asset).is_file()
 

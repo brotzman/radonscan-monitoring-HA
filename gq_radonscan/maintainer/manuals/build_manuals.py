@@ -11,7 +11,7 @@ from reportlab.platypus import (
     Paragraph, Spacer, Table, TableStyle,
 )
 
-VERSION = "5.0.0"
+VERSION = "5.1.0"
 ORANGE = colors.HexColor("#F47B20")
 DARK = colors.HexColor("#172033")
 MUTED = colors.HexColor("#667085")
@@ -38,12 +38,13 @@ CONTENT = {
 ]),
 ("2. Installation, Upgrade und erster Start", [
 "Verbinden Sie das RadonScan Gerät per USB, stellen Sie MQTT für Home Assistant bereit und starten Sie die App. Für die automatische Erkennung kann serial_port leer beziehungsweise auf auto bleiben. Für eine feste Zuordnung ist ein Pfad unter /dev/serial/by-id/ vorzuziehen.",
-"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.0.0 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
+"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.1.0 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
 "Nur abgeschlossene Stunden werden übernommen. Nach dem ersten Anschließen kann deshalb zunächst noch kein aktueller Messwert verfügbar sein."
 ]),
 ("3. Übersicht", [
 "Die Übersicht zeigt den letzten abgeschlossenen Stundenwert, Datenalter, Rohwert, Messort, gespeicherte Stunden, Geräteverbindung und MQTT-Status. Zusätzlich werden 24-Stunden-, 7-Tage- und 30-Tage-Kennwerte angezeigt.",
 "Ein Zeitraumwert erscheint erst, wenn die geforderte Messdauer und Mindestabdeckung erreicht sind. Andernfalls steht in der Kachel eine konkrete Begründung wie Zeitraum noch nicht vollständig oder Datenabdeckung zu gering.",
+"Der Home-Assistant-Standort zeigt den in den allgemeinen Home-Assistant-Einstellungen hinterlegten Standortnamen oder eine dort bereitgestellte Adresse sowie Koordinaten, Höhe, Land und Zeitzone. Radon Monitoring führt keine externe Rückwärts-Geokodierung durch und sendet die Standortdaten nicht an einen Geokodierungsdienst. Die Radonampel ordnet den aktuellen Stundenwert anhand der konfigurierten Warn- und Gefahrenschwellen als grün, gelb oder rot ein.",
 "Der Aktualisieren-Schalter lädt zuerst den kompakten Systemzustand. Verlauf, Katalog und Analyse folgen getrennt, damit neue USB-Daten nicht durch langsamere Abfragen verdeckt werden."
 ]),
 ("4. Analyse und Statistik", [
@@ -52,8 +53,8 @@ CONTENT = {
 "Die Strukturbruchanalyse ist explorativ. Bei sehr langen Reihen wird ausschließlich diese Diagnose auf eine gleichmäßig verteilte, zeitlich geordnete Stichprobe begrenzt. Deskriptive Kennwerte, Schwellenberechnungen und Datenprüfsummen verwenden weiterhin alle ausgewählten Datensätze.",
 "Eine statistische Signifikanz beweist weder eine Ursache noch eine praktisch relevante Wirkung. Ereignisse und Maßnahmen müssen zusätzlich fachlich interpretiert werden."
 ]),
-("5. Expertenansicht, Faktor und Kalibrierung", [
-"Die Expertenansicht zeigt Firmware, Serienanschluss, Decoder- und Protokolldaten, Rohzählwerte, Datenbankintegrität und Faktorhistorie. Die Kacheln „Block-Prüfsummen“ und „Laufzeitstatus“ wurden in Version 5.0.0 entfernt; ausführliche technische Daten bleiben über den Diagnose-Download verfügbar.",
+("5. Geräte & System, Faktor und Kalibrierung", [
+"Die frühere Expertenansicht wurde in Version 5.1.0 vollständig aus Oberfläche und Seitenleiste entfernt. Geräte-, Protokoll-, Dienst- und Datenbankstatus finden Sie gebündelt unter Geräte & System; konfigurierbare Schwellen und weitere Betriebsparameter stehen unter Einstellungen.",
 "Der aktuell konfigurierte Faktor wird getrennt vom Faktor des ausgewählten historischen Messwerts dargestellt. Dadurch bleiben ältere Werte reproduzierbar, auch wenn die Konfiguration später geändert wird.",
 "Kalibrierungen können mit Datum, Labor, Zertifikatsreferenz, Faktor, Unsicherheit, Folgetermin und Notizen dokumentiert werden. Ein Eintrag verändert vorhandene Messwerte nicht automatisch."
 ]),
@@ -80,22 +81,22 @@ CONTENT = {
 ("10. Bedienung, Mobilansicht und Barrierefreiheit", [
 "Die Seitenleiste wird auf kleinen Bildschirmen als Menü eingeblendet. Tabellen und Wochen-Heatmap bleiben innerhalb ihrer Kachel horizontal scrollbar; die restliche Seite darf keinen horizontalen Überstand erzeugen.",
 "Die Oberfläche unterstützt Tastaturbedienung, sichtbare Fokusmarkierungen, einen Sprunglink zum Hauptinhalt, Escape zum Schließen des Menüs, reduzierte Animationen und Schriftvergrößerung bis 200 Prozent.",
-"Version 5.0.0 wurde in Chromium bei 320, 390, 768 und 1440 Pixeln, in allen acht Sprachen und mit langen Testbezeichnungen geprüft."
+"Version 5.1.0 wurde in Chromium bei 320, 390, 768 und 1440 Pixeln, in allen acht Sprachen und mit langen Testbezeichnungen geprüft."
 ]),
 ("11. Fehlerbehebung", [
 "Kein Gerät: USB-Zuordnung, Berechtigungen, konfigurierten Port und konkurrierende Prozesse prüfen.",
-"Keine neuen Werte: Nur abgeschlossene Stunden werden importiert. Aktualisieren betätigen und Zeitpunkt des letzten Scans in der Expertenansicht prüfen.",
+"Keine neuen Werte: Nur abgeschlossene Stunden werden importiert. Aktualisieren betätigen und den Zeitpunkt des letzten Scans unter Geräte & System prüfen.",
 "Alte Oberfläche: App neu starten, Ingress-Panel schließen und neu öffnen.",
 "Recorder-Purge schlägt fehl: Administrator-Token, Recorder-Integration und Home-Assistant-Administratorrechte prüfen.",
 "Verifikation zeigt verbleibende Daten: Warten und erneut prüfen; Recorder-Arbeiten können asynchron laufen. Langzeitstatistiken sind separat zu behandeln.",
 "Wiederherstellung abgelehnt: Nur lesbare SQLite-Sicherungen mit kompatiblem Schema werden übernommen. Die aktive Datenbank bleibt bei Fehlern unverändert."
 ]),
 ("12. Datenschutz und verantwortungsvolle Nutzung", [
-"Messwerte und Metadaten bleiben standardmäßig lokal. Nur aktivierte externe Funktionen übertragen Daten. Prüfen Sie vor World-Map-Uploads, ob Veröffentlichung und Standortangaben Ihren Datenschutzanforderungen entsprechen.",
+"Messwerte und Metadaten bleiben standardmäßig lokal. Nur aktivierte externe Funktionen übertragen Daten. Die Standortkachel liest ihre Angaben ausschließlich über die lokale Home-Assistant-Core-API und verwendet keinen externen Geokodierungsdienst. Prüfen Sie vor World-Map-Uploads, ob Veröffentlichung und Standortangaben Ihren Datenschutzanforderungen entsprechen.",
 "Bewahren Sie Backups und Berichte geschützt auf. Sie können Gerätekennungen, Messorte, Zeiträume und Gebäudedaten enthalten."
 ]),
-("13. Neu in Version 5.0.0", [
-"Die Expertenansicht wurde vereinfacht: Die Kacheln „Block-Prüfsummen“ und „Laufzeitstatus“ sowie die zugehörigen Frontend-Funktionen wurden entfernt. Versionsangaben, Tests sowie das deutsche und englische Benutzerhandbuch wurden auf Version 5.0.0 aktualisiert."
+("13. Neu in Version 5.1.0", [
+"Die Übersicht enthält jetzt eine responsive Kachel für den Home-Assistant-Standort und eine Radonampel, die den aktuellen Stundenwert anhand der konfigurierten Schwellen einordnet. Die frühere Expertenansicht wurde vollständig aus Oberfläche und Seitenleiste entfernt, weil die benötigten Betriebsdaten bereits unter Geräte & System und Einstellungen verfügbar sind. Es findet keine externe Geokodierung statt. Versionsangaben, Tests sowie das deutsche und englische Benutzerhandbuch wurden auf Version 5.1.0 aktualisiert."
 ])
 ],
 "options": [
@@ -123,12 +124,13 @@ CONTENT = {
 ]),
 ("2. Installation, upgrade and first start", [
 "Connect the RadonScan by USB, make MQTT available to Home Assistant and start the app. Leave serial_port empty or set to auto for discovery. For a stable fixed assignment, prefer a path under /dev/serial/by-id/.",
-"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.0.0. If an old Ingress view remains open, close the panel and reopen it.",
+"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.1.0. If an old Ingress view remains open, close the panel and reopen it.",
 "Only completed hours are imported. A newly connected device can therefore remain without a current value until a complete record is available."
 ]),
 ("3. Overview", [
 "Overview shows the latest completed hourly value, data age, raw value, measurement site, stored hours, device connection and MQTT state. It also shows 24-hour, 7-day and 30-day summaries.",
 "A period result is displayed only after the required duration and minimum coverage have been reached. Otherwise the card explains why the value is not yet meaningful.",
+"The Home Assistant location card shows the location name or an address supplied in the general Home Assistant settings together with coordinates, elevation, country and time zone. Radon Monitoring performs no external reverse geocoding and does not send the location data to a geocoding service. The Radon traffic light classifies the current hourly value as green, amber or red using the configured warning and danger thresholds.",
 "Refresh loads the compact system state first. History, catalogue and analysis follow separately so that slower requests do not hide newly imported USB data."
 ]),
 ("4. Analysis and statistics", [
@@ -137,8 +139,8 @@ CONTENT = {
 "Change-point analysis is exploratory. For very long series, only this diagnostic is bounded to an evenly distributed, time-ordered sample. Descriptive statistics, threshold calculations and data checksums continue to use every selected record.",
 "Statistical significance proves neither causality nor practical importance. Events and interventions still require professional interpretation."
 ]),
-("5. Expert view, factor and calibration", [
-"Expert view shows firmware, serial port, decoder and protocol data, raw counts, database integrity and factor history. The Block checksums and Runtime status cards were removed in version 5.0.0; detailed technical data remains available through the diagnostics download.",
+("5. Devices & System, factor and calibration", [
+"The former Expert view was removed completely from the interface and sidebar in version 5.1.0. Device, protocol, service and database status is grouped under Devices & System; configured thresholds and other operating parameters are shown under Settings.",
 "The currently configured factor is displayed separately from the factor stored with the selected historical measurement. Historical results therefore remain reproducible after later configuration changes.",
 "Calibration records can include date, laboratory, certificate reference, factor, uncertainty, next due date and notes. A calibration entry does not silently alter existing measurements."
 ]),
@@ -165,22 +167,22 @@ CONTENT = {
 ("10. Operation, mobile layout and accessibility", [
 "On small screens the sidebar opens as a menu. Tables and the weekly heatmap remain horizontally scrollable inside their own cards; the rest of the page must not create horizontal page overflow.",
 "The interface supports keyboard operation, visible focus, a skip link, Escape to close the menu, reduced motion and text scaling to 200 percent.",
-"Version 5.0.0 was checked in Chromium at 320, 390, 768 and 1440 pixels, in all eight languages and with deliberately long labels."
+"Version 5.1.0 was checked in Chromium at 320, 390, 768 and 1440 pixels, in all eight languages and with deliberately long labels."
 ]),
 ("11. Troubleshooting", [
 "No device: check USB mapping, permissions, configured port and competing processes.",
-"No new values: only completed hours are imported. Press Refresh and inspect the latest scan time in Expert view.",
+"No new values: only completed hours are imported. Press Refresh and inspect the latest scan time under Devices & System.",
 "Old interface: restart the app, close the Ingress panel and reopen it.",
 "Recorder purge fails: check administrator token, Recorder integration and Home Assistant administrator rights.",
 "Verification reports remaining data: wait and verify again; Recorder maintenance can be asynchronous. Treat long-term statistics separately.",
 "Restore rejected: only readable SQLite backups with a compatible schema are accepted. The active database remains unchanged after validation failure."
 ]),
 ("12. Privacy and responsible use", [
-"Measurements and metadata remain local by default. Only enabled external functions transmit data. Before World Map publication, confirm that location and publication settings meet your privacy requirements.",
+"Measurements and metadata remain local by default. Only enabled external functions transmit data. The location card reads its values only through the local Home Assistant Core API and uses no external geocoding service. Before World Map publication, confirm that location and publication settings meet your privacy requirements.",
 "Protect backups and reports because they may contain device identifiers, sites, periods and building information."
 ]),
-("13. New in version 5.0.0", [
-"The Expert view was simplified: the Block checksums and Runtime status cards and their related frontend functions were removed. Version metadata, tests and the German and English user manuals were updated to version 5.0.0."
+("13. New in version 5.1.0", [
+"Overview now contains a responsive Home Assistant location card and a Radon traffic light that classifies the current hourly value using the configured thresholds. The former Expert view was removed completely from the interface and sidebar because the required operating information is already available under Devices & System and Settings. No external geocoding is performed. Version metadata, tests and the German and English user manuals were updated to version 5.1.0."
 ])
 ],
 "options": [

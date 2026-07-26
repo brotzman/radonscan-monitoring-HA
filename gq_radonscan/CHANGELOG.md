@@ -2,6 +2,18 @@
 
 All notable changes to Radon Monitoring are documented here. Versions follow semantic versioning.
 
+## 5.1.0 - Overview location, Radon traffic light and streamlined navigation
+
+- Added a responsive Home Assistant location card to the Overview.
+- Read location name or locally supplied address, coordinates, elevation, country and time zone from the local Home Assistant Core configuration.
+- Added an explicit privacy note and no external reverse-geocoding dependency.
+- Added graceful fallback to the Home Assistant location name when no postal address is exposed.
+- Added a Radon traffic light that classifies the latest completed hourly value using the configured warning and danger thresholds.
+- Removed the complete Expert view from the interface and sidebar; operational data remains consolidated under Devices & System and Settings.
+- Added backend, localisation, integrity and responsive browser regression tests.
+- Updated release metadata and the German and English user manuals to version 5.1.0.
+- No database-schema change; existing 4.x and 5.0.0 databases remain compatible.
+
 ## 5.0.0 - Streamlined Expert view
 
 - Removed the Block checksums and Runtime status cards from the Expert view.

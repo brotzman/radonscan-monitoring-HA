@@ -54,16 +54,65 @@ class HomeAssistantClient:
         except URLError as exc:
             raise HomeAssistantError(safe_error_message(f"Home Assistant is not reachable: {exc.reason}", self.token)) from exc
 
+    @staticmethod
+    def _location_address(config: dict[str, object]) -> str | None:
+        """Return only address text already supplied by Home Assistant.
+
+        Home Assistant's public config response normally exposes a location name,
+        coordinates, elevation, country and time zone. Some versions or installations
+        may additionally expose structured address fields. This helper deliberately
+        performs no reverse-geocoding and never calls an external service.
+        """
+        for key in ("address", "street_address", "formatted_address"):
+            value = config.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+
+        street = next(
+            (
+                str(config.get(key)).strip()
+                for key in ("street", "address_line_1")
+                if config.get(key) not in (None, "")
+            ),
+            "",
+        )
+        postal_code = next(
+            (
+                str(config.get(key)).strip()
+                for key in ("postal_code", "postcode", "zip_code")
+                if config.get(key) not in (None, "")
+            ),
+            "",
+        )
+        city = next(
+            (
+                str(config.get(key)).strip()
+                for key in ("city", "locality")
+                if config.get(key) not in (None, "")
+            ),
+            "",
+        )
+        locality = " ".join(part for part in (postal_code, city) if part)
+        combined = ", ".join(part for part in (street, locality) if part)
+        return combined or None
+
     def status(self) -> dict[str, object]:
         if not self.available:
             return {"available": False, "connected": False, "error": "token_missing"}
         try:
             config = self._request("GET", "config")
+            if not isinstance(config, dict):
+                config = {}
             return {
                 "available": True,
                 "connected": True,
                 "version": config.get("version"),
                 "location_name": config.get("location_name"),
+                "address": self._location_address(config),
+                "latitude": config.get("latitude"),
+                "longitude": config.get("longitude"),
+                "elevation": config.get("elevation"),
+                "country": config.get("country"),
                 "time_zone": config.get("time_zone"),
             }
         except HomeAssistantError as exc:

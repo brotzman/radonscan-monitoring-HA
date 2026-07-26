@@ -19,7 +19,6 @@
       <nav class="side-nav" data-i18n-aria-label="main_navigation" aria-label="Main navigation">
         <button class="nav-item active" data-view="overview"><span class="nav-icon">⌂</span><span data-i18n="overview"></span></button>
         <button class="nav-item" data-view="analysis"><span class="nav-icon">⌁</span><span data-i18n="analysis"></span></button>
-        <button class="nav-item" data-view="expert"><span class="nav-icon">⌘</span><span data-i18n="expert_view"></span></button>
         <div class="nav-separator"></div>
         <button class="nav-item" data-view="map"><span class="nav-icon">◎</span><span data-i18n="gmcmap_nav"></span></button>
         <button class="nav-item" data-view="history"><span class="nav-icon">≋</span><span data-i18n="history"></span></button>
@@ -71,6 +70,39 @@
                 <div><span data-i18n="last_update"></span><strong id="overviewLastUpdate">–</strong></div>
                 <div><span data-i18n="database"></span><strong id="overviewDatabaseStatus">–</strong></div>
                 <div><span data-i18n="coverage_30d"></span><strong id="overviewCoverage">–</strong></div>
+              </div>
+            </article>
+          </div>
+
+          <div class="overview-context-grid">
+            <article class="panel ha-location-panel" id="homeAssistantLocationCard" aria-labelledby="homeAssistantLocationTitle">
+              <div class="ha-location-layout">
+                <div class="ha-location-icon" aria-hidden="true">⌖</div>
+                <div class="ha-location-copy">
+                  <h2 id="homeAssistantLocationTitle" data-i18n="ha_location_title"></h2>
+                  <p id="homeAssistantLocationAddress" class="ha-location-address">–</p>
+                  <p id="homeAssistantLocationDetails" class="ha-location-details">–</p>
+                  <p class="ha-location-privacy" data-i18n="ha_location_privacy"></p>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel radon-traffic-panel neutral" id="radonTrafficCard" aria-labelledby="radonTrafficTitle">
+              <div class="panel-heading compact">
+                <h2 id="radonTrafficTitle" data-i18n="radon_traffic_title"></h2>
+                <span id="radonTrafficStatus" class="badge neutral" data-i18n="unknown"></span>
+              </div>
+              <div class="radon-traffic-layout">
+                <div id="radonTrafficSignal" class="radon-traffic-signal" role="img" aria-label="">
+                  <span class="radon-traffic-light danger" data-level="danger" aria-hidden="true"></span>
+                  <span class="radon-traffic-light warning" data-level="warning" aria-hidden="true"></span>
+                  <span class="radon-traffic-light normal" data-level="normal" aria-hidden="true"></span>
+                </div>
+                <div class="radon-traffic-copy">
+                  <p id="radonTrafficValue" class="radon-traffic-value">–</p>
+                  <p id="radonTrafficThresholds" class="radon-traffic-thresholds">–</p>
+                  <p class="radon-traffic-hint" data-i18n="radon_traffic_hint"></p>
+                </div>
               </div>
             </article>
           </div>
@@ -139,16 +171,6 @@
             <article class="panel"><h3 data-i18n="sensitivity_analysis"></h3><dl id="sensitivityFacts" class="facts-grid"></dl></article>
           </div>
           <article class="panel"><div class="panel-heading"><h3 data-i18n="daily_statistics"></h3><button id="analysisCsvButton" class="button secondary" data-i18n="export_csv"></button></div><div class="table-wrap"><table><thead><tr><th data-i18n="date"></th><th data-i18n="samples"></th><th data-i18n="coverage"></th><th data-i18n="minimum"></th><th data-i18n="median"></th><th data-i18n="maximum"></th><th data-i18n="mean"></th></tr></thead><tbody id="dailyBody"></tbody></table></div></article>
-        </section>
-
-        <section id="view-expert" class="view">
-          <div class="section-header"><div><span class="eyebrow" data-i18n="technical_diagnostics"></span><h2 data-i18n="expert_title"></h2><p data-i18n="expert_hint"></p></div><a class="button secondary" href="api/diagnostics" download data-i18n="download_diagnostics"></a></div>
-          <div class="three-column">
-            <article class="panel facts-panel"><h3 data-i18n="device"></h3><dl id="expertDeviceFacts"></dl></article>
-            <article class="panel facts-panel"><h3 data-i18n="decoder_protocol"></h3><dl id="expertProtocolFacts"></dl></article>
-            <article class="panel facts-panel"><h3 data-i18n="data_path"></h3><dl id="expertDataFacts"></dl></article>
-          </div>
-          <article class="panel"><h3 data-i18n="methodological_notes"></h3><div class="notice-list"><p data-i18n="read_only_notice"></p><p data-i18n="experimental_notice"></p><p data-i18n="scientific_limit_notice"></p></div></article>
         </section>
 
         <section id="view-map" class="view gmcmap-view">
