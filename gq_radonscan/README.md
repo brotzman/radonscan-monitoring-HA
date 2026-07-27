@@ -1,4 +1,4 @@
-# Radon Monitoring 5.5.0
+# Radon Monitoring 5.5.1
 
 Radon Monitoring is a local Home Assistant app for read-only monitoring of compatible GQ RadonScan devices. It imports completed hourly values, stores raw and converted measurements in SQLite, publishes Home Assistant entities through MQTT, provides scientific time-series analysis, generates PDF reports and can optionally upload measurements to the GQ Radiation World Map.
 
@@ -23,31 +23,23 @@ Radon Monitoring is a local Home Assistant app for read-only monitoring of compa
 - optional complete Home Assistant Recorder purge for RadonScan entities, plus verification through the History API
 - interface and Home Assistant option translations in German, English, Spanish, French, Croatian, Italian, Dutch and Polish
 
-## Version 5.5.0
+## Version 5.5.1
 
-Version 5.5.0 combines workflow hardening with a clearer **Analysis** view. The statistical page is now reordered into concentration level, thresholds and exceedances, distribution and variability, development and period comparison, data quality and event impact. The separate **Time patterns** tile was removed from Advanced statistics. New rolling 24-hour, 7-day and 30-day means, additional percentiles, variability metrics, previous-period comparison and exploratory event-impact estimates complement the existing scientific diagnostics.
+Version 5.5.1 is a **presentation-focused refinement release**. It keeps the analytical structure introduced in 5.5.0 but improves the mobile experience with more compact statistic cards, tighter panel spacing and better wrapping behaviour in Overview, Analysis and Data Management. On smaller screens, two-column card layouts remain available longer before falling back to a single-column layout on very narrow displays.
 
-**Rooms & events** remains explicitly ordered: first create or edit a room, then assign a device and measurement period. The second step remains disabled until a room exists. Saved assignments are shown below the room list so the user can verify room, device, period and sample count.
+Statistical fact grids were tuned for more readable label/value pairs in narrow widths, chart legends were tightened, and the Advanced statistics summary now wraps long helper text more cleanly. The goal is less horizontal tension and less vertical scrolling while preserving readability, spacing and touch usability.
 
-Validation messages are displayed directly below the affected field. Room names are normalised and length-checked, decimal commas are accepted for measurement height, repeated submissions update the same room, and renaming a room to an existing name is rejected. A successful save is accepted only when the server returns the stored record identifier.
-
-Room requests use the JSON body as the canonical source. For Home Assistant Ingress variants that unexpectedly forward an empty body, the browser also adds encoded fallback headers and query parameters. The server accepts regular JSON, URL-encoded forms and bounded chunked transfer encoding. Location and building data are never duplicated: place/address and building remain read-only values from Home Assistant, while only room and measurement height are stored locally.
-
-**Devices & System** now contains a non-destructive System self-test. It checks the web API, SQLite integrity, a real room insert/read operation rolled back inside a savepoint, write access to the report directory, and the current RadonScan, MQTT and Home Assistant connections. Connection outages are reported as warnings; persistence or integrity failures are errors.
-
-The feature controllers are less monolithic: `rooms-events.js` owns the room, assignment and event workflow; `system-diagnostics.js` owns the self-test display; `room_metadata.py` centralises request normalisation and validation; and `diagnostics.py` executes operational checks. The compatibility matrix in `maintainer/COMPATIBILITY.md` records automated coverage separately from real-installation validation.
-
-The existing coherent Overview, 24-hour Radon traffic light, location privacy modes, event markers, visible data gaps, collapsed scientific Analysis and optional World Map behaviour remain unchanged.
+All workflows, data structures, API routes and statistical calculations remain unchanged. Existing 5.5.0 functionality — including the reordered Analysis view, the removed Time patterns tile, rolling means, added percentiles, previous-period comparison, guided Rooms & events workflow and System self-test — remains fully intact.
 
 ## Upgrade notes
 
-The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.0 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
+The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.1 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
 
 Before upgrading:
 
 1. Create a Home Assistant backup and, where appropriate, an app database backup.
 2. Stop the app before replacing a local repository package.
-3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.0.
+3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.1.
 4. Reopen the Ingress panel if an old iframe remains visible.
 5. Review `location_display_mode` if the Overview is shown in screenshots or shared displays.
 

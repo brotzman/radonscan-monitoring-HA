@@ -1,6 +1,13 @@
 # Changelog
 
-## 5.5.0 - Analysis restructuring, guided room workflow and System self-test
+## 5.5.1 - Mobile UI polish and compact statistics cards
+
+- Added a focused **UI polishing** pass for narrow screens and Home Assistant mobile WebViews.
+- Made Overview, Analysis and Data statistics cards more compact with reduced padding, tighter typography and better use of two-column layouts on small screens before falling back to a single column on very narrow displays.
+- Tightened panel spacing, section-heading spacing and chart legend spacing in the statistical views to reduce scrolling without sacrificing readability.
+- Improved mobile readability of fact grids with balanced label/value sizing, safer wrapping and clearer stacking behaviour.
+- Refined the Advanced statistics details header so long helper text wraps cleanly on smaller screens.
+- Kept all data structures, API routes and statistical calculations unchanged; this is a presentation-only refinement release.
 
 - Reordered the **Analysis** view into concentration level, thresholds, distribution, development, data quality and event impact sections; removed the separate **Time patterns** card from Advanced statistics and added new rolling, percentile and comparison statistics.
 - Reworked **Rooms & events** into a guided two-step workflow: create or edit a room first, then assign a device and time period.
