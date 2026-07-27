@@ -1,8 +1,8 @@
-# Radon Monitoring Home Assistant Repository 5.5.7
+# Radon Monitoring Home Assistant Repository 5.5.8
 
 This repository contains the Home Assistant app **Radon Monitoring** for compatible GQ RadonScan devices.
 
-Version 5.5.7 restores a stable **GQ RadonScan** device in Home Assistant MQTT Discovery. Discovery is now published immediately after the MQTT connection and no longer depends on a connected serial device, a stored measurement or a temporary runtime device ID. Home Assistant receives exactly three entities: the completed hourly value, the 24-hour mean and the 7-day mean, all in `Bq/m³`.
+Version 5.5.8 fixes an invalid Home Assistant MQTT Discovery payload. The previous payload used the unsupported origin field `sw`, so Home Assistant could reject all three sensor configurations even though the app was connected to the MQTT broker. The optional origin block and optional radon device class are now omitted for broad compatibility, while retained QoS 1 discovery creates exactly the completed hourly value, 24-hour mean and 7-day mean in `Bq/m³`.
 
 Historical dynamic discovery nodes are cleaned up and the desired sensors are recreated on one stable device identifier, preventing both missing and duplicate RadonScan device cards.
 
