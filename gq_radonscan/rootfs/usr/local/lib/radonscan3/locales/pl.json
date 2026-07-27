@@ -291,7 +291,7 @@
   "main_navigation": "Nawigacja główna",
   "mann_kendall_tau": "Tau Manna-Kendalla",
   "manual": "Manual",
-  "manual_note_v3": "Podręcznik użytkownika odpowiada wersji 5.5.11. Oddzielna dokumentacja protokołu SPIR pozostaje w wersji 3.0.0, ponieważ opisuje protokół urządzenia, a nie wersję aplikacji.",
+  "manual_note_v3": "Podręcznik użytkownika odpowiada wersji 5.5.12. Oddzielna dokumentacja protokołu SPIR pozostaje w wersji 3.0.0, ponieważ opisuje protokół urządzenia, a nie wersję aplikacji.",
   "manual_upload": "Przesyłanie ręczne",
   "manual_upload_hint": "Przesyła tylko najnowszy zakończony lokalny odczyt godzinowy. Opublikowany protokół nie pozwala przesyłać historycznych znaczników czasu.",
   "map_click_hint": "Kliknij plan, aby ustawić położenie pomieszczenia.",
@@ -631,5 +631,10 @@
   "import_status": "Stan importu",
   "zero_confirmation_pending": "Wartość zerowa oczekuje na potwierdzenie",
   "new_hour_imported": "Zaimportowano nową godzinę",
-  "no_new_hour": "Brak nowej zakończonej godziny"
+  "no_new_hour": "Brak nowej zakończonej godziny",
+  "pagination_previous": "Poprzednie 10 wpisów",
+  "pagination_next": "Następne 10 wpisów",
+  "pagination_status": "Strona {current} z {total} · Wpisy {start}–{end} z {count}",
+  "pagination_history_label": "Stronicowanie pomiarów godzinowych",
+  "pagination_upload_label": "Stronicowanie przesyłek World Map"
 }

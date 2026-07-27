@@ -1,14 +1,14 @@
 # Changelog
 
-## 5.5.11 - Clearer hourly history table
+## 5.5.12 - Ten-entry pagination and cleaner data management
 
-- Reworked the **Hourly measurements** table with a stronger visual hierarchy instead of uniformly styled rows.
-- Added compact summary chips for measurement count, mean and maximum above the table.
-- Added proportional concentration bars so differences between low Radon values remain visible even when every value is below the warning threshold.
-- Highlighted the newest record, introduced subtle alternating rows and clearer separators between calendar days.
-- Presented raw counts, campaign and room as compact badges while separating device model and serial number for faster scanning.
-- Converted the history table into responsive measurement cards on narrow screens to avoid horizontal scrolling.
-- Kept two-decimal Bq/m³ display, stored values, statistical calculations, APIs and the database schema unchanged.
+- Limited the visible **Hourly measurements** list to ten rows per page.
+- Added accessible previous/next arrow controls and a translated page/range indicator.
+- Kept history summaries and CSV exports based on the complete filtered data set.
+- Limited the visible **GQ World Map upload history** to ten uploads per page with the same navigation pattern.
+- Increased the locally fetched upload-history window to the storage limit of 1,000 records so older uploads can be reached through pagination.
+- Removed the complete raw **Administration log** panel, refresh control and frontend audit loader from Data management.
+- Kept internal audit recording, stored measurements, calculations, MQTT entities, APIs and the database schema unchanged.
 
 ## 5.5.4 - Correct public GMCMap upload endpoint
 

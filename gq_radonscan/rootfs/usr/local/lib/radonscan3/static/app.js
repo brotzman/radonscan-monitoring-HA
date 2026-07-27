@@ -4,6 +4,10 @@
   let state = null;
   let overviewRecords = [];
   let historyRecords = [];
+  let historyPage = 0;
+  let gmcmapUploads = [];
+  let gmcmapPage = 0;
+  const PAGE_SIZE = 10;
   let catalog = {locations:[],sessions:[],campaigns:[],devices:[],events:[],reports:[],homeassistant_location:{}};
   let analysisData = null;
   let dataManagement = null;
@@ -94,7 +98,7 @@
     storageSet('local','radonMonitoringView',name);
     closeSidebar();
     if(name==='analysis'&&!analysisData) loadAnalysis();
-    if(name==='data') {dataManagement?.loadDataSummary();dataManagement?.loadAudit();}
+    if(name==='data') dataManagement?.loadDataSummary();
     if(name==='map') loadGmcmap();
   }
 
@@ -602,35 +606,63 @@
     } catch(err) {if(showError) toast(err.message,true); else console.warn('Overview refresh failed',err);}
     finally {if(button) button.disabled=false;}
   }
-  async function loadHistoryFiltered(showError=true) {try{const payload=await api(`api/history?${historyQuery()}`);historyRecords=payload.items||[];renderHistory();const exportParams=historyQuery();exportParams.delete('limit');$('historyCsv').href=`export/history.csv?${exportParams}`;}catch(err){if(showError)toast(err.message,true);else console.warn('History refresh failed',err);}}
+  function paginationStatus(current,total,start,end,count) {
+    return tr('pagination_status')
+      .replace('{current}',fmtInteger(current))
+      .replace('{total}',fmtInteger(total))
+      .replace('{start}',fmtInteger(start))
+      .replace('{end}',fmtInteger(end))
+      .replace('{count}',fmtInteger(count));
+  }
+
+  function updatePagination(prefix,page,count) {
+    const totalPages=Math.max(1,Math.ceil(count/PAGE_SIZE));
+    const current=Math.min(Math.max(0,page),totalPages-1);
+    const start=count?current*PAGE_SIZE+1:0;
+    const end=count?Math.min((current+1)*PAGE_SIZE,count):0;
+    const previous=$(`${prefix}PrevPage`),next=$(`${prefix}NextPage`),status=$(`${prefix}PageInfo`);
+    if(previous)previous.disabled=count===0||current===0;
+    if(next)next.disabled=count===0||current>=totalPages-1;
+    if(status)status.textContent=count?paginationStatus(current+1,totalPages,start,end,count):tr('no_data');
+    return current;
+  }
+
+  async function loadHistoryFiltered(showError=true) {try{const payload=await api(`api/history?${historyQuery()}`);historyRecords=payload.items||[];historyPage=0;renderHistory();const exportParams=historyQuery();exportParams.delete('limit');$('historyCsv').href=`export/history.csv?${exportParams}`;}catch(err){if(showError)toast(err.message,true);else console.warn('History refresh failed',err);}}
   function renderHistory() {
-    const body=$('historyBody'),summary=$('historySummary'),rows=historyRecords.slice(0,1000);
-    if(!rows.length){
+    const body=$('historyBody'),summary=$('historySummary'),allRows=historyRecords.slice(0,10000);
+    historyPage=updatePagination('history',historyPage,allRows.length);
+    if(!allRows.length){
       summary.textContent=`0 ${tr('samples')}`;
       body.innerHTML=`<tr><td colspan="7" class="empty-cell">${tr('history_empty')}</td></tr>`;
       return;
     }
-    const numeric=rows.map(row=>Number(row.bq_m3)).filter(Number.isFinite);
+    const numeric=allRows.map(row=>Number(row.bq_m3)).filter(Number.isFinite);
     const mean=numeric.length?numeric.reduce((sum,value)=>sum+value,0)/numeric.length:0;
     const maximum=numeric.length?Math.max(...numeric):0;
     summary.innerHTML=[
-      `<span class="history-summary-item"><strong>${fmtInteger(historyRecords.length)}</strong><small>${tr('samples')}</small></span>`,
+      `<span class="history-summary-item"><strong>${fmtInteger(allRows.length)}</strong><small>${tr('samples')}</small></span>`,
       `<span class="history-summary-item"><strong>${radon(mean)}</strong><small>${tr('mean')}</small></span>`,
       `<span class="history-summary-item"><strong>${radon(maximum)}</strong><small>${tr('maximum')}</small></span>`
     ].join('');
+    const pageStart=historyPage*PAGE_SIZE,rows=allRows.slice(pageStart,pageStart+PAGE_SIZE);
     const warning=Number(state?.settings?.warning_threshold_bq_m3||100),danger=Number(state?.settings?.danger_threshold_bq_m3||300);
     const maxVisible=Math.max(...numeric,1);
-    const latestIndex=rows.reduce((best,row,index)=>{const current=Date.parse(row.completed_at)||0;const previous=Date.parse(rows[best]?.completed_at)||0;return current>previous?index:best;},0);
+    const latestTimestamp=Math.max(...allRows.map(row=>Date.parse(row.completed_at)||0));
     let previousDate='';
+    if(pageStart>0){
+      const previous=new Date(allRows[pageStart-1].completed_at);
+      if(!Number.isNaN(previous.getTime()))previousDate=previous.toLocaleDateString(locale(),{year:'numeric',month:'2-digit',day:'2-digit'});
+    }
     body.innerHTML=rows.map((row,index)=>{
       const value=Number(row.bq_m3)||0,ratio=value<=0?0:Math.max(7,Math.min(100,(value/maxVisible)*100));
       const date=new Date(row.completed_at),valid=!Number.isNaN(date.getTime());
       const dateText=valid?date.toLocaleDateString(locale(),{year:'numeric',month:'2-digit',day:'2-digit'}):fmtDateOnly(row.completed_at);
       const timeText=valid?date.toLocaleTimeString(locale(),{hour:'2-digit',minute:'2-digit'}):'';
       const level=value>=danger?'danger':value>=warning?'warning':value===0?'zero':'normal';
-      const dayStart=index===0||dateText!==previousDate;previousDate=dateText;
+      const dayStart=dateText!==previousDate;previousDate=dateText;
+      const isLatest=(Date.parse(row.completed_at)||0)===latestTimestamp;
       const model=escapeHtml(row.model||'GQ RadonScan'),serial=escapeHtml(row.serial_number||row.device_id||'');
-      return `<tr class="history-row history-${level}${index===latestIndex?' history-latest':''}${dayStart?' history-day-start':''}">`+
+      return `<tr class="history-row history-${level}${isLatest?' history-latest':''}${dayStart?' history-day-start':''}">`+
         `<td class="history-time-cell" data-label="${escapeHtml(tr('time'))}"><span class="history-date">${escapeHtml(dateText)}</span><span class="history-time">${escapeHtml(timeText)}</span></td>`+
         `<td class="history-value-cell" data-label="${escapeHtml(tr('value'))}"><span class="history-value-text">${radon(row.bq_m3)}</span><span class="history-value-bar" style="--history-fill:${ratio.toFixed(1)}%" aria-hidden="true"></span></td>`+
         `<td class="history-count-cell" data-label="${escapeHtml(tr('raw_cph'))}"><span class="history-count-badge">${fmtInteger(row.raw_cph)}</span></td>`+
@@ -641,19 +673,27 @@
     }).join('');
   }
 
+  function renderGmcmapHistory() {
+    const body=$('gmcmapHistoryBody');
+    gmcmapPage=updatePagination('gmcmap',gmcmapPage,gmcmapUploads.length);
+    if(!gmcmapUploads.length){body.innerHTML=`<tr><td colspan="7" class="empty-cell">${tr('no_uploads')}</td></tr>`;return;}
+    const start=gmcmapPage*PAGE_SIZE,rows=gmcmapUploads.slice(start,start+PAGE_SIZE);
+    body.innerHTML=rows.map(r=>`<tr><td>${fmtDate(r.attempted_at)}</td><td>${fmtDate(r.measurement_at)}</td><td>${fmtNumber(r.bq_m3,2)}</td><td>${fmtNumber(r.pci_l,4)}</td><td>${escapeHtml(tr(r.trigger)||r.trigger)}</td><td><span class="badge ${r.ok?'normal':'danger'}">${r.ok?tr('successful'):tr('failed')}</span></td><td><code>${escapeHtml(r.response||'–')}</code></td></tr>`).join('');
+  }
+
   async function loadGmcmap() {
     try {
-      const payload=await api('api/gmcmap?limit=100'); const st=payload.status||{};
+      const payload=await api('api/gmcmap?limit=1000'); const st=payload.status||{};
       const badge=$('gmcmapStatusBadge'); badge.className=`badge ${st.enabled&&st.configured?'normal':'neutral'}`; badge.textContent=st.enabled?(st.configured?tr('ready'):tr('not_configured')):tr('disabled');
       $('gmcmapFacts').innerHTML=[fact(tr('enabled'),bool(st.enabled)),fact(tr('automatic_upload'),bool(st.auto_upload)),fact(tr('account_id'),st.account_id_masked||tr('not_configured')),fact(tr('device_id'),st.device_id_masked||tr('not_configured')),fact(tr('upload_interval'),`${st.interval_minutes||60} min`),fact(tr('pending_uploads'),st.queue?.pending_total??0),fact(tr('oldest_pending'),fmtDate(st.queue?.oldest_pending)),fact(tr('endpoint'),st.endpoint||'–'),fact(tr('gmcmap_upload_mode'),st.upload_mode==='radon_only'?tr('gmcmap_radon_only'):st.upload_mode||'–')].join('');
       $('gmcmapNotice').textContent=st.enabled&&st.configured?tr('gmcmap_ready_notice'):tr('gmcmap_setup_notice');
       const latest=state?.measurement||{};$('gmcmapLatestValue').textContent=latest.available?`${fmtNumber(latest.bq_m3,2)} Bq/m³ · ${fmtNumber(latest.pci_l,3)} pCi/L`:tr('no_data');$('gmcmapLatestTime').textContent=fmtDate(latest.completed_at);
-      const rows=payload.uploads||[];$('gmcmapHistoryBody').innerHTML=rows.length?rows.map(r=>`<tr><td>${fmtDate(r.attempted_at)}</td><td>${fmtDate(r.measurement_at)}</td><td>${fmtNumber(r.bq_m3,2)}</td><td>${fmtNumber(r.pci_l,4)}</td><td>${escapeHtml(tr(r.trigger)||r.trigger)}</td><td><span class="badge ${r.ok?'normal':'danger'}">${r.ok?tr('successful'):tr('failed')}</span></td><td><code>${escapeHtml(r.response||'–')}</code></td></tr>`).join(''):`<tr><td colspan="7" class="empty-cell">${tr('no_uploads')}</td></tr>`;
+      gmcmapUploads=payload.uploads||[];gmcmapPage=0;renderGmcmapHistory();
     } catch(err) {toast(err.message,true);}
   }
 
   async function retryGmcmap() {const button=$('gmcmapRetryButton');button.disabled=true;try{const result=await api('api/gmcmap/retry',{method:'POST',body:{}});toast(`${tr('retry_scheduled')}: ${result.retried||0}`);await loadGmcmap();}catch(err){toast(err.message,true);}finally{button.disabled=false;}}
-  async function uploadGmcmap() {const button=$('gmcmapUploadButton');button.disabled=true;try{await api('api/gmcmap/upload',{method:'POST',body:{confirmation:$('gmcmapConfirmation').value}});toast(tr('upload_successful'));$('gmcmapConfirmation').value='';await loadGmcmap();loadAudit();}catch(err){toast(err.message,true);}finally{button.disabled=false;}}
+  async function uploadGmcmap() {const button=$('gmcmapUploadButton');button.disabled=true;try{await api('api/gmcmap/upload',{method:'POST',body:{confirmation:$('gmcmapConfirmation').value}});toast(tr('upload_successful'));$('gmcmapConfirmation').value='';await loadGmcmap();}catch(err){toast(err.message,true);}finally{button.disabled=false;}}
 
   async function reloadCatalog() {catalog=await api('api/catalog');renderCatalog();}
   async function loadStateFast() {
@@ -714,17 +754,20 @@
     roomsEvents?.bind();
     systemDiagnostics?.bind();
     $('gmcmapUploadButton').addEventListener('click',uploadGmcmap);$('gmcmapRetryButton').addEventListener('click',retryGmcmap);$('refreshGmcmap').addEventListener('click',loadGmcmap);
-    $('historyApply').addEventListener('click',loadHistoryFiltered);
+    $('historyApply').addEventListener('click',loadHistoryFiltered);$('historyPrevPage')?.addEventListener('click',()=>{if(historyPage>0){historyPage-=1;renderHistory();}});$('historyNextPage')?.addEventListener('click',()=>{if((historyPage+1)*PAGE_SIZE<historyRecords.length){historyPage+=1;renderHistory();}});$('gmcmapPrevPage')?.addEventListener('click',()=>{if(gmcmapPage>0){gmcmapPage-=1;renderGmcmapHistory();}});$('gmcmapNextPage')?.addEventListener('click',()=>{if((gmcmapPage+1)*PAGE_SIZE<gmcmapUploads.length){gmcmapPage+=1;renderGmcmapHistory();}});
     $('reportForm').addEventListener('submit',async event=>{event.preventDefault();const button=$('createReportButton');button.disabled=true;button.textContent=tr('generating');try{const result=await api('api/reports',{method:'POST',body:{title:$('reportTitle').value,profile:$('reportProfile').value,locale:$('reportLocale').value,device_id:$('reportDevice').value,location_id:$('reportLocation').value||null,days:Number($('reportDays').value),start:toIso($('reportStart').value),end:toIso($('reportEnd').value)}});toast(tr('report_created'));await reloadCatalog();window.open(`reports/${encodeURIComponent(result.item.report_id)}`,'_blank');}catch(err){toast(err.message,true);}finally{button.disabled=false;button.textContent=tr('generate_pdf');}});
     $('deleteDataForm').addEventListener('submit',dataManagement.deleteData);
     $('restoreForm').addEventListener('submit',async event=>{event.preventDefault();if(!confirm(tr('confirm_restore')))return;const formElement=event.currentTarget;const form=new FormData(formElement);form.set('file',$('restoreFile').files[0]);form.set('confirmation',$('restoreConfirmation').value);try{await api('api/data/restore',{method:'POST',body:form});toast(tr('restored'));formElement.reset();await loadAll();}catch(err){toast(err.message,true);}});
-    $('purgeHaHistory').addEventListener('click',dataManagement.purgeHa);$('verifyHaPurge').addEventListener('click',dataManagement.verifyHaPurge);$('refreshAudit').addEventListener('click',dataManagement.loadAudit);
+    $('purgeHaHistory').addEventListener('click',dataManagement.purgeHa);$('verifyHaPurge').addEventListener('click',dataManagement.verifyHaPurge);
     $('modalClose').addEventListener('click',()=> $('modal').classList.add('hidden'));
   }
 
   function resetClientData() {
     overviewRecords=[];
     historyRecords=[];
+    historyPage=0;
+    gmcmapUploads=[];
+    gmcmapPage=0;
     catalog={locations:[],sessions:[],campaigns:[],devices:[],events:[],reports:[],homeassistant_location:{}};
     analysisData=null;
     catalogInitialised=false;

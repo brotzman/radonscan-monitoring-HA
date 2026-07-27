@@ -11,7 +11,7 @@ from reportlab.platypus import (
     Paragraph, Spacer, Table, TableStyle,
 )
 
-VERSION = "5.5.11"
+VERSION = "5.5.12"
 ORANGE = colors.HexColor("#F47B20")
 DARK = colors.HexColor("#172033")
 MUTED = colors.HexColor("#667085")
@@ -37,8 +37,8 @@ CONTENT = {
 "Ein hoher einzelner Stundenwert ist nicht automatisch eine Überschreitung eines Jahresreferenzwerts. Oberfläche und Berichte trennen aktuellen Wert, Zeitraumstatistik, Zählunsicherheit, Kalibrierinformation und fachliche Einordnung."
 ]),
 ("2. Installation, Upgrade und erster Start", [
-"Verbinden Sie das RadonScan Gerät per USB, stellen Sie MQTT für Home Assistant bereit und starten Sie die App. In Version 5.5.11 ist /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0 als stabiler Anschluss voreingestellt. Ein fester serial_port wird ausschließlich verwendet; auto aktiviert bewusst die automatische Suche.",
-"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.5.11 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
+"Verbinden Sie das RadonScan Gerät per USB, stellen Sie MQTT für Home Assistant bereit und starten Sie die App. In Version 5.5.12 ist /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0 als stabiler Anschluss voreingestellt. Ein fester serial_port wird ausschließlich verwendet; auto aktiviert bewusst die automatische Suche.",
+"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.5.12 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
 "Nur abgeschlossene Stunden werden übernommen. Nach dem ersten Anschließen kann deshalb zunächst noch kein aktueller Messwert verfügbar sein."
 ]),
 ("3. Übersicht", [
@@ -68,7 +68,7 @@ CONTENT = {
 ]),
 ("7. GQ Radiation World Map", [
 "Der Upload ist optional und standardmäßig deaktiviert. Ist gmcmap_enabled ausgeschaltet, wird die World-Map-Ansicht vollständig aus der Seitenleiste ausgeblendet. Bei Aktivierung enthält sie ausschließlich externe Upload-, Warteschlangen- und Verlaufsfunktionen; lokale Räume, Zuordnungen und Ereignisse verbleiben in ihrer eigenen Ansicht. Account-ID und Geräte-ID werden nur maskiert angezeigt.",
-"Eine persistente Warteschlange verhindert Doppelübertragungen, wiederholt temporäre Fehler mit zunehmendem Abstand und kann zu alte Werte nach einer konfigurierbaren Grenze verwerfen. Der manuelle Upload ist eine geschützte POST-Aktion.",
+"Eine persistente Warteschlange verhindert Doppelübertragungen, wiederholt temporäre Fehler mit zunehmendem Abstand und kann zu alte Werte nach einer konfigurierbaren Grenze verwerfen. Der manuelle Upload ist eine geschützte POST-Aktion. Der Uploadverlauf zeigt zehn Einträge pro Seite; Pfeile blättern jeweils um zehn Einträge vor oder zurück.",
 "RadonScan-Werte werden über den öffentlich dokumentierten GMCMap-Endpunkt log2.asp ausschließlich mit AID, GID und pCi gesendet. Die App übermittelt keine Felder CPM, ACPM oder uSV. Dadurch entstehen bei neuen Uploads keine künstlichen Radioaktivitätswerte von 0 CPM.",
 "Die öffentliche Position wird im GQ-Konto verwaltet. Radon Monitoring übermittelt keine eigenen GPS-Koordinaten. Bereits früher an GMCMap gesendete Nullwerte werden durch ein App-Update nicht vom externen Dienst gelöscht."
 ]),
@@ -81,12 +81,12 @@ CONTENT = {
 "Die Datenverwaltung kann mit data_management_enabled vollständig aus Navigation und API ausgeblendet werden.",
 "Der vollständige lokale Reset erstellt automatisch eine Sicherheitskopie, löscht App-Daten transaktional, prüft anschließend die SQLite-Integrität und zeigt Vorgangs-ID, gelöschte Datensätze, Dateianzahl, Größen und Dauer an. Die App unterdrückt danach den sofortigen erneuten Import der zuvor gelöschten Gerätehistorie.",
 "Der Home-Assistant-Recorder-Purge übermittelt erkannte RadonScan-Entitäten und stabile Namensmuster an recorder.purge_entities. Ein langlebiger Administrator-Token ist optional erforderlich. Er wird nicht angezeigt, nicht in Diagnoseexporte übernommen und zentral aus Fehlermeldungen entfernt.",
-"Die Verifikation prüft anschließend den jüngeren Home-Assistant-Verlauf. Sie bestätigt nicht die sofortige physische Komprimierung jeder Recorder-Datenbank und erfasst nicht automatisch separat gespeicherte Langzeitstatistiken."
+"Die Verifikation prüft anschließend den jüngeren Home-Assistant-Verlauf. Sie bestätigt nicht die sofortige physische Komprimierung jeder Recorder-Datenbank und erfasst nicht automatisch separat gespeicherte Langzeitstatistiken. Das frühere Verwaltungsprotokoll mit rohen JSON-Details wurde aus der Oberfläche entfernt; interne Audit-Einträge bleiben für Nachvollziehbarkeit und Diagnose in der Datenbank erhalten."
 ]),
 ("10. Bedienung, Mobilansicht und Barrierefreiheit", [
-"Die Seitenleiste wird auf kleinen Bildschirmen als Menü eingeblendet. Tabellen und Wochen-Heatmap bleiben innerhalb ihrer Kachel horizontal scrollbar; die restliche Seite darf keinen horizontalen Überstand erzeugen.",
+"Die Seitenleiste wird auf kleinen Bildschirmen als Menü eingeblendet. Tabellen und Wochen-Heatmap bleiben innerhalb ihrer Kachel horizontal scrollbar; die restliche Seite darf keinen horizontalen Überstand erzeugen. Stündlicher Verlauf und World-Map-Uploadliste zeigen jeweils zehn Einträge pro Seite und werden mit Pfeiltasten in Zehnerschritten durchblättert.",
 "Die Oberfläche unterstützt Tastaturbedienung, sichtbare Fokusmarkierungen, einen Sprunglink zum Hauptinhalt, Escape zum Schließen des Menüs, reduzierte Animationen und Schriftvergrößerung bis 200 Prozent.",
-"Version 5.5.11 enthält zusätzlich automatisierte Tests für die zweistellige Bq/m³-Darstellung in Übersicht, Analyse und Verlauf sowie für die empfohlene zweistellige Anzeigepräzision der drei Home-Assistant-MQTT-Sensoren. Gespeicherte Werte und Berechnungen behalten ihre höhere interne Genauigkeit."
+"Version 5.5.12 enthält zusätzliche automatisierte Tests für die Zehner-Paginierung beider Verlaufslisten, übersetzte und barrierefreie Pfeilnavigation, mobile Überlauffreiheit sowie das vollständige Entfernen des Verwaltungsprotokolls aus der Oberfläche. Gespeicherte Werte und Berechnungen bleiben unverändert."
 ]),
 ("11. Fehlerbehebung", [
 "Kein Gerät: USB-Zuordnung, Berechtigungen, konfigurierten Port und konkurrierende Prozesse prüfen.",
@@ -100,8 +100,8 @@ CONTENT = {
 "Messwerte und Metadaten bleiben standardmäßig lokal. Nur aktivierte externe Funktionen übertragen Daten. Die Standortkachel liest ihre Angaben ausschließlich über die lokale Home-Assistant-Core-API und verwendet keinen externen Geokodierungsdienst. Mit location_display_mode kann die Anzeige vollständig, reduziert oder ausgeblendet erfolgen. Prüfen Sie vor Bildschirmfotos, Berichten und World-Map-Uploads, ob die sichtbaren Standortangaben Ihren Datenschutzanforderungen entsprechen.",
 "Bewahren Sie Backups und Berichte geschützt auf. Sie können Gerätekennungen, Räume, Zeiträume und Gebäudedaten enthalten."
 ]),
-("13. Neu in Version 5.5.11", [
-"Version 5.5.11 verbessert die Darstellung der stündlichen Messhistorie. Der neueste Wert wird hervorgehoben, Tageswechsel werden getrennt und dezente Wechselzeilen erleichtern das Lesen. Proportionale Konzentrationsbalken machen Unterschiede zwischen niedrigen Werten sichtbar. Kompakte Kennzahlen zeigen Anzahl, Mittelwert und Maximum; auf schmalen Displays werden die Messungen als Karten ohne horizontales Scrollen dargestellt. Messwerte bleiben mit zwei Nachkommastellen sichtbar. Speicherung, Berechnungen, MQTT-Entitäten und Datenbankschema bleiben unverändert."
+("13. Neu in Version 5.5.12", [
+"Version 5.5.12 begrenzt den sichtbaren stündlichen Messverlauf und die World-Map-Uploadliste auf jeweils zehn Einträge. Pfeile blättern in Zehnerschritten; eine Statuszeile zeigt Seite und sichtbaren Bereich. Filter, Zusammenfassungen und CSV-Export arbeiten weiterhin mit der vollständigen Auswahl. Das bisherige Verwaltungsprotokoll wurde vollständig aus der Datenverwaltungsansicht entfernt, während interne Audit-Daten erhalten bleiben. Speicherung, Berechnungen, MQTT-Entitäten und Datenbankschema bleiben unverändert."
 ])
 ],
 "options": [
@@ -129,8 +129,8 @@ CONTENT = {
 "A high individual hourly value is not automatically an exceedance of an annual reference value. The interface and reports distinguish the current value, period statistics, counting uncertainty, calibration information and professional interpretation."
 ]),
 ("2. Installation, upgrade and first start", [
-"Connect the RadonScan by USB, make MQTT available to Home Assistant and start the app. Version 5.5.11 defaults to /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0. A fixed serial_port is used exclusively; auto deliberately enables discovery.",
-"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.5.11. If an old Ingress view remains open, close the panel and reopen it.",
+"Connect the RadonScan by USB, make MQTT available to Home Assistant and start the app. Version 5.5.12 defaults to /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0. A fixed serial_port is used exclusively; auto deliberately enables discovery.",
+"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.5.12. If an old Ingress view remains open, close the panel and reopen it.",
 "Only completed hours are imported. A newly connected device can therefore remain without a current value until a complete record is available."
 ]),
 ("3. Overview", [
@@ -160,7 +160,7 @@ CONTENT = {
 ]),
 ("7. GQ Radiation World Map", [
 "Upload is optional and disabled by default. When gmcmap_enabled is off, the World Map view is omitted from the sidebar. When enabled it contains only external upload, queue and history functions; local rooms, assignments and events remain in their dedicated view. Account ID and device ID are shown only in masked form.",
-"A persistent queue prevents duplicates, retries temporary failures with increasing delay and can discard measurements older than a configured limit. Manual upload is a protected POST action.",
+"A persistent queue prevents duplicates, retries temporary failures with increasing delay and can discard measurements older than a configured limit. Manual upload is a protected POST action. Upload history shows ten entries per page, with arrows moving backwards or forwards by ten records.",
 "RadonScan values are sent through GMCMap's documented public log2.asp endpoint using only AID, GID and pCi. The app does not submit CPM, ACPM or uSV. New uploads therefore no longer create artificial 0 CPM radioactivity entries.",
 "The public position is managed in the GQ account. Radon Monitoring does not transmit its own GPS coordinates. Zero-valued records uploaded previously are stored by the external GMCMap service and are not removed by an application update."
 ]),
@@ -173,12 +173,12 @@ CONTENT = {
 "The complete Data management area can be hidden from navigation and blocked at the API using data_management_enabled.",
 "Complete local reset automatically creates a safety backup, clears app data transactionally, verifies SQLite integrity and reports operation ID, deleted records, removed files, sizes and duration. Immediate re-import of the deleted device history is suppressed.",
 "Home Assistant Recorder purge submits recognised RadonScan entities and stable name patterns to recorder.purge_entities. An optional long-lived administrator token may be required. It is never displayed, excluded from diagnostics and centrally redacted from error messages.",
-"Verification subsequently checks recent Home Assistant history. It does not prove immediate physical compaction of every Recorder backend and does not automatically cover separately retained long-term statistics."
+"Verification subsequently checks recent Home Assistant history. It does not prove immediate physical compaction of every Recorder backend and does not automatically cover separately retained long-term statistics. The former Administration log with raw JSON details has been removed from the interface; internal audit entries remain stored for traceability and diagnostics."
 ]),
 ("10. Operation, mobile layout and accessibility", [
-"On small screens the sidebar opens as a menu. Tables and the weekly heatmap remain horizontally scrollable inside their own cards; the rest of the page must not create horizontal page overflow.",
+"On small screens the sidebar opens as a menu. Tables and the weekly heatmap remain horizontally scrollable inside their own cards; the rest of the page must not create horizontal page overflow. Hourly history and World Map uploads show ten entries per page and use arrow buttons to move in groups of ten.",
 "The interface supports keyboard operation, visible focus, a skip link, Escape to close the menu, reduced motion and text scaling to 200 percent.",
-"Version 5.5.11 adds automated tests for two-decimal Bq/m³ presentation in Overview, Analysis and history, and for the recommended two-decimal display precision of the three Home Assistant MQTT sensors. Stored values and calculations retain their higher internal precision."
+"Version 5.5.12 adds automated tests for ten-entry pagination in both histories, translated and accessible arrow navigation, mobile overflow protection and complete removal of the Administration log from the interface. Stored values and calculations remain unchanged."
 ]),
 ("11. Troubleshooting", [
 "No device: check USB mapping, permissions, configured port and competing processes.",
@@ -192,8 +192,8 @@ CONTENT = {
 "Measurements and metadata remain local by default. Only enabled external functions transmit data. Location, address and building name are read only through the local Home Assistant Core API and are not manually duplicated. No external geocoding service is used. location_display_mode can show full, reduced or no location details. Before screenshots, reports and World Map publication, confirm that visible location data meets your privacy requirements.",
 "Protect backups and reports because they may contain device identifiers, rooms, periods and building information."
 ]),
-("13. New in version 5.5.11", [
-"Version 5.5.11 improves the hourly measurement history. The newest record is highlighted, calendar-day changes are separated and subtle alternating rows make long histories easier to scan. Proportional concentration bars reveal differences between low readings. Compact summaries show count, mean and maximum; on narrow displays each measurement becomes a card without horizontal scrolling. Values remain visible with two decimal places. Storage, calculations, MQTT entities and the database schema are unchanged."
+("13. New in version 5.5.12", [
+"Version 5.5.12 limits the visible hourly measurement history and World Map upload history to ten entries each. Arrow buttons move in groups of ten and a status line reports page and visible range. Filters, summaries and CSV export continue to use the complete selection. The former Administration log has been removed entirely from Data management while internal audit data remains stored. Storage, calculations, MQTT entities and the database schema are unchanged."
 ])
 ],
 "options": [

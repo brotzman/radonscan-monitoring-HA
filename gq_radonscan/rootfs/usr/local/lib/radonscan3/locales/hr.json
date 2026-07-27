@@ -291,7 +291,7 @@
   "main_navigation": "Glavna navigacija",
   "mann_kendall_tau": "Mann-Kendallov tau",
   "manual": "Manual",
-  "manual_note_v3": "Korisnički priručnik odgovara verziji 5.5.11. Zasebna referenca SPIR protokola ostaje verzija 3.0.0 jer opisuje protokol uređaja, a ne izdanje aplikacije.",
+  "manual_note_v3": "Korisnički priručnik odgovara verziji 5.5.12. Zasebna referenca SPIR protokola ostaje verzija 3.0.0 jer opisuje protokol uređaja, a ne izdanje aplikacije.",
   "manual_upload": "Ručni prijenos",
   "manual_upload_hint": "Prenosi samo najnovije dovršeno lokalno satno očitanje. Objavljeni protokol ne omogućuje slanje povijesnih vremenskih oznaka.",
   "map_click_hint": "Kliknite tlocrt kako biste postavili položaj prostorije.",
@@ -631,5 +631,10 @@
   "import_status": "Status uvoza",
   "zero_confirmation_pending": "Nulta vrijednost čeka potvrdu",
   "new_hour_imported": "Uvezen je novi sat",
-  "no_new_hour": "Nema novog dovršenog sata"
+  "no_new_hour": "Nema novog dovršenog sata",
+  "pagination_previous": "Prethodnih 10 zapisa",
+  "pagination_next": "Sljedećih 10 zapisa",
+  "pagination_status": "Stranica {current} od {total} · Zapisi {start}–{end} od {count}",
+  "pagination_history_label": "Straničenje satnih mjerenja",
+  "pagination_upload_label": "Straničenje prijenosa na World Map"
 }

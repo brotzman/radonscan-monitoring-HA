@@ -13,7 +13,7 @@ VISIBLE_VIEWS = ("overview", "analysis", "sites", "history", "reports", "data", 
 
 def _state(language="de"):
     return {
-        "app": {"version": "5.5.11"},
+        "app": {"version": "5.5.12"},
         "settings": {
             "preferred_unit": "Bq/m3",
             "factor_bq_m3_per_cph": 1.54,
@@ -134,10 +134,10 @@ def _fixture_html(locale="de") -> str:
     tr = json.loads((LOCALES / f"{locale}.json").read_text())
     locale_names = {code: code.upper() for code in LOCALE_CODES}
     html = (STATIC / "index.html").read_text()
-    html = html.replace("__LOCALE__", locale).replace("__TRANSLATIONS__", json.dumps(tr)).replace("__LOCALE_NAMES__", json.dumps(locale_names)).replace("__VERSION__", "5.5.11").replace("__ACTION_TOKEN__", "test-token")
-    html = html.replace('<link rel="stylesheet" href="assets/app.css?v=5.5.11">', "<style>" + (STATIC / "app.css").read_text() + "</style>")
+    html = html.replace("__LOCALE__", locale).replace("__TRANSLATIONS__", json.dumps(tr)).replace("__LOCALE_NAMES__", json.dumps(locale_names)).replace("__VERSION__", "5.5.12").replace("__ACTION_TOKEN__", "test-token")
+    html = html.replace('<link rel="stylesheet" href="assets/app.css?v=5.5.12">', "<style>" + (STATIC / "app.css").read_text() + "</style>")
     for script in ("core.js", "accessibility.js", "data-management.js", "rooms-events.js", "system-diagnostics.js", "app.js"):
-        html = html.replace(f'<script src="assets/{script}?v=5.5.11"></script>', "<script>" + (STATIC / script).read_text() + "</script>")
+        html = html.replace(f'<script src="assets/{script}?v=5.5.12"></script>', "<script>" + (STATIC / script).read_text() + "</script>")
     return html
 
 
@@ -153,7 +153,7 @@ def _payloads(language="de"):
         "api/homeassistant/verify-purge": {"operation_id": "verify-test", "verified": True, "checked_entities": 4, "remaining_rows": 0, "checked_at": "2026-07-25T16:05:00+00:00", "period_start": "2026-06-25T16:05:00+00:00", "period_end": "2026-07-25T16:05:00+00:00", "limitation": "Recorder history API verification; long-term statistics may be retained separately."},
         "api/data/summary": {"measurements": 500, "first_measurement": "2026-07-01T00:00:00+00:00", "last_measurement": "2026-07-25T16:00:00+00:00", "database_size_bytes": 1000000, "integrity": "ok", "reports": 0, "report_size_bytes": 0, "schema_version": 8},
         "api/locations/assign": {"ok": True, "assigned": 24, "session_id": 12},
-        "api/self-test": {"ok": True, "status": "warning", "version": "5.5.11", "generated_at": "2026-07-25T16:05:00+00:00", "items": [{"id": "api", "status": "ok", "detail": "5.5.11"}, {"id": "database_integrity", "status": "ok", "detail": "ok"}, {"id": "room_persistence", "status": "ok", "detail": "insert/read/rollback"}, {"id": "device_connection", "status": "warning", "detail": "disconnected"}]},
+        "api/self-test": {"ok": True, "status": "warning", "version": "5.5.12", "generated_at": "2026-07-25T16:05:00+00:00", "items": [{"id": "api", "status": "ok", "detail": "5.5.12"}, {"id": "database_integrity", "status": "ok", "detail": "ok"}, {"id": "room_persistence", "status": "ok", "detail": "insert/read/rollback"}, {"id": "device_connection", "status": "warning", "detail": "disconnected"}]},
         "api/analysis": {"statistics": {}, "thresholds": {"warning": {}, "danger": {}}, "quality_control": {}, "uncertainty": {}, "scientific_quality": {}, "autocorrelation": {}, "change_point": {}, "records": [], "daily": [], "histogram": [], "weekday_profile": [], "hourly_profile": [], "weekly_heatmap": [], "events": []},
     }
 
@@ -508,5 +508,78 @@ def test_hourly_history_has_visual_hierarchy_and_mobile_cards(shared_browser):
     assert "87,30 Bq/m³" in latest.inner_text()
     assert latest.evaluate("el => el.scrollWidth <= el.clientWidth + 1")
     assert page.locator("#view-history").evaluate("el => el.scrollWidth <= el.clientWidth + 1")
+    assert not errors
+    page.close()
+
+
+def test_history_and_worldmap_lists_page_in_tens_and_audit_view_is_removed(shared_browser):
+    page, errors = _new_page(shared_browser, 390, 844, "de")
+    history = [
+        {
+            "device_id": "dev-1",
+            "campaign_id": 7,
+            "location_id": 1,
+            "completed_at": f"2026-07-25T{22-index:02d}:00:00+00:00",
+            "bq_m3": float(index + 1),
+            "raw_cph": index + 1,
+            "model": "GQ RadonScan",
+            "serial_number": "RS-1",
+            "location_name": "Keller",
+        }
+        for index in range(23)
+    ]
+    uploads = [
+        {
+            "attempted_at": f"2026-07-25T{22-index:02d}:05:00+00:00",
+            "measurement_at": f"2026-07-25T{22-index:02d}:00:00+00:00",
+            "bq_m3": float(index + 1),
+            "pci_l": float(index + 1) / 37.0,
+            "trigger": "automatic",
+            "ok": True,
+            "response": "OK.ERR0",
+        }
+        for index in range(23)
+    ]
+    page.evaluate(
+        """([history,uploads])=>{
+          window.__TEST_PAYLOADS__['api/history']={items:history};
+          window.__TEST_PAYLOADS__['api/state'].settings.gmcmap_enabled=true;
+          window.__TEST_PAYLOADS__['api/gmcmap']={
+            status:{enabled:true,configured:true,auto_upload:true,queue:{pending_total:0},upload_mode:'radon_only'},
+            uploads
+          };
+        }""",
+        [history, uploads],
+    )
+    page.locator("#refreshButton").click()
+    page.wait_for_timeout(350)
+
+    page.locator('[data-view="history"]').evaluate("el=>el.click()")
+    page.wait_for_timeout(100)
+    assert page.locator("#historyBody tr").count() == 10
+    assert page.locator("#historyPageInfo").inner_text() == "Seite 1 von 3 · Einträge 1–10 von 23"
+    assert page.locator("#historyPrevPage").is_disabled()
+    page.locator("#historyNextPage").click()
+    assert page.locator("#historyBody tr").count() == 10
+    assert page.locator("#historyPageInfo").inner_text() == "Seite 2 von 3 · Einträge 11–20 von 23"
+    page.locator("#historyNextPage").click()
+    assert page.locator("#historyBody tr").count() == 3
+    assert page.locator("#historyPageInfo").inner_text() == "Seite 3 von 3 · Einträge 21–23 von 23"
+    assert page.locator("#historyNextPage").is_disabled()
+
+    assert page.locator("#gmcmapNav").is_visible()
+    page.locator('[data-view="map"]').evaluate("el=>el.click()")
+    page.wait_for_timeout(150)
+    assert page.locator("#gmcmapHistoryBody tr").count() == 10
+    assert page.locator("#gmcmapPageInfo").inner_text() == "Seite 1 von 3 · Einträge 1–10 von 23"
+    page.locator("#gmcmapNextPage").click()
+    assert page.locator("#gmcmapHistoryBody tr").count() == 10
+    page.locator("#gmcmapNextPage").click()
+    assert page.locator("#gmcmapHistoryBody tr").count() == 3
+    assert page.locator("#gmcmapPageInfo").inner_text() == "Seite 3 von 3 · Einträge 21–23 von 23"
+
+    page.locator('[data-view="data"]').evaluate("el=>el.click()")
+    assert page.locator("#auditBody").count() == 0
+    assert page.locator("#refreshAudit").count() == 0
     assert not errors
     page.close()

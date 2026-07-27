@@ -9,16 +9,16 @@ LOCALES = LIB / 'locales'
 
 
 def test_release_versions_are_consistent():
-    assert 'version: 5.5.11' in (ROOT / 'config.yaml').read_text(encoding='utf-8')
-    assert 'BUILD_VERSION="5.5.11"' in (ROOT / 'Dockerfile').read_text(encoding='utf-8')
-    assert '__version__ = "5.5.11"' in (LIB / '__init__.py').read_text(encoding='utf-8')
-    assert 'Radon Monitoring 5.5.11' in (ROOT / 'README.md').read_text(encoding='utf-8')
+    assert 'version: 5.5.12' in (ROOT / 'config.yaml').read_text(encoding='utf-8')
+    assert 'BUILD_VERSION="5.5.12"' in (ROOT / 'Dockerfile').read_text(encoding='utf-8')
+    assert '__version__ = "5.5.12"' in (LIB / '__init__.py').read_text(encoding='utf-8')
+    assert 'Radon Monitoring 5.5.12' in (ROOT / 'README.md').read_text(encoding='utf-8')
 
 
 def test_current_manuals_exist_and_obsolete_manuals_are_removed():
     docs = ROOT / 'rootfs/usr/local/share/radonscan3/docs'
     for lang in ('de', 'en'):
-        path = docs / f'Radon_Monitoring_User_Manual_5.5.11_{lang}.pdf'
+        path = docs / f'Radon_Monitoring_User_Manual_5.5.12_{lang}.pdf'
         assert path.is_file() and path.stat().st_size > 10_000
     assert not list(docs.glob('Radon_Monitoring_User_Manual_4.2.1_*.pdf'))
     assert not list(docs.glob('Radon_Monitoring_User_Manual_4.9.0_*.pdf'))
@@ -26,7 +26,7 @@ def test_current_manuals_exist_and_obsolete_manuals_are_removed():
     assert not list(docs.glob('Radon_Monitoring_User_Manual_5.3.0_*.pdf'))
     assert not list(docs.glob('Radon_Monitoring_User_Manual_5.3.2_*.pdf'))
     assert not list(docs.glob('Radon_Monitoring_User_Manual_5.5.8_*.pdf'))
-    assert 'Radon_Monitoring_User_Manual_5.5.11' in (LIB / 'web.py').read_text(encoding='utf-8')
+    assert 'Radon_Monitoring_User_Manual_5.5.12' in (LIB / 'web.py').read_text(encoding='utf-8')
 
 
 def test_frontend_assets_and_ids_are_consistent():
@@ -39,7 +39,7 @@ def test_frontend_assets_and_ids_are_consistent():
     for removed_id in ('copyHashes', 'hashes', 'runtimeSummary', 'view-expert', 'expertDeviceFacts', 'expertProtocolFacts', 'expertDataFacts'):
         assert f'id="{removed_id}"' not in html
     assert 'data-view="expert"' not in html
-    for required_id in ('homeAssistantLocationCard', 'homeAssistantLocationPrivacyMode', 'homeAssistantRoom', 'radonTrafficCard', 'radonTrafficSignal', 'radonTrafficStatus', 'radonTrafficBasis', 'overviewDevice', 'overviewCampaign', 'metricPeak24', 'analysisSummaryText', 'analysisAdvanced', 'view-sites', 'locationRoom', 'haRoomBuilding', 'haRoomPlace', 'gmcmapNav', 'assignFieldset', 'assignmentList', 'runSelfTest', 'selfTestItems', 'locationRoomError', 'locationHeightError', 'overviewLastDeviceRead', 'overviewLastMeasurement'):
+    for required_id in ('homeAssistantLocationCard', 'homeAssistantLocationPrivacyMode', 'homeAssistantRoom', 'radonTrafficCard', 'radonTrafficSignal', 'radonTrafficStatus', 'radonTrafficBasis', 'overviewDevice', 'overviewCampaign', 'metricPeak24', 'analysisSummaryText', 'analysisAdvanced', 'view-sites', 'locationRoom', 'haRoomBuilding', 'haRoomPlace', 'gmcmapNav', 'assignFieldset', 'assignmentList', 'runSelfTest', 'selfTestItems', 'locationRoomError', 'locationHeightError', 'overviewLastDeviceRead', 'overviewLastMeasurement', 'historyPagination', 'historyPrevPage', 'historyNextPage', 'gmcmapPagination', 'gmcmapPrevPage', 'gmcmapNextPage'):
         assert f'id="{required_id}"' in html
     assert 'data-view="sites"' in html
     assert 'id="overviewLocation"' not in html
@@ -57,9 +57,12 @@ def test_frontend_assets_and_ids_are_consistent():
     assert 'id="locationForm"' not in map_section
     assert 'id="eventForm"' not in map_section
     assert 'block_hashes' not in html
+    for removed_id in ('auditBody', 'refreshAudit'):
+        assert f'id="{removed_id}"' not in html
+    assert 'data-i18n="administration_log"' not in html
     assert 'runtime_state' not in html
     app_js = (STATIC / 'app.js').read_text(encoding='utf-8')
-    for removed_id in ('copyHashes', 'hashes', 'runtimeSummary', 'renderExpert', 'expertDeviceFacts', 'expertProtocolFacts', 'expertDataFacts'):
+    for removed_id in ('copyHashes', 'hashes', 'runtimeSummary', 'renderExpert', 'expertDeviceFacts', 'expertProtocolFacts', 'expertDataFacts', 'loadAudit', 'refreshAudit', 'auditBody'):
         assert removed_id not in app_js
     assert 'renderRadonTraffic' in app_js
     assert "location_display_mode" in app_js
@@ -70,6 +73,8 @@ def test_frontend_assets_and_ids_are_consistent():
     assert "api/locations" not in app_js
     assert "roomsEvents?.render()" in app_js
     assert "systemDiagnostics?.initialize()" in app_js
+    assert 'PAGE_SIZE = 10' in app_js
+    assert 'renderGmcmapHistory' in app_js
     rooms_js = (STATIC / 'rooms-events.js').read_text(encoding='utf-8')
     assert "measurement_height_m" in rooms_js
     assert "new URLSearchParams" in rooms_js

@@ -58,15 +58,6 @@
       finally { if(button)button.disabled=false; }
     }
 
-    async function loadAudit() {
-      try {
-        const payload=await api('api/audit?limit=200');
-        const body=$('auditBody'),items=payload.items||[];
-        if(!body)return;
-        body.innerHTML=items.length?items.map(item=>`<tr><td>${fmtDate(item.created_at)}</td><td>${escapeHtml(item.action)}</td><td>${escapeHtml(item.target||'–')}</td><td>${escapeHtml(item.user_name||'–')}</td><td><code>${escapeHtml(JSON.stringify(item.details||{}))}</code></td></tr>`).join(''):`<tr><td colspan="5" class="empty-cell">${tr('no_data')}</td></tr>`;
-      } catch(err) { toast(err.message,true); }
-    }
-
     async function purgeHa(event) {
       event?.preventDefault();
       const input=$('haConfirmation');
@@ -123,7 +114,7 @@
       } finally { if(button)button.disabled=false; }
     }
 
-    return {loadDataSummary, deleteData, loadAudit, purgeHa, verifyHaPurge, renderOperationResult};
+    return {loadDataSummary, deleteData, purgeHa, verifyHaPurge, renderOperationResult};
   }
 
   window.RMDataManagement={create};

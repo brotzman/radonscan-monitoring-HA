@@ -291,7 +291,7 @@
   "main_navigation": "Hauptnavigation",
   "mann_kendall_tau": "Mann–Kendall-Tau",
   "manual": "Manuell",
-  "manual_note_v3": "Das Benutzerhandbuch entspricht Version 5.5.11. Die separate SPIR-Protokollreferenz trägt weiterhin Version 3.0.0, da sie das Geräteprotokoll und nicht die App-Version beschreibt.",
+  "manual_note_v3": "Das Benutzerhandbuch entspricht Version 5.5.12. Die separate SPIR-Protokollreferenz trägt weiterhin Version 3.0.0, da sie das Geräteprotokoll und nicht die App-Version beschreibt.",
   "manual_upload": "Manueller Upload",
   "manual_upload_hint": "Es wird ausschließlich der letzte abgeschlossene lokale Stundenwert hochgeladen. Historische Zeitstempel können über das veröffentlichte Protokoll nicht übertragen werden.",
   "map_click_hint": "Klicken Sie auf den Grundriss, um die Position des Raumes festzulegen.",
@@ -631,5 +631,10 @@
   "import_status": "Importstatus",
   "zero_confirmation_pending": "Nullwert wartet auf Bestätigung",
   "new_hour_imported": "Neue Stunde importiert",
-  "no_new_hour": "Keine neue abgeschlossene Stunde"
+  "no_new_hour": "Keine neue abgeschlossene Stunde",
+  "pagination_previous": "Vorherige 10 Einträge",
+  "pagination_next": "Nächste 10 Einträge",
+  "pagination_status": "Seite {current} von {total} · Einträge {start}–{end} von {count}",
+  "pagination_history_label": "Seitennavigation der stündlichen Messwerte",
+  "pagination_upload_label": "Seitennavigation der World-Map-Uploads"
 }
