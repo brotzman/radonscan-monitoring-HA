@@ -10,7 +10,7 @@ from .config import Settings
 from .storage import Storage
 
 LOGGER = logging.getLogger(__name__)
-RADON_ENDPOINT = "https://www.gmcmap.com/rdlog.asp"
+RADON_ENDPOINT = "https://www.gmcmap.com/log2.asp"
 
 
 class GmcMapError(RuntimeError):
@@ -108,10 +108,10 @@ class GmcMapClient:
     def _upload_item(self, item: dict[str, object], *, trigger: str, user_name: str | None) -> dict[str, object]:
         bq_m3 = float(item["bq_m3"])
         pci_l = float(item.get("pci_l") or bq_m3 / 37.0)
-        # RadonScan readings must use the dedicated radon endpoint.  Sending
-        # CPM=0 to the generic radiation endpoint creates an artificial zero
-        # value on the radioactivity map, even though no Geiger measurement
-        # exists.  Keep this request strictly radon-only.
+        # GMCMap's documented public submission endpoint is log2.asp. A
+        # RadonScan has no Geiger-counter reading, so submit only the radon
+        # parameter and deliberately omit CPM, ACPM and uSV. Sending CPM=0
+        # would create an artificial zero-valued radioactivity record.
         params = {
             "AID": self.settings.gmcmap_account_id,
             "GID": self.settings.gmcmap_device_id,
@@ -135,7 +135,7 @@ class GmcMapClient:
         try:
             request = urllib.request.Request(
                 url,
-                headers={"User-Agent": "Radon-Monitoring/5.5.3", "Accept": "text/plain,text/html;q=0.9,*/*;q=0.8"},
+                headers={"User-Agent": "Radon-Monitoring/5.5.4", "Accept": "text/plain,text/html;q=0.9,*/*;q=0.8"},
                 method="GET",
             )
             with urllib.request.urlopen(request, timeout=15) as response:
@@ -147,6 +147,13 @@ class GmcMapClient:
                 if not result["ok"]:
                     error = body or f"GMCMap returned HTTP {response.status}"
                     raise GmcMapError(error)
+        except urllib.error.HTTPError as exc:
+            body = exc.read(4096).decode("utf-8", errors="replace").strip()
+            result["http_status"] = int(exc.code)
+            result["response"] = body or str(exc)
+            error = f"HTTP {exc.code}: {body or exc.reason}"
+            self._record(result, user_name, error)
+            raise GmcMapError(f"GMCMap upload failed: {error}") from exc
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
             error = str(exc)
             result["response"] = error

@@ -11,7 +11,7 @@ from reportlab.platypus import (
     Paragraph, Spacer, Table, TableStyle,
 )
 
-VERSION = "5.5.3"
+VERSION = "5.5.4"
 ORANGE = colors.HexColor("#F47B20")
 DARK = colors.HexColor("#172033")
 MUTED = colors.HexColor("#667085")
@@ -37,8 +37,8 @@ CONTENT = {
 "Ein hoher einzelner Stundenwert ist nicht automatisch eine Überschreitung eines Jahresreferenzwerts. Oberfläche und Berichte trennen aktuellen Wert, Zeitraumstatistik, Zählunsicherheit, Kalibrierinformation und fachliche Einordnung."
 ]),
 ("2. Installation, Upgrade und erster Start", [
-"Verbinden Sie das RadonScan Gerät per USB, stellen Sie MQTT für Home Assistant bereit und starten Sie die App. In Version 5.5.3 ist /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0 als stabiler Anschluss voreingestellt. Ein fester serial_port wird ausschließlich verwendet; auto aktiviert bewusst die automatische Suche.",
-"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.5.3 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
+"Verbinden Sie das RadonScan Gerät per USB, stellen Sie MQTT für Home Assistant bereit und starten Sie die App. In Version 5.5.4 ist /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0 als stabiler Anschluss voreingestellt. Ein fester serial_port wird ausschließlich verwendet; auto aktiviert bewusst die automatische Suche.",
+"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.5.4 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
 "Nur abgeschlossene Stunden werden übernommen. Nach dem ersten Anschließen kann deshalb zunächst noch kein aktueller Messwert verfügbar sein."
 ]),
 ("3. Übersicht", [
@@ -68,7 +68,7 @@ CONTENT = {
 ("7. GQ Radiation World Map", [
 "Der Upload ist optional und standardmäßig deaktiviert. Ist gmcmap_enabled ausgeschaltet, wird die World-Map-Ansicht vollständig aus der Seitenleiste ausgeblendet. Bei Aktivierung enthält sie ausschließlich externe Upload-, Warteschlangen- und Verlaufsfunktionen; lokale Räume, Zuordnungen und Ereignisse verbleiben in ihrer eigenen Ansicht. Account-ID und Geräte-ID werden nur maskiert angezeigt.",
 "Eine persistente Warteschlange verhindert Doppelübertragungen, wiederholt temporäre Fehler mit zunehmendem Abstand und kann zu alte Werte nach einer konfigurierbaren Grenze verwerfen. Der manuelle Upload ist eine geschützte POST-Aktion.",
-"RadonScan-Werte werden über den speziellen Radon-Endpunkt rdlog.asp ausschließlich mit AID, GID und pCi gesendet. Die App übermittelt keine Felder CPM, ACPM oder uSV und verwendet keinen Rückfall auf den allgemeinen Radioaktivitäts-Endpunkt log2.asp. Dadurch entstehen bei neuen Uploads keine künstlichen Radioaktivitätswerte von 0 CPM.",
+"RadonScan-Werte werden über den öffentlich dokumentierten GMCMap-Endpunkt log2.asp ausschließlich mit AID, GID und pCi gesendet. Die App übermittelt keine Felder CPM, ACPM oder uSV. Dadurch entstehen bei neuen Uploads keine künstlichen Radioaktivitätswerte von 0 CPM.",
 "Die öffentliche Position wird im GQ-Konto verwaltet. Radon Monitoring übermittelt keine eigenen GPS-Koordinaten. Bereits früher an GMCMap gesendete Nullwerte werden durch ein App-Update nicht vom externen Dienst gelöscht."
 ]),
 ("8. Wissenschaftliche PDF-Berichte", [
@@ -85,7 +85,7 @@ CONTENT = {
 ("10. Bedienung, Mobilansicht und Barrierefreiheit", [
 "Die Seitenleiste wird auf kleinen Bildschirmen als Menü eingeblendet. Tabellen und Wochen-Heatmap bleiben innerhalb ihrer Kachel horizontal scrollbar; die restliche Seite darf keinen horizontalen Überstand erzeugen.",
 "Die Oberfläche unterstützt Tastaturbedienung, sichtbare Fokusmarkierungen, einen Sprunglink zum Hauptinhalt, Escape zum Schließen des Menüs, reduzierte Animationen und Schriftvergrößerung bis 200 Prozent.",
-"Version 5.5.3 enthält zusätzlich automatisierte Tests für die exklusive Nutzung eines festen seriellen Anschlusses, das Überspringen erkennbarer Zigbee- und Konsolenadapter, die Zusammenführung doppelter Gerätepfade sowie verständliche Fehlercodes. Die bestehenden Radon-only-, Darstellungs- und Sprachtests bleiben erhalten."
+"Version 5.5.4 enthält zusätzlich automatisierte Tests für die exklusive Nutzung eines festen seriellen Anschlusses, das Überspringen erkennbarer Zigbee- und Konsolenadapter, die Zusammenführung doppelter Gerätepfade sowie verständliche Fehlercodes. Die bestehenden Radon-only-, Darstellungs- und Sprachtests bleiben erhalten."
 ]),
 ("11. Fehlerbehebung", [
 "Kein Gerät: USB-Zuordnung, Berechtigungen, konfigurierten Port und konkurrierende Prozesse prüfen.",
@@ -99,8 +99,8 @@ CONTENT = {
 "Messwerte und Metadaten bleiben standardmäßig lokal. Nur aktivierte externe Funktionen übertragen Daten. Die Standortkachel liest ihre Angaben ausschließlich über die lokale Home-Assistant-Core-API und verwendet keinen externen Geokodierungsdienst. Mit location_display_mode kann die Anzeige vollständig, reduziert oder ausgeblendet erfolgen. Prüfen Sie vor Bildschirmfotos, Berichten und World-Map-Uploads, ob die sichtbaren Standortangaben Ihren Datenschutzanforderungen entsprechen.",
 "Bewahren Sie Backups und Berichte geschützt auf. Sie können Gerätekennungen, Räume, Zeiträume und Gebäudedaten enthalten."
 ]),
-("13. Neu in Version 5.5.3", [
-"Version 5.5.3 stabilisiert die Geräteverbindung auf Systemen mit mehreren seriellen Adaptern. Der konfigurierte Anschluss /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0 wird exklusiv verwendet. Die automatische Suche überspringt erkennbare Sonoff-, ITEAD-, Zigbee-, Z-Wave- und ttyAMA-Geräte und fasst Pfade zum selben physischen Anschluss zusammen. Unter Geräte & System erscheinen der geprüfte Anschluss und eine verständliche Diagnose, etwa Anschluss belegt, keine Antwort oder falscher Gerätetyp. Die Startmeldung zeigt nun die tatsächliche App-Version. Datenbank und Messwerte bleiben kompatibel."
+("13. Neu in Version 5.5.4", [
+"Version 5.5.4 korrigiert den GQ-World-Map-Upload. Der nicht erreichbare HTTPS-Pfad rdlog.asp wurde durch den öffentlich dokumentierten Endpunkt log2.asp ersetzt. RadonScan sendet dort ausschließlich AID, GID und pCi; CPM, ACPM und uSV bleiben vollständig aus der Anfrage entfernt, damit keine künstlichen 0-CPM-Werte entstehen. HTTP-Status und Antworttext werden zur Diagnose gespeichert. Die feste Portauswahl und gefilterte automatische Gerätesuche aus 5.5.3 bleiben erhalten. Datenbank und Messwerte bleiben kompatibel."
 ])
 ],
 "options": [
@@ -128,8 +128,8 @@ CONTENT = {
 "A high individual hourly value is not automatically an exceedance of an annual reference value. The interface and reports distinguish the current value, period statistics, counting uncertainty, calibration information and professional interpretation."
 ]),
 ("2. Installation, upgrade and first start", [
-"Connect the RadonScan by USB, make MQTT available to Home Assistant and start the app. Version 5.5.3 defaults to /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0. A fixed serial_port is used exclusively; auto deliberately enables discovery.",
-"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.5.3. If an old Ingress view remains open, close the panel and reopen it.",
+"Connect the RadonScan by USB, make MQTT available to Home Assistant and start the app. Version 5.5.4 defaults to /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0. A fixed serial_port is used exclusively; auto deliberately enables discovery.",
+"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.5.4. If an old Ingress view remains open, close the panel and reopen it.",
 "Only completed hours are imported. A newly connected device can therefore remain without a current value until a complete record is available."
 ]),
 ("3. Overview", [
@@ -159,7 +159,7 @@ CONTENT = {
 ("7. GQ Radiation World Map", [
 "Upload is optional and disabled by default. When gmcmap_enabled is off, the World Map view is omitted from the sidebar. When enabled it contains only external upload, queue and history functions; local rooms, assignments and events remain in their dedicated view. Account ID and device ID are shown only in masked form.",
 "A persistent queue prevents duplicates, retries temporary failures with increasing delay and can discard measurements older than a configured limit. Manual upload is a protected POST action.",
-"RadonScan values are sent through the dedicated rdlog.asp radon endpoint using only AID, GID and pCi. The app does not submit CPM, ACPM or uSV and does not fall back to the generic log2.asp radiation endpoint. New uploads therefore no longer create artificial 0 CPM radioactivity entries.",
+"RadonScan values are sent through GMCMap's documented public log2.asp endpoint using only AID, GID and pCi. The app does not submit CPM, ACPM or uSV. New uploads therefore no longer create artificial 0 CPM radioactivity entries.",
 "The public position is managed in the GQ account. Radon Monitoring does not transmit its own GPS coordinates. Zero-valued records uploaded previously are stored by the external GMCMap service and are not removed by an application update."
 ]),
 ("8. Scientific PDF reports", [
@@ -176,7 +176,7 @@ CONTENT = {
 ("10. Operation, mobile layout and accessibility", [
 "On small screens the sidebar opens as a menu. Tables and the weekly heatmap remain horizontally scrollable inside their own cards; the rest of the page must not create horizontal page overflow.",
 "The interface supports keyboard operation, visible focus, a skip link, Escape to close the menu, reduced motion and text scaling to 200 percent.",
-"Version 5.5.3 adds automated tests for exclusive fixed-port use, skipping recognisable Zigbee and console adapters, de-duplicating device aliases and exposing actionable connection codes. Existing radon-only, layout and language tests remain in place."
+"Version 5.5.4 adds automated tests for exclusive fixed-port use, skipping recognisable Zigbee and console adapters, de-duplicating device aliases and exposing actionable connection codes. Existing radon-only, layout and language tests remain in place."
 ]),
 ("11. Troubleshooting", [
 "No device: check USB mapping, permissions, configured port and competing processes.",
@@ -190,8 +190,8 @@ CONTENT = {
 "Measurements and metadata remain local by default. Only enabled external functions transmit data. Location, address and building name are read only through the local Home Assistant Core API and are not manually duplicated. No external geocoding service is used. location_display_mode can show full, reduced or no location details. Before screenshots, reports and World Map publication, confirm that visible location data meets your privacy requirements.",
 "Protect backups and reports because they may contain device identifiers, rooms, periods and building information."
 ]),
-("13. New in version 5.5.3", [
-"Version 5.5.3 stabilises device connectivity on hosts with several serial adapters. The configured /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0 path is used exclusively. Automatic discovery skips recognisable Sonoff, ITEAD, Zigbee, Z-Wave and ttyAMA devices and de-duplicates aliases for the same physical port. Devices & System shows the checked port and an actionable diagnosis such as port busy, no response or wrong device type. The startup message now reports the actual app version. The database and measurements remain compatible."
+("13. New in version 5.5.4", [
+"Version 5.5.4 corrects the GQ World Map upload. The unavailable HTTPS rdlog.asp path was replaced with the documented public log2.asp endpoint. RadonScan submits only AID, GID and pCi; CPM, ACPM and uSV remain completely absent so no artificial 0 CPM records are created. HTTP status and response text are retained for diagnostics. The fixed-port selection and filtered automatic discovery from 5.5.3 remain in place. The database and measurements remain compatible."
 ])
 ],
 "options": [

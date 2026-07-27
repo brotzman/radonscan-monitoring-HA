@@ -1,4 +1,4 @@
-# Testing - Radon Monitoring 5.5.3
+# Testing - Radon Monitoring 5.5.4
 
 ## Standard command
 
@@ -19,7 +19,7 @@ Root `pyproject.toml` supplies the app library path and test directory. The app 
 - token and error redaction
 - USB disconnect/reconnect runtime state
 - GQ World Map queue and manual POST route
-- Radon-only GMCMap request contract: `rdlog.asp` with exactly `AID`, `GID` and `pCi`; no `CPM`, `ACPM` or `uSV`
+- Radon-only GMCMap request contract: `log2.asp` with exactly `AID`, `GID` and `pCi`; no `CPM`, `ACPM` or `uSV`
 - actual web-server static assets and protected endpoints
 - three-year hourly database/report performance
 - release version, manuals, translations, HTML IDs and asset integrity

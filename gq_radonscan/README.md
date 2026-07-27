@@ -1,4 +1,4 @@
-# Radon Monitoring 5.5.3
+# Radon Monitoring 5.5.4
 
 Radon Monitoring is a local Home Assistant app for read-only monitoring of compatible GQ RadonScan devices. It imports completed hourly values, stores raw and converted measurements in SQLite, publishes Home Assistant entities through MQTT, provides scientific time-series analysis, generates PDF reports and can optionally upload measurements to the GQ Radiation World Map.
 
@@ -23,31 +23,29 @@ Radon Monitoring is a local Home Assistant app for read-only monitoring of compa
 - optional complete Home Assistant Recorder purge for RadonScan entities, plus verification through the History API
 - interface and Home Assistant option translations in German, English, Spanish, French, Croatian, Italian, Dutch and Polish
 
-## Version 5.5.3
+## Version 5.5.4
 
-Version 5.5.3 fixes serial-device selection on Home Assistant systems with several USB adapters. A non-empty `serial_port` is now treated as an explicit operator choice and is used **exclusively**. For this installation the default stable path is:
+Version 5.5.4 corrects the GQ Radiation World Map integration. The `rdlog.asp` address shown in the device's Wi-Fi server menu is not available as the public HTTPS submission endpoint and returns HTTP 404. Radon Monitoring therefore uses GMCMap's documented public endpoint:
 
 ```text
-/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0
+https://www.gmcmap.com/log2.asp
 ```
 
-This prevents Radon Monitoring from sending `GETVER` to Sonoff/ITEAD Zigbee dongles, unrelated `/dev/ttyUSB*` devices or internal `/dev/ttyAMA*` interfaces. Existing installations that still store an empty port option automatically adopt the stable path during the upgrade. An explicit `auto` value remains automatic and is not overridden.
+RadonScan uploads remain strictly radon-only. The query contains exactly `AID`, `GID` and `pCi`; the application does not send `CPM`, `ACPM` or `uSV`. This prevents artificial `0 CPM` radioactivity entries while restoring a reachable upload target. HTTP status codes and response bodies are stored in the upload result so server, account and device-ID errors are easier to diagnose.
 
-Automatic discovery was also hardened. It skips recognisable Zigbee, Z-Wave and console adapters, prefers stable `/dev/serial/by-id/` aliases and removes duplicate aliases that resolve to the same physical device.
+The fixed-port and serial-discovery improvements from 5.5.3 remain unchanged. A configured `serial_port` is used exclusively; for this installation the stable path is `/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0`. An explicit `auto` value still enables filtered automatic discovery.
 
-Devices & System now reports the checked port and an actionable connection diagnosis: port busy, port missing, permission denied, no GETVER response, wrong serial device, general read error or no RadonScan detected. The service log uses the same error code, and the startup message now displays the actual application version rather than the obsolete fixed `4.0` label.
-
-The database schema, measurements, MQTT identifiers, Radon-only GMCMap upload and all analysis functions remain unchanged.
+The database schema, queue format, measurements, MQTT identifiers and analysis functions remain unchanged.
 
 ## Upgrade notes
 
-The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.3 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
+The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.4 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
 
 Before upgrading:
 
 1. Create a Home Assistant backup and, where appropriate, an app database backup.
 2. Stop the app before replacing a local repository package.
-3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.3.
+3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.4.
 4. Reopen the Ingress panel if an old iframe remains visible.
 5. Review `location_display_mode` if the Overview is shown in screenshots or shared displays.
 

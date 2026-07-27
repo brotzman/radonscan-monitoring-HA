@@ -1,5 +1,14 @@
 # Changelog
 
+## 5.5.4 - Correct public GMCMap upload endpoint
+
+- Corrected the World Map target from the unavailable `rdlog.asp` URL to GMCMap's documented public `log2.asp` submission endpoint.
+- Keep RadonScan uploads radon-only by sending exactly `AID`, `GID` and `pCi`; `CPM`, `ACPM` and `uSV` remain deliberately absent.
+- Added explicit HTTP status/body recording so endpoint and account errors are visible in the upload history.
+- Updated all interface languages, maintainer documentation, user manuals and request-level regression tests.
+- Retained the fixed-port and safer serial-discovery changes introduced in 5.5.3.
+- Kept the database schema, queue format, MQTT identifiers and stored measurements unchanged.
+
 ## 5.5.3 - Fixed RadonScan port and safer serial discovery
 
 - Treat a configured `serial_port` as exclusive instead of appending and probing every serial device on the Home Assistant host.
