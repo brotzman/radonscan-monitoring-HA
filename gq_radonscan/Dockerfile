@@ -1,6 +1,6 @@
 FROM ghcr.io/home-assistant/base:3.24
 
-ARG BUILD_VERSION="5.3.2"
+ARG BUILD_VERSION="5.4.0"
 ARG BUILD_ARCH="unknown"
 
 ENV PYTHONPATH="/usr/local/lib"

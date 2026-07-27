@@ -199,32 +199,37 @@
               <div><dt data-i18n="place_address"></dt><dd id="haRoomPlace">–</dd></div>
             </dl>
           </article>
-          <div class="two-column">
-            <article class="panel">
-              <h3 data-i18n="room"></h3>
-              <p class="field-help" data-i18n="room_form_hint"></p>
-              <form id="locationForm" class="form-stack">
+          <div class="two-column workflow-grid">
+            <article class="panel workflow-step" data-step="1">
+              <div class="workflow-heading"><span class="workflow-number">1</span><div><h3 data-i18n="create_room_step"></h3><p class="field-help" data-i18n="room_form_hint"></p></div></div>
+              <form id="locationForm" class="form-stack" novalidate>
                 <input type="hidden" id="locationId" name="id">
-                <label><span data-i18n="room"></span><input id="locationRoom" name="room" required autocomplete="off" maxlength="120"></label>
-                <label><span data-i18n="measurement_height"></span><input id="locationHeight" name="measurement_height_m" type="number" min="0" max="10" step="0.1" inputmode="decimal"></label>
-                <button id="saveRoomButton" class="button primary" type="submit" data-i18n="save_site"></button>
+                <label><span data-i18n="room"></span><input id="locationRoom" name="room" required autocomplete="off" maxlength="120" aria-describedby="locationRoomHelp locationRoomError"><small id="locationRoomHelp" class="field-help" data-i18n="room_field_help"></small><small id="locationRoomError" class="field-error" role="alert" hidden></small></label>
+                <label><span data-i18n="measurement_height"></span><input id="locationHeight" name="measurement_height_m" type="number" min="0" max="10" step="0.1" inputmode="decimal" aria-describedby="locationHeightHelp locationHeightError"><small id="locationHeightHelp" class="field-help" data-i18n="measurement_height_help"></small><small id="locationHeightError" class="field-error" role="alert" hidden></small></label>
+                <div class="button-row"><button id="saveRoomButton" class="button primary" type="submit" data-i18n="save_site"></button><button id="cancelRoomEdit" class="button secondary" type="button" data-i18n="cancel_edit" hidden></button></div>
+                <p id="locationFormStatus" class="form-status" aria-live="polite" hidden></p>
               </form>
             </article>
-            <article class="panel">
-              <h3 data-i18n="assign_measurements"></h3>
-              <form id="assignForm" class="form-stack">
-                <label><span data-i18n="device"></span><select id="assignDevice" required></select></label>
-                <label><span data-i18n="room"></span><select id="assignLocation" required></select></label>
-                <label><span data-i18n="session_title"></span><input id="assignTitle" required></label>
-                <div class="two-field"><label><span data-i18n="start"></span><input id="assignStart" type="datetime-local" required></label><label><span data-i18n="end_optional"></span><input id="assignEnd" type="datetime-local"></label></div>
-                <label><span data-i18n="purpose"></span><input id="assignPurpose"></label>
-                <label><span data-i18n="notes"></span><textarea id="assignNotes" rows="2"></textarea></label>
-                <button type="submit" class="button primary" data-i18n="assign"></button>
+            <article id="assignmentPanel" class="panel workflow-step" data-step="2">
+              <div class="workflow-heading"><span class="workflow-number">2</span><div><h3 data-i18n="assign_measurements"></h3><p class="field-help" data-i18n="assignment_step_hint"></p></div></div>
+              <div id="assignEmptyNotice" class="notice info" data-i18n="assignment_requires_room"></div>
+              <form id="assignForm" class="form-stack" novalidate>
+                <fieldset id="assignFieldset" class="form-fieldset" disabled>
+                  <label><span data-i18n="device"></span><select id="assignDevice" required></select></label>
+                  <label><span data-i18n="room"></span><select id="assignLocation" required aria-describedby="assignLocationError"></select><small id="assignLocationError" class="field-error" role="alert" hidden></small></label>
+                  <label><span data-i18n="session_title"></span><input id="assignTitle" required aria-describedby="assignTitleError"><small id="assignTitleError" class="field-error" role="alert" hidden></small></label>
+                  <div class="two-field"><label><span data-i18n="start"></span><input id="assignStart" type="datetime-local" required aria-describedby="assignStartError"><small id="assignStartError" class="field-error" role="alert" hidden></small></label><label><span data-i18n="end_optional"></span><input id="assignEnd" type="datetime-local" aria-describedby="assignEndError"><small id="assignEndError" class="field-error" role="alert" hidden></small></label></div>
+                  <label><span data-i18n="purpose"></span><input id="assignPurpose"></label>
+                  <label><span data-i18n="notes"></span><textarea id="assignNotes" rows="2"></textarea></label>
+                  <button id="assignButton" type="submit" class="button primary" data-i18n="assign"></button>
+                </fieldset>
+                <p id="assignFormStatus" class="form-status" aria-live="polite" hidden></p>
               </form>
             </article>
           </div>
-          <article class="panel"><div class="panel-heading"><h3 data-i18n="measurement_sites"></h3><span id="locationCount" class="muted">0</span></div><div id="locationCards" class="location-grid"></div></article>
-          <div class="two-column"><article class="panel"><h3 data-i18n="add_event"></h3><form id="eventForm" class="form-stack"><div class="two-field"><label><span data-i18n="event_type"></span><select id="eventType"><option value="ventilation" data-i18n="ventilation"></option><option value="window" data-i18n="window"></option><option value="construction" data-i18n="construction"></option><option value="device_move" data-i18n="device_move"></option><option value="outage" data-i18n="outage"></option><option value="note" data-i18n="note"></option></select></label><label><span data-i18n="time"></span><input id="eventTime" type="datetime-local" required></label></div><label><span data-i18n="room"></span><select id="eventLocation"></select></label><label><span data-i18n="title"></span><input id="eventTitle" required></label><label><span data-i18n="notes"></span><textarea id="eventNotes" rows="2"></textarea></label><button type="submit" class="button primary" data-i18n="save_event"></button></form></article><article class="panel"><div class="panel-heading"><h3 data-i18n="events"></h3><span id="eventCount" class="muted">0</span></div><div id="eventList" class="event-list"></div></article></div>
+          <article class="panel"><div class="panel-heading"><div><h3 data-i18n="measurement_sites"></h3><p data-i18n="rooms_list_hint"></p></div><span id="locationCount" class="muted">0</span></div><div id="locationCards" class="location-grid"></div></article>
+          <article class="panel"><div class="panel-heading"><div><h3 data-i18n="measurement_assignments"></h3><p data-i18n="measurement_assignments_hint"></p></div><span id="assignmentCount" class="muted">0</span></div><div id="assignmentList" class="assignment-list"></div></article>
+          <div class="two-column"><article class="panel"><h3 data-i18n="add_event"></h3><form id="eventForm" class="form-stack" novalidate><div class="two-field"><label><span data-i18n="event_type"></span><select id="eventType"><option value="ventilation" data-i18n="ventilation"></option><option value="window" data-i18n="window"></option><option value="construction" data-i18n="construction"></option><option value="device_move" data-i18n="device_move"></option><option value="outage" data-i18n="outage"></option><option value="note" data-i18n="note"></option></select></label><label><span data-i18n="time"></span><input id="eventTime" type="datetime-local" required aria-describedby="eventTimeError"><small id="eventTimeError" class="field-error" role="alert" hidden></small></label></div><label><span data-i18n="room"></span><select id="eventLocation"></select></label><label><span data-i18n="title"></span><input id="eventTitle" required aria-describedby="eventTitleError"><small id="eventTitleError" class="field-error" role="alert" hidden></small></label><label><span data-i18n="notes"></span><textarea id="eventNotes" rows="2"></textarea></label><button type="submit" class="button primary" data-i18n="save_event"></button><p id="eventFormStatus" class="form-status" aria-live="polite" hidden></p></form></article><article class="panel"><div class="panel-heading"><h3 data-i18n="events"></h3><span id="eventCount" class="muted">0</span></div><div id="eventList" class="event-list"></div></article></div>
         </section>
 
         <section id="view-map" class="view gmcmap-view">
@@ -313,6 +318,11 @@
 
         <section id="view-system" class="view">
           <div class="section-header"><div><span class="eyebrow" data-i18n="hardware_communication"></span><h2 data-i18n="device_title"></h2><p data-i18n="architecture"></p></div></div>
+          <article class="panel self-test-panel" aria-labelledby="selfTestTitle">
+            <div class="panel-heading"><div><span class="eyebrow" data-i18n="operational_check"></span><h3 id="selfTestTitle" data-i18n="system_self_test"></h3><p data-i18n="system_self_test_hint"></p></div><span id="selfTestBadge" class="badge neutral" data-i18n="self_test_status_unknown"></span></div>
+            <div class="self-test-actions"><button id="runSelfTest" class="button primary" type="button" data-i18n="run_self_test"></button><p id="selfTestSummary" class="muted" data-i18n="self_test_not_run"></p></div>
+            <div id="selfTestItems" class="self-test-list"><div class="empty" data-i18n="self_test_not_run"></div></div>
+          </article>
           <div class="two-column"><article class="panel facts-panel"><h3 data-i18n="device"></h3><dl id="deviceFacts"></dl></article><article class="panel facts-panel"><h3 data-i18n="protocol"></h3><dl id="protocolFacts"></dl></article></div>
           <div class="two-column"><article class="panel facts-panel"><h3 data-i18n="services"></h3><dl id="serviceFacts"></dl></article><article class="panel facts-panel"><h3 data-i18n="database"></h3><dl id="databaseFacts"></dl></article></div>
         </section>
@@ -342,6 +352,8 @@
   <script src="assets/core.js?v=__VERSION__"></script>
   <script src="assets/accessibility.js?v=__VERSION__"></script>
   <script src="assets/data-management.js?v=__VERSION__"></script>
+  <script src="assets/rooms-events.js?v=__VERSION__"></script>
+  <script src="assets/system-diagnostics.js?v=__VERSION__"></script>
   <script src="assets/app.js?v=__VERSION__"></script>
 </body>
 </html>

@@ -22,6 +22,8 @@ from .homeassistant import HomeAssistantClient, HomeAssistantError
 from .gmcmap import GmcMapClient, GmcMapError
 from .i18n import LOCALE_NAMES, load, resolve
 from .reports import ScientificReport
+from .diagnostics import run_system_self_test
+from .room_metadata import merge_room_request
 from .state import build_state
 from .operations import DataManagementOperations
 from .security import redact_sensitive, safe_error_message
@@ -208,6 +210,26 @@ class WebServer:
                     raise StorageError("JSON body must be an object")
                 return payload
 
+            def read_object(self) -> dict[str, object]:
+                """Read JSON or a standard URL-encoded form body."""
+                body = self.read_body(4 * 1024 * 1024)
+                if not body:
+                    return {}
+                content_type = self.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+                if content_type == "application/x-www-form-urlencoded":
+                    try:
+                        values = parse_qs(body.decode("utf-8"), keep_blank_values=True)
+                    except UnicodeDecodeError as exc:
+                        raise StorageError("Invalid form request") from exc
+                    return {key: value[-1] if value else "" for key, value in values.items()}
+                try:
+                    payload = json.loads(body.decode("utf-8"))
+                except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                    raise StorageError("Invalid JSON request") from exc
+                if not isinstance(payload, dict):
+                    raise StorageError("JSON body must be an object")
+                return payload
+
             def read_multipart(self, max_bytes: int | None = None) -> tuple[dict[str, str], dict[str, tuple[str, str, bytes]]]:
                 content_type = self.headers.get("Content-Type", "")
                 if "multipart/form-data" not in content_type:
@@ -272,7 +294,7 @@ class WebServer:
 
                     if path.startswith("/assets/"):
                         name = path.split("/", 2)[-1]
-                        if name not in {"app.css", "app.js", "core.js", "accessibility.js", "data-management.js", "icon.png"}:
+                        if name not in {"app.css", "app.js", "core.js", "accessibility.js", "data-management.js", "rooms-events.js", "system-diagnostics.js", "icon.png"}:
                             self.send_bytes(b"Not found", "text/plain", 404)
                             return
                         file_path = app.static_dir / name
@@ -467,7 +489,7 @@ class WebServer:
 
                     if path in {"/docs/user-manual.pdf", "/docs/protocol-reference.pdf"}:
                         locale = self.locale(query)
-                        prefix = "Radon_Monitoring_User_Manual_5.3.2" if "user-manual" in path else "GQ_RadonScan_Protocol_Reference_3.0.0"
+                        prefix = "Radon_Monitoring_User_Manual_5.4.0" if "user-manual" in path else "GQ_RadonScan_Protocol_Reference_3.0.0"
                         candidates = [app.docs_dir / f"{prefix}_{locale}.pdf", app.docs_dir / f"{prefix}_en.pdf"]
                         manual = next((candidate for candidate in candidates if candidate.is_file()), None)
                         if manual is None:
@@ -491,6 +513,12 @@ class WebServer:
                 if not self.require_write_token():
                     return
                 try:
+                    if path == "/api/self-test":
+                        result = run_system_self_test(app.storage, app.settings, app.ha)
+                        app.storage.audit("system_self_test", "system", {"status": result.get("status")}, self.user_name)
+                        self.json_response({"ok": True, **result})
+                        return
+
                     if path == "/api/gmcmap/upload":
                         payload = self.read_json()
                         confirmation = str(payload.get("confirmation") or "").strip().upper()
@@ -507,39 +535,16 @@ class WebServer:
                         return
 
                     if path == "/api/locations":
-                        payload = self.read_json()
-                        # Home Assistant Ingress may forward a browser request with chunked
-                        # transfer encoding. read_body handles that directly. The encoded
-                        # fallback headers below also keep room creation functional if an
-                        # intermediary unexpectedly drops an otherwise valid JSON body.
-                        if not (payload.get("room") or payload.get("name") or payload.get("room_name")):
-                            header_room = unquote(self.headers.get("X-Radon-Room", "")).strip()
-                            query_room = str((query.get("room") or query.get("name") or [""])[0]).strip()
-                            fallback_room = header_room or query_room
-                            if fallback_room:
-                                payload["room"] = fallback_room
-                        if payload.get("measurement_height_m") in (None, ""):
-                            header_height = self.headers.get("X-Radon-Measurement-Height", "").strip()
-                            query_height = str((query.get("measurement_height_m") or [""])[0]).strip()
-                            fallback_height = header_height or query_height
-                            if fallback_height:
-                                payload["measurement_height_m"] = fallback_height
-                        if payload.get("id") in (None, ""):
-                            header_id = self.headers.get("X-Radon-Location-Id", "").strip()
-                            query_id = str((query.get("id") or [""])[0]).strip()
-                            fallback_id = header_id or query_id
-                            if fallback_id:
-                                payload["id"] = fallback_id
-                        # Home Assistant remains the authoritative source for place/address
-                        # and building details. Room data therefore stays writable even when
-                        # Core is temporarily unavailable and no HA location value is copied
-                        # into the local room record.
-                        location_payload = dict(payload)
-                        location_payload.update({"building": "", "active": True})
-                        item = app.storage.save_location(location_payload)
-                        # Room saving must not depend on a successful Home Assistant
-                        # status request. The read-only HA metadata is added only as a
-                        # best-effort response convenience.
+                        # The request body is canonical. Query/header values are only
+                        # fallbacks for Home Assistant Ingress variants that forward an
+                        # empty POST body. Keeping the fallback in one normaliser avoids
+                        # frontend/backend version-skew bugs.
+                        payload = merge_room_request(
+                            self.read_object(),
+                            query=query,
+                            headers=self.headers,
+                        )
+                        item = app.storage.save_location(payload)
                         try:
                             ha_location = app.ha.status()
                         except Exception as exc:

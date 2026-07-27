@@ -9,22 +9,23 @@ LOCALES = LIB / 'locales'
 
 
 def test_release_versions_are_consistent():
-    assert 'version: 5.3.2' in (ROOT / 'config.yaml').read_text(encoding='utf-8')
-    assert 'BUILD_VERSION="5.3.2"' in (ROOT / 'Dockerfile').read_text(encoding='utf-8')
-    assert '__version__ = "5.3.2"' in (LIB / '__init__.py').read_text(encoding='utf-8')
-    assert 'Radon Monitoring 5.3.2' in (ROOT / 'README.md').read_text(encoding='utf-8')
+    assert 'version: 5.4.0' in (ROOT / 'config.yaml').read_text(encoding='utf-8')
+    assert 'BUILD_VERSION="5.4.0"' in (ROOT / 'Dockerfile').read_text(encoding='utf-8')
+    assert '__version__ = "5.4.0"' in (LIB / '__init__.py').read_text(encoding='utf-8')
+    assert 'Radon Monitoring 5.4.0' in (ROOT / 'README.md').read_text(encoding='utf-8')
 
 
 def test_current_manuals_exist_and_obsolete_manuals_are_removed():
     docs = ROOT / 'rootfs/usr/local/share/radonscan3/docs'
     for lang in ('de', 'en'):
-        path = docs / f'Radon_Monitoring_User_Manual_5.3.2_{lang}.pdf'
+        path = docs / f'Radon_Monitoring_User_Manual_5.4.0_{lang}.pdf'
         assert path.is_file() and path.stat().st_size > 10_000
     assert not list(docs.glob('Radon_Monitoring_User_Manual_4.2.1_*.pdf'))
     assert not list(docs.glob('Radon_Monitoring_User_Manual_4.9.0_*.pdf'))
     assert not list(docs.glob('Radon_Monitoring_User_Manual_5.1.0_*.pdf'))
     assert not list(docs.glob('Radon_Monitoring_User_Manual_5.3.0_*.pdf'))
-    assert 'Radon_Monitoring_User_Manual_5.3.2' in (LIB / 'web.py').read_text(encoding='utf-8')
+    assert not list(docs.glob('Radon_Monitoring_User_Manual_5.3.2_*.pdf'))
+    assert 'Radon_Monitoring_User_Manual_5.4.0' in (LIB / 'web.py').read_text(encoding='utf-8')
 
 
 def test_frontend_assets_and_ids_are_consistent():
@@ -37,7 +38,7 @@ def test_frontend_assets_and_ids_are_consistent():
     for removed_id in ('copyHashes', 'hashes', 'runtimeSummary', 'view-expert', 'expertDeviceFacts', 'expertProtocolFacts', 'expertDataFacts'):
         assert f'id="{removed_id}"' not in html
     assert 'data-view="expert"' not in html
-    for required_id in ('homeAssistantLocationCard', 'homeAssistantLocationPrivacyMode', 'homeAssistantRoom', 'radonTrafficCard', 'radonTrafficSignal', 'radonTrafficStatus', 'radonTrafficBasis', 'overviewDevice', 'overviewCampaign', 'metricPeak24', 'analysisSummaryText', 'analysisAdvanced', 'view-sites', 'locationRoom', 'haRoomBuilding', 'haRoomPlace', 'gmcmapNav'):
+    for required_id in ('homeAssistantLocationCard', 'homeAssistantLocationPrivacyMode', 'homeAssistantRoom', 'radonTrafficCard', 'radonTrafficSignal', 'radonTrafficStatus', 'radonTrafficBasis', 'overviewDevice', 'overviewCampaign', 'metricPeak24', 'analysisSummaryText', 'analysisAdvanced', 'view-sites', 'locationRoom', 'haRoomBuilding', 'haRoomPlace', 'gmcmapNav', 'assignFieldset', 'assignmentList', 'runSelfTest', 'selfTestItems', 'locationRoomError', 'locationHeightError'):
         assert f'id="{required_id}"' in html
     assert 'data-view="sites"' in html
     assert 'id="overviewLocation"' not in html
@@ -49,6 +50,8 @@ def test_frontend_assets_and_ids_are_consistent():
     sites_section = html.split('id="view-sites"', 1)[1].split('id="view-map"', 1)[0]
     map_section = html.split('id="view-map"', 1)[1].split('id="view-history"', 1)[0]
     assert 'id="locationForm"' in sites_section
+    assert re.search(r'id="assignFieldset"[^>]*\bdisabled\b', sites_section)
+    assert 'id="assignmentList"' in sites_section
     assert 'id="eventForm"' in sites_section
     assert 'id="locationForm"' not in map_section
     assert 'id="eventForm"' not in map_section
@@ -63,8 +66,16 @@ def test_frontend_assets_and_ids_are_consistent():
     assert "event-marker" in app_js
     assert "scope','selection" in app_js
     assert "overviewLocation" not in app_js
-    assert "measurement_height_m" in app_js
-    for asset in ('core.js', 'accessibility.js', 'data-management.js', 'app.js', 'app.css', 'icon.png'):
+    assert "api/locations" not in app_js
+    assert "roomsEvents?.render()" in app_js
+    assert "systemDiagnostics?.initialize()" in app_js
+    rooms_js = (STATIC / 'rooms-events.js').read_text(encoding='utf-8')
+    assert "measurement_height_m" in rooms_js
+    assert "new URLSearchParams" in rooms_js
+    assert "assignFieldset" in rooms_js
+    diagnostics_js = (STATIC / 'system-diagnostics.js').read_text(encoding='utf-8')
+    assert "api/self-test" in diagnostics_js
+    for asset in ('core.js', 'accessibility.js', 'data-management.js', 'rooms-events.js', 'system-diagnostics.js', 'app.js', 'app.css', 'icon.png'):
         assert (STATIC / asset).is_file()
 
 
@@ -88,7 +99,7 @@ def test_analysis_hierarchy_is_translated():
 
 
 def test_javascript_translation_keys_exist_in_all_locales():
-    scripts = "\n".join((STATIC / name).read_text(encoding="utf-8") for name in ("app.js", "data-management.js"))
+    scripts = "\n".join((STATIC / name).read_text(encoding="utf-8") for name in ("app.js", "data-management.js", "rooms-events.js", "system-diagnostics.js"))
     keys = set(re.findall(r"\btr\(['\"]([^'\"]+)['\"]\)", scripts))
     assert keys
     for locale_path in LOCALES.glob('*.json'):
@@ -135,7 +146,7 @@ def test_critical_interface_text_is_localised_in_supported_languages():
 def test_non_english_locales_do_not_fall_back_to_english_at_scale():
     html = (STATIC / 'index.html').read_text(encoding='utf-8')
     used = set(re.findall(r'data-i18n(?:-title|-placeholder|-aria-label)?="([^"]+)"', html))
-    for name in ('app.js', 'data-management.js', 'core.js', 'accessibility.js'):
+    for name in ('app.js', 'data-management.js', 'rooms-events.js', 'system-diagnostics.js', 'core.js', 'accessibility.js'):
         used.update(re.findall(r"\btr\(['\"]([^'\"]+)['\"]\)", (STATIC / name).read_text(encoding='utf-8')))
     english = json.loads((LOCALES / 'en.json').read_text(encoding='utf-8'))
     technical_or_shared = {

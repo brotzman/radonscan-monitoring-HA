@@ -7,6 +7,8 @@
   let catalog = {locations:[],sessions:[],campaigns:[],devices:[],events:[],reports:[],homeassistant_location:{}};
   let analysisData = null;
   let dataManagement = null;
+  let roomsEvents = null;
+  let systemDiagnostics = null;
   let chartDays = 7;
   let catalogInitialised = false;
   let loadInProgress = false;
@@ -439,8 +441,7 @@
     };
     const locationLabel=l=>String(l.room||l.name||tr('not_available'));
     const locOpts=options(catalog.locations,'id',locationLabel,tr('all_sites'));
-    ['analysisLocation','historyLocation','reportLocation','eventLocation'].forEach(id=>updateSelect(id,locOpts));
-    ['assignLocation'].forEach(id=>updateSelect(id,options(catalog.locations,'id',locationLabel)));
+    ['analysisLocation','historyLocation','reportLocation'].forEach(id=>updateSelect(id,locOpts));
     const deviceLabel=d=>[d.model,d.serial_number||d.device_id].filter(Boolean).join(' · ');
     const allDeviceOpts=options(catalog.devices,'device_id',deviceLabel,tr('all_devices_combined'));
     ['analysisDevice','historyDevice'].forEach(id=>{
@@ -474,24 +475,9 @@
     catalogInitialised=true;
     renderOverviewSelectionSummary();
     renderHomeAssistantRoomSource();
-    if($('locationCards')) renderLocations();
-    if($('eventList')) renderEvents();
+    roomsEvents?.render();
     if($('reportList')) renderReports();
   }
-
-  function renderLocations() {
-    $('locationCount').textContent=catalog.locations.length;const wrap=$('locationCards');if(!catalog.locations.length){wrap.innerHTML=`<div class="empty">${tr('no_sites')}</div>`;return;}
-    const ha=state?.homeassistant||catalog.homeassistant_location||{};
-    const building=ha.building_name||ha.location_name||'';
-    const place=ha.place_address||ha.address||'';
-    const inherited=[building,place].filter((value,index,items)=>value&&items.indexOf(value)===index).join(' · ')||tr('ha_location_unavailable');
-    wrap.innerHTML=catalog.locations.map(l=>{const height=l.measurement_height_m===null||l.measurement_height_m===undefined?tr('not_set'):`${fmtNumber(Number(l.measurement_height_m),1)} m`;return `<article class="location-card"><h4>${escapeHtml(l.room||l.name)}</h4><p>${escapeHtml(inherited)}</p><p><strong>${escapeHtml(tr('measurement_height'))}:</strong> ${escapeHtml(height)}</p><div class="location-value">${l.latest_bq_m3===null||l.latest_bq_m3===undefined?'–':radon(l.latest_bq_m3)}</div><p>${fmtInteger(l.sample_count||0)} ${tr('samples')} · ${fmtDate(l.latest_at)}</p><div class="location-actions"><button class="mini-button" data-action="edit-location" data-id="${l.id}">${tr('edit')}</button><button class="mini-button" data-action="delete-location" data-id="${l.id}">${tr('delete')}</button></div></article>`;}).join('');
-    wrap.querySelectorAll('[data-action]').forEach(button=>button.addEventListener('click',async()=>{const id=Number(button.dataset.id);if(button.dataset.action==='edit-location')editLocation(id);if(button.dataset.action==='delete-location'){if(!confirm(tr('confirm_delete_site')))return;try{await api(`api/locations/${id}`,{method:'DELETE'});toast(tr('deleted'));await reloadCatalog();}catch(err){toast(err.message,true);}}}));
-  }
-
-  function editLocation(id) {const l=catalog.locations.find(x=>Number(x.id)===Number(id));if(!l)return;$('locationId').value=l.id;$('locationRoom').value=l.room||l.name||'';$('locationHeight').value=l.measurement_height_m??'';$('locationRoom').focus();}
-
-  function renderEvents() {$('eventCount').textContent=catalog.events.length;const wrap=$('eventList');if(!catalog.events.length){wrap.innerHTML=`<div class="empty">${tr('no_events')}</div>`;return;}wrap.innerHTML=catalog.events.slice(0,100).map(e=>`<div class="event-item"><small>${fmtDate(e.occurred_at)}</small><div><strong>${escapeHtml(tr(`event_${e.event_type}`)||e.event_type)} · ${escapeHtml(e.title)}</strong><small>${escapeHtml([e.location_name,e.notes].filter(Boolean).join(' · '))}</small></div><button class="mini-button" data-delete-event="${e.id}">${tr('delete')}</button></div>`).join('');wrap.querySelectorAll('[data-delete-event]').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm(tr('confirm_delete_event')))return;try{await api(`api/events/${btn.dataset.deleteEvent}`,{method:'DELETE'});toast(tr('deleted'));await reloadCatalog();}catch(err){toast(err.message,true);}}));}
 
   function renderReports() {$('reportCount').textContent=catalog.reports.length;const wrap=$('reportList');if(!catalog.reports.length){wrap.innerHTML=`<div class="empty">${tr('no_reports')}</div>`;return;}wrap.innerHTML=catalog.reports.map(r=>`<div class="report-item"><small>${fmtDate(r.created_at)}</small><div><strong>${escapeHtml(r.title)}</strong><small>${escapeHtml(r.location_name||tr('all_sites'))} · ${escapeHtml(r.device_model||r.device_id||tr('not_available'))} · ${escapeHtml(r.profile)}</small></div><div><strong>${r.mean_bq_m3===null||r.mean_bq_m3===undefined?'–':radon(r.mean_bq_m3)}</strong><small>${fmtInteger(r.samples)} ${tr('samples')} · ${fmtNumber(r.coverage_percent,0)} %</small></div><div class="report-actions"><a class="mini-button" href="reports/${encodeURIComponent(r.report_id)}" target="_blank">PDF</a><button class="mini-button" data-delete-report="${escapeHtml(r.report_id)}">${tr('delete')}</button></div></div>`).join('');wrap.querySelectorAll('[data-delete-report]').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm(tr('confirm_delete_report')))return;try{await api(`api/reports/${encodeURIComponent(btn.dataset.deleteReport)}`,{method:'DELETE'});toast(tr('deleted'));await reloadCatalog();}catch(err){toast(err.message,true);}}));}
 
@@ -584,57 +570,8 @@
     $('overviewCampaign')?.addEventListener('change',renderOverviewSelectionSummary);
     $('analysisApply')?.addEventListener('click',loadAnalysis);$('analysisPreset')?.addEventListener('change',()=>{const custom=$('analysisPreset')?.value==='custom';if($('analysisStart'))$('analysisStart').disabled=!custom;if($('analysisEnd'))$('analysisEnd').disabled=!custom;});
     $('analysisCsvButton').addEventListener('click',()=>{const params=analysisQuery();location.href=`export/history.csv?${params}`;});
-    $('locationRoom')?.addEventListener('input',event=>event.currentTarget.setCustomValidity(''));
-    $('locationForm').addEventListener('submit',async event=>{
-      event.preventDefault();
-      const form=event.currentTarget;
-      const roomInput=form.elements.namedItem('room')||$('locationRoom');
-      const heightInput=form.elements.namedItem('measurement_height_m')||$('locationHeight');
-      const idInput=form.elements.namedItem('id')||$('locationId');
-      const room=String(roomInput?.value??'').replace(/\s+/g,' ').trim();
-      if(!room) {
-        roomInput?.setCustomValidity(tr('room_name_required'));
-        roomInput?.focus();
-        toast(tr('room_name_required'),true);
-        return;
-      }
-      roomInput?.setCustomValidity('');
-      const rawHeight=String(heightInput?.value??'').trim();
-      const payload={
-        id:String(idInput?.value??'').trim()||null,
-        room,
-        // Keep the legacy alias during upgrades so a cached 5.3.0 backend or
-        // frontend cannot lose the room value across an Ingress version skew.
-        name:room,
-        measurement_height_m:rawHeight===''?null:Number(rawHeight),
-      };
-      const button=$('saveRoomButton');
-      if(button) {button.disabled=true;button.textContent=tr('saving_room');}
-      try {
-        const fallbackHeaders={
-          'X-Radon-Room':encodeURIComponent(room),
-          'X-Radon-Measurement-Height':rawHeight,
-        };
-        if(payload.id) fallbackHeaders['X-Radon-Location-Id']=String(payload.id);
-        const result=await api('api/locations',{method:'POST',headers:fallbackHeaders,body:payload});
-        if(result?.item) {
-          const index=catalog.locations.findIndex(item=>Number(item.id)===Number(result.item.id));
-          if(index>=0) catalog.locations[index]=result.item; else catalog.locations.push(result.item);
-          renderCatalog();
-        }
-        toast(tr('room_saved'));
-        form.reset();
-        if(idInput) idInput.value='';
-        await reloadCatalog();
-        await loadOverviewSelection(false);
-      } catch(err) {
-        toast(err?.message==='A room name is required'?tr('room_name_required'):err?.message,true);
-      } finally {
-        if(button) {button.disabled=false;button.textContent=tr('save_site');}
-      }
-    });
-    $('assignForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;try{const result=await api('api/locations/assign',{method:'POST',body:{device_id:$('assignDevice').value,location_id:$('assignLocation').value,title:$('assignTitle').value,start:toIso($('assignStart').value),end:toIso($('assignEnd').value),purpose:$('assignPurpose').value,notes:$('assignNotes').value}});toast(`${tr('assigned')}: ${result.assigned}`);form.reset();await loadAll();}catch(err){toast(err.message,true);}});
-    $('eventForm').addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;try{await api('api/events',{method:'POST',body:{event_type:$('eventType').value,occurred_at:toIso($('eventTime').value),location_id:$('eventLocation').value||null,title:$('eventTitle').value,notes:$('eventNotes').value}});toast(tr('saved'));form.reset();$('eventTime').value=toInput(new Date());await reloadCatalog();}catch(err){toast(err.message,true);}});
+    roomsEvents?.bind();
+    systemDiagnostics?.bind();
     $('gmcmapUploadButton').addEventListener('click',uploadGmcmap);$('gmcmapRetryButton').addEventListener('click',retryGmcmap);$('refreshGmcmap').addEventListener('click',loadGmcmap);
     $('historyApply').addEventListener('click',loadHistoryFiltered);
     $('reportForm').addEventListener('submit',async event=>{event.preventDefault();const button=$('createReportButton');button.disabled=true;button.textContent=tr('generating');try{const result=await api('api/reports',{method:'POST',body:{title:$('reportTitle').value,profile:$('reportProfile').value,locale:$('reportLocale').value,device_id:$('reportDevice').value,location_id:$('reportLocation').value||null,days:Number($('reportDays').value),start:toIso($('reportStart').value),end:toIso($('reportEnd').value)}});toast(tr('report_created'));await reloadCatalog();window.open(`reports/${encodeURIComponent(result.item.report_id)}`,'_blank');}catch(err){toast(err.message,true);}finally{button.disabled=false;button.textContent=tr('generate_pdf');}});
@@ -659,11 +596,20 @@
   function initializeDefaults() {
     if($('analysisStart')) $('analysisStart').disabled=true;
     if($('analysisEnd')) $('analysisEnd').disabled=true;
-    if($('eventTime')) $('eventTime').value=toInput(new Date());
-    const latest=state?.measurement?.completed_at||new Date();
-    if($('assignStart')) $('assignStart').value=toInput(latest);
     if($('reportLocale')) $('reportLocale').value=locale()==='de'?'de':'en';
+    roomsEvents?.initializeDefaults();
+    systemDiagnostics?.initialize();
   }
+
+  roomsEvents=window.RMRoomsEvents.create({
+    $,tr,escapeHtml,fmtNumber,fmtInteger,fmtDate,toIso,toInput,api,toast,radon,
+    getCatalog:()=>catalog,
+    getState:()=>state,
+    reloadCatalog,
+    loadOverviewSelection,
+    loadAll,
+  });
+  systemDiagnostics=window.RMSystemDiagnostics.create({$,tr,escapeHtml,fmtDate,api,toast});
 
   applyTranslations();bindEvents();initializeDefaults();
   const requested=(location.hash||'').slice(1)||storageGet('local','radonMonitoringView')||'overview';setView($(`view-${requested}`)?requested:'overview');

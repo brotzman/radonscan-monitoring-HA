@@ -16,6 +16,7 @@ import zipfile
 
 from .analysis import analyse_records, iso as analysis_iso, parse_dt, window_summary
 from .decoder import Snapshot
+from .room_metadata import RoomMetadataError, normalise_room_record
 
 SCHEMA_VERSION = 8
 
@@ -981,24 +982,16 @@ class Storage:
         return int(cur.rowcount)
 
     def save_location(self, payload: dict[str, object]) -> dict[str, object]:
+        try:
+            canonical = normalise_room_record(payload)
+        except RoomMetadataError as exc:
+            raise StorageError(str(exc)) from exc
+
         now = iso(utc_now())
-        location_id = payload.get("id")
-        room_value = payload.get("room") or payload.get("name") or payload.get("room_name")
-        if not room_value:
-            for container_key in ("location", "item", "data", "form"):
-                nested = payload.get(container_key)
-                if isinstance(nested, dict):
-                    room_value = nested.get("room") or nested.get("name") or nested.get("room_name")
-                    if room_value:
-                        break
-        room = " ".join(str(room_value or "").split())
-        if not room:
-            raise StorageError("A room name is required")
-        measurement_height = None
-        if payload.get("measurement_height_m") not in (None, ""):
-            measurement_height = float(payload["measurement_height_m"])
-            if not 0.0 <= measurement_height <= 10.0:
-                raise StorageError("Measurement height must be between 0 and 10 metres")
+        location_id = canonical["id"]
+        room = str(canonical["room"])
+        measurement_height = canonical["measurement_height_m"]
+        active = bool(canonical["active"])
         values = (
             room,
             "",  # Place/building are read live from Home Assistant, never duplicated locally.
@@ -1009,10 +1002,27 @@ class Storage:
             None,
             measurement_height,
             "",
-            1 if payload.get("active", True) else 0,
+            1 if active else 0,
         )
         with self._connection() as con:
+            matching = next(
+                (
+                    int(row["id"])
+                    for row in con.execute("SELECT id,name FROM locations").fetchall()
+                    if str(row["name"] or "").strip().casefold() == room.casefold()
+                ),
+                None,
+            )
+            if location_id and matching is not None and matching != int(location_id):
+                raise StorageError("A room with this name already exists")
+            if not location_id and matching is not None:
+                # Repeated submissions through a slow Ingress connection are idempotent.
+                location_id = matching
+
             if location_id:
+                exists = con.execute("SELECT 1 FROM locations WHERE id=?", (int(location_id),)).fetchone()
+                if exists is None:
+                    raise StorageError("The selected room does not exist")
                 con.execute(
                     """
                     UPDATE locations SET name=?,building=?,floor=?,room_type=?,map_id=?,x_percent=?,y_percent=?,
@@ -1034,9 +1044,34 @@ class Storage:
         self.audit(
             "location_save",
             f"location:{saved_id}",
-            {"room": room, "measurement_height_m": measurement_height, "active": bool(payload.get("active", True))},
+            {"room": room, "measurement_height_m": measurement_height, "active": active},
         )
         return self.location(saved_id) or {}
+
+    def room_roundtrip_self_test(self) -> dict[str, object]:
+        """Verify room insert/read semantics inside a rolled-back savepoint."""
+        marker = f"__radon_self_test_{int(utc_now().timestamp() * 1_000_000)}"
+        now = iso(utc_now())
+        with self._connection() as con:
+            con.execute("SAVEPOINT room_self_test")
+            try:
+                cur = con.execute(
+                    """
+                    INSERT INTO locations(name,building,floor,room_type,map_id,x_percent,y_percent,
+                        measurement_height_m,notes,active,created_at,updated_at)
+                    VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
+                    """,
+                    (marker, "", "", "", None, None, None, 1.0, "", 1, now, now),
+                )
+                row = con.execute(
+                    "SELECT name,measurement_height_m FROM locations WHERE id=?",
+                    (int(cur.lastrowid),),
+                ).fetchone()
+                ok = bool(row and row["name"] == marker and float(row["measurement_height_m"]) == 1.0)
+            finally:
+                con.execute("ROLLBACK TO room_self_test")
+                con.execute("RELEASE room_self_test")
+        return {"ok": ok, "detail": "insert/read/rollback" if ok else "roundtrip mismatch"}
 
     def location(self, location_id: int) -> dict[str, object] | None:
         with self._connection() as con:

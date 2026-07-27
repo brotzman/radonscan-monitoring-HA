@@ -13,7 +13,7 @@ VISIBLE_VIEWS = ("overview", "analysis", "sites", "history", "reports", "data", 
 
 def _state(language="de"):
     return {
-        "app": {"version": "5.3.2"},
+        "app": {"version": "5.4.0"},
         "settings": {
             "preferred_unit": "Bq/m3",
             "factor_bq_m3_per_cph": 1.54,
@@ -114,7 +114,7 @@ def _catalog():
         "locations": [{"id": 1, "name": "Keller", "room": "Keller", "building": "", "measurement_height_m": 1.1, "latest_bq_m3": 87.3, "latest_at": "2026-07-25T16:00:00+00:00", "sample_count": 24}],
         "homeassistant_location": {"connected": True, "location_name": "Home", "building_name": "Home", "address": "Linnenkamp 22, 44536 Lünen", "place_address": "Linnenkamp 22, 44536 Lünen"},
         "campaigns": [{"id": 7, "device_id": "dev-1", "active": 1, "started_at": "2026-07-24T16:00:00+00:00", "sample_count": 24}],
-        "sessions": [{"id": 11, "device_id": "dev-1", "campaign_id": 7, "location_id": 1, "started_at": "2026-07-24T16:00:00+00:00"}],
+        "sessions": [{"id": 11, "device_id": "dev-1", "campaign_id": 7, "location_id": 1, "location_name": "Keller", "title": "Kellermessung", "started_at": "2026-07-24T16:00:00+00:00", "ended_at": None, "sample_count": 24}],
         "events": [{"id": 1, "session_id": 11, "location_id": 1, "event_type": "ventilation", "occurred_at": "2026-07-25T15:00:00+00:00", "title": "Stoßlüftung", "notes": "Fenster vollständig geöffnet", "location_name": "Keller"}],
         "reports": [],
     }
@@ -134,10 +134,10 @@ def _fixture_html(locale="de") -> str:
     tr = json.loads((LOCALES / f"{locale}.json").read_text())
     locale_names = {code: code.upper() for code in LOCALE_CODES}
     html = (STATIC / "index.html").read_text()
-    html = html.replace("__LOCALE__", locale).replace("__TRANSLATIONS__", json.dumps(tr)).replace("__LOCALE_NAMES__", json.dumps(locale_names)).replace("__VERSION__", "5.3.2").replace("__ACTION_TOKEN__", "test-token")
-    html = html.replace('<link rel="stylesheet" href="assets/app.css?v=5.3.2">', "<style>" + (STATIC / "app.css").read_text() + "</style>")
-    for script in ("core.js", "accessibility.js", "data-management.js", "app.js"):
-        html = html.replace(f'<script src="assets/{script}?v=5.3.2"></script>', "<script>" + (STATIC / script).read_text() + "</script>")
+    html = html.replace("__LOCALE__", locale).replace("__TRANSLATIONS__", json.dumps(tr)).replace("__LOCALE_NAMES__", json.dumps(locale_names)).replace("__VERSION__", "5.4.0").replace("__ACTION_TOKEN__", "test-token")
+    html = html.replace('<link rel="stylesheet" href="assets/app.css?v=5.4.0">', "<style>" + (STATIC / "app.css").read_text() + "</style>")
+    for script in ("core.js", "accessibility.js", "data-management.js", "rooms-events.js", "system-diagnostics.js", "app.js"):
+        html = html.replace(f'<script src="assets/{script}?v=5.4.0"></script>', "<script>" + (STATIC / script).read_text() + "</script>")
     return html
 
 
@@ -152,6 +152,8 @@ def _payloads(language="de"):
         "api/homeassistant/purge-all": {"operation_id": "purge-test", "detected_entities": 4, "submitted_globs": 5, "authentication": "long_lived_access_token", "keep_days": 0, "server_duration_ms": 55, "entity_ids": ["sensor.radonscan"], "entity_globs": ["sensor.radon*"]},
         "api/homeassistant/verify-purge": {"operation_id": "verify-test", "verified": True, "checked_entities": 4, "remaining_rows": 0, "checked_at": "2026-07-25T16:05:00+00:00", "period_start": "2026-06-25T16:05:00+00:00", "period_end": "2026-07-25T16:05:00+00:00", "limitation": "Recorder history API verification; long-term statistics may be retained separately."},
         "api/data/summary": {"measurements": 500, "first_measurement": "2026-07-01T00:00:00+00:00", "last_measurement": "2026-07-25T16:00:00+00:00", "database_size_bytes": 1000000, "integrity": "ok", "reports": 0, "report_size_bytes": 0, "schema_version": 8},
+        "api/locations/assign": {"ok": True, "assigned": 24, "session_id": 12},
+        "api/self-test": {"ok": True, "status": "warning", "version": "5.4.0", "generated_at": "2026-07-25T16:05:00+00:00", "items": [{"id": "api", "status": "ok", "detail": "5.4.0"}, {"id": "database_integrity", "status": "ok", "detail": "ok"}, {"id": "room_persistence", "status": "ok", "detail": "insert/read/rollback"}, {"id": "device_connection", "status": "warning", "detail": "disconnected"}]},
         "api/analysis": {"statistics": {}, "thresholds": {"warning": {}, "danger": {}}, "quality_control": {}, "uncertainty": {}, "scientific_quality": {}, "autocorrelation": {}, "change_point": {}, "records": [], "daily": [], "histogram": [], "weekday_profile": [], "hourly_profile": [], "weekly_heatmap": [], "events": []},
     }
 
@@ -164,7 +166,7 @@ def _new_page(browser, width, height, locale="de", text_scale=1.0):
     html = _fixture_html(locale)
     page = browser.new_page(viewport={"width": width, "height": height})
     init_payloads = json.dumps(_payloads(locale))
-    mock_script = f"""<script>window.__TEST_PAYLOADS__={init_payloads}; window.__TEST_CALLS__=[]; window.fetch = async (url, options={{}}) => {{ window.__TEST_CALLS__.push({{url:String(url),method:options.method||'GET',body:options.body||null,headers:options.headers||{{}}}}); const found=Object.entries(window.__TEST_PAYLOADS__).find(([k])=>String(url).includes(k)); const body=found?found[1]:{{}}; return new Response(JSON.stringify(body),{{status:200,headers:{{'Content-Type':'application/json'}}}}); }};</script>"""
+    mock_script = f"""<script>window.__TEST_PAYLOADS__={init_payloads}; window.__TEST_CALLS__=[]; window.fetch = async (url, options={{}}) => {{ const requestUrl=String(url), method=options.method||'GET'; window.__TEST_CALLS__.push({{url:requestUrl,method,body:options.body||null,headers:options.headers||{{}}}}); let body=null; if(method==='POST' && requestUrl.includes('api/locations?') && !requestUrl.includes('/assign')) {{ const submitted=typeof options.body==='string'?JSON.parse(options.body):{{}}; const existing=(window.__TEST_PAYLOADS__['api/catalog'].locations||[]).find(item=>Number(item.id)===Number(submitted.id)); const item={{...(existing||{{}}),id:existing?.id||Math.max(0,...window.__TEST_PAYLOADS__['api/catalog'].locations.map(x=>Number(x.id)||0))+1,name:submitted.room,room:submitted.room,building:'',measurement_height_m:submitted.measurement_height_m,latest_bq_m3:null,latest_at:null,sample_count:0}}; const index=window.__TEST_PAYLOADS__['api/catalog'].locations.findIndex(x=>Number(x.id)===Number(item.id)); if(index>=0)window.__TEST_PAYLOADS__['api/catalog'].locations[index]=item;else window.__TEST_PAYLOADS__['api/catalog'].locations.push(item); body={{ok:true,item}}; }} if(body===null) {{ const found=Object.entries(window.__TEST_PAYLOADS__).sort((a,b)=>b[0].length-a[0].length).find(([k])=>requestUrl.includes(k)); body=found?found[1]:{{}}; }} return new Response(JSON.stringify(body),{{status:200,headers:{{'Content-Type':'application/json'}}}}); }};</script>"""
     html = html.replace("<head>", "<head>" + mock_script, 1)
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
@@ -370,7 +372,7 @@ def test_room_form_submits_only_room_and_measurement_height(shared_browser):
     page.wait_for_timeout(100)
     empty_calls = page.evaluate("window.__TEST_CALLS__.filter(call=>call.url.includes('api/locations') && call.method==='POST')")
     assert empty_calls == []
-    assert "Raum" in page.locator("#toast").inner_text()
+    assert "Raum" in page.locator("#locationRoomError").inner_text()
     page.locator("#locationRoom").fill("  Arbeitszimmer  ")
     page.locator("#locationHeight").fill("1.2")
     page.locator("#locationForm button[type=submit]").click()
@@ -379,10 +381,55 @@ def test_room_form_submits_only_room_and_measurement_height(shared_browser):
     assert len(calls) == 1
     body = json.loads(calls[0]["body"])
     assert body == {"id": None, "room": "Arbeitszimmer", "name": "Arbeitszimmer", "measurement_height_m": 1.2}
+    assert "room=Arbeitszimmer" in calls[0]["url"]
+    assert "measurement_height_m=1.2" in calls[0]["url"]
     assert calls[0]["headers"]["X-Radon-Room"] == "Arbeitszimmer"
     assert calls[0]["headers"]["X-Radon-Measurement-Height"] == "1.2"
+    assert page.locator("#locationCards").get_by_text("Arbeitszimmer").count() == 1
+    assert page.locator("#assignLocation").input_value() == "2"
+    assert page.locator("#locationRoomError").is_hidden()
     assert not errors
     page.close()
+
+def test_assignment_is_disabled_until_a_room_exists_and_errors_are_inline(shared_browser):
+    page, errors = _new_page(shared_browser, 390, 844, "de")
+    page.evaluate("window.__TEST_PAYLOADS__['api/catalog'].locations=[]")
+    page.locator("#refreshButton").click()
+    page.wait_for_timeout(350)
+    page.locator('[data-view="sites"]').evaluate("el=>el.click()")
+    assert page.evaluate("document.getElementById('assignFieldset').disabled")
+    assert page.locator("#assignEmptyNotice").is_visible()
+    page.locator("#locationRoom").fill("   ")
+    page.locator("#saveRoomButton").click()
+    assert page.locator("#locationRoomError").is_visible()
+    assert "Raum" in page.locator("#locationRoomError").inner_text()
+    assert not errors
+    page.close()
+
+
+def test_system_self_test_renders_actionable_results(shared_browser):
+    page, errors = _new_page(shared_browser, 390, 844, "de")
+    page.locator('[data-view="system"]').evaluate("el=>el.click()")
+    page.locator("#runSelfTest").click()
+    page.wait_for_timeout(250)
+    assert page.locator("#selfTestBadge").inner_text() == "Hinweis"
+    assert page.locator("#selfTestItems .self-test-item").count() == 4
+    assert "Datenbankintegrität" in page.locator("#selfTestItems").inner_text()
+    calls = page.evaluate("window.__TEST_CALLS__.filter(call=>call.url.includes('api/self-test'))")
+    assert len(calls) == 1 and calls[0]["method"] == "POST"
+    assert not errors
+    page.close()
+
+
+def test_measurement_assignments_are_visible_in_rooms_view(shared_browser):
+    page, errors = _new_page(shared_browser, 390, 844, "de")
+    page.locator('[data-view="sites"]').evaluate("el=>el.click()")
+    assert page.locator("#assignmentCount").inner_text() == "1"
+    assert page.locator("#assignmentList .assignment-item").count() == 1
+    assert "Keller" in page.locator("#assignmentList").inner_text()
+    assert not errors
+    page.close()
+
 
 def test_analysis_starts_with_summary_and_collapsed_scientific_details(shared_browser):
     page, errors = _new_page(shared_browser, 390, 844, "de")

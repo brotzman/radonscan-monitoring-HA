@@ -1,12 +1,17 @@
 # Changelog
 
-## 5.3.2 - Home Assistant Ingress request-body fix
+## 5.4.0 - Stability, guided room workflow and System self-test
 
-- Fixed room creation when Home Assistant Ingress forwards the POST request with `Transfer-Encoding: chunked` and no `Content-Length`.
-- Added standards-compliant bounded decoding for chunked request bodies.
-- Added an encoded-header fallback for room, measurement height and edit ID so an intermediary cannot silently discard the room value.
-- Added real HTTP regression tests for both chunked Ingress requests and an empty-body proxy fallback.
-- Kept the local metadata model unchanged: only room and measurement height are stored locally.
+- Reworked **Rooms & events** into a guided two-step workflow: create or edit a room first, then assign a device and time period.
+- Disabled the assignment form until at least one room exists and added clear next-step empty states.
+- Added inline validation beside room, measurement-height, assignment and event fields instead of relying only on transient toast messages.
+- Added a URL query fallback for room name, measurement height and edit ID in addition to JSON, URL-encoded and chunked request-body handling. This covers Ingress variants that forward an empty body and remove custom headers.
+- Made repeated room submissions idempotent and prevented case-insensitive duplicate room names.
+- Added visible measurement-assignment cards so saved room/device/time relationships can be verified directly.
+- Added a non-destructive **System self-test** for API availability, SQLite integrity, room insert/read/rollback, report-directory writes, RadonScan, MQTT and Home Assistant connectivity.
+- Split room/event browser logic into `rooms-events.js`, system checks into `system-diagnostics.js`, and request normalisation/self-test logic into dedicated Python modules.
+- Added `maintainer/COMPATIBILITY.md` to distinguish automated contract tests from required real-device and Home Assistant field tests.
+- Kept schema version 8 and all existing database, MQTT and Home Assistant identifiers unchanged.
 
 ## 5.3.1 - Reliable room saving
 

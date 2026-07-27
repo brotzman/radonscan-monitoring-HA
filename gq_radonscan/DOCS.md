@@ -1,4 +1,4 @@
-# Radon Monitoring 5.3.2 - App documentation
+# Radon Monitoring 5.4.0 - App documentation
 
 ## Purpose
 
@@ -16,9 +16,13 @@ The app is an orientation and documentation tool. It does not turn a consumer mo
 
 Only completed hours are imported. A newly connected device may therefore remain without a current value until a completed record is available.
 
-## Room-save reliability in 5.3.2
+## Stability and workflow changes in 5.4.0
 
-Room creation now supports both regular requests with `Content-Length` and chunked requests forwarded by Home Assistant Ingress. The HTTP server decodes chunked request bodies with strict size limits and validation. The browser also sends the room and measurement height in encoded fallback headers. This avoids the misleading “A room name is required” response when an intermediary forwards an empty body. Only room and measurement height are stored locally; place/address and building remain read-only Home Assistant metadata.
+The room workflow no longer depends on a single request representation. The browser submits canonical JSON and adds encoded query/header fallbacks. The server accepts JSON, standard URL-encoded forms and bounded chunked transfer encoding, then passes all variants through one normaliser. Repeated submissions for the same room are idempotent, duplicate room names are rejected, decimal commas are accepted for measurement height and successful responses include the persisted record.
+
+The Local metadata view guides the user through two steps. A room is created or edited first; the measurement-assignment form remains disabled until at least one room exists. Validation is shown beside the relevant field, and existing assignments are visible as cards with room, device, period and sample count.
+
+Devices & System includes a non-destructive self-test. It checks SQLite integrity, performs a room insert/read inside a rolled-back savepoint, verifies report-directory write access and reports current device, MQTT and Home Assistant connectivity. No measurement, room or report remains from the test.
 
 ## Views
 
@@ -48,11 +52,11 @@ The analysis time series includes documented events and visible gaps. Missing va
 
 This dedicated Local metadata view manages rooms, measurement campaigns, time-based device-to-room assignments and event documentation. Place/address and building/location name are shown as read-only values obtained directly from Home Assistant's general settings. They are not entered or stored a second time in the form.
 
-Only **room** and **measurement height** are added manually. Ventilation, interventions, construction work, outages and device moves can be documented without altering original measurement values. Existing database identifiers and assignment records remain compatible with older releases.
+Only **room** and **measurement height** are added manually. The form validates values inline and confirms the saved database record before enabling the assignment step. Existing time-based assignments are listed below the rooms so incorrect room/device periods can be noticed immediately. Ventilation, interventions, construction work, outages and device moves can be documented without altering original measurement values. Existing database identifiers and assignment records remain compatible with older releases.
 
 ### Devices & System
 
-Shows device, protocol, service and database status in one consolidated view. Configured thresholds and other operating parameters are shown under Settings. The former Expert view remains removed because its operational data is available here and under Settings.
+Shows device, protocol, service and database status in one consolidated view. The **System self-test** checks the web endpoint, database integrity, room persistence, report-directory access and the current RadonScan, MQTT and Home Assistant connections. A disconnected external service is a warning; a failed local integrity or persistence check is an error. Configured thresholds and other operating parameters are shown under Settings. The former Expert view remains removed because its operational data is available here and under Settings.
 
 ### GQ Radiation World Map
 
@@ -179,6 +183,6 @@ From the repository root:
 python3 -m pytest
 ```
 
-Version 5.3.2 includes tests for filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, automatic room resolution, read-only Home Assistant place/building data and separation of local rooms from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
+Version 5.4.0 includes tests for filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, automatic room resolution, read-only Home Assistant place/building data, guided room creation and assignment, inline validation, query/header/chunked Ingress fallbacks, idempotent room saves, the non-destructive System self-test, visible assignment cards, separation of local rooms from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
 
 Real-device and real-Home-Assistant field testing remains necessary for USB hardware variations, Home Assistant upgrades and Recorder backends.

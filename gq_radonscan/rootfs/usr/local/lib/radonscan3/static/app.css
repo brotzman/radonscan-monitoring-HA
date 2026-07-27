@@ -417,7 +417,7 @@ html[data-reduced-motion="true"] *,html[data-reduced-motion="true"] *::before,ht
 @media(max-width:330px){.radon-traffic-layout{grid-template-columns:1fr}.radon-traffic-signal{width:100%;min-height:58px;flex-direction:row;border-radius:19px}.radon-traffic-light{width:36px;height:36px}}
 
 
-/* Overview context, event annotations and privacy controls (5.3.2) */
+/* Overview context, event annotations and privacy controls (5.4.0) */
 .overview-filter-panel{margin-bottom:18px;background:linear-gradient(135deg,var(--surface),color-mix(in srgb,var(--surface-2) 74%,var(--surface)))}
 .overview-filter-panel .panel-heading{margin-bottom:12px}
 .overview-filter-panel .panel-heading p{max-width:70rem}
@@ -467,7 +467,7 @@ html[data-reduced-motion="true"] *,html[data-reduced-motion="true"] *::before,ht
   .event-item>*:last-child,.report-item>*:last-child{grid-column:2;grid-row:1/4;align-self:start}
 }
 
-/* Room metadata sourced from Home Assistant (5.3.2) */
+/* Room metadata sourced from Home Assistant (5.4.0) */
 .overview-filter-grid-compact{grid-template-columns:repeat(2,minmax(150px,1fr)) auto}
 .micro-grid-two{grid-template-columns:repeat(2,minmax(0,1fr))}
 .ha-location-room{margin:10px 0 0;padding-top:10px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted);overflow-wrap:anywhere}
@@ -480,7 +480,7 @@ html[data-reduced-motion="true"] *,html[data-reduced-motion="true"] *::before,ht
 @media(max-width:1050px){.overview-filter-grid-compact{grid-template-columns:repeat(2,minmax(0,1fr))}.overview-filter-grid-compact .button{grid-column:span 2}}
 @media(max-width:620px){.overview-filter-grid-compact,.ha-source-facts{grid-template-columns:1fr}.overview-filter-grid-compact .button{grid-column:auto}.micro-grid-two{grid-template-columns:1fr 1fr}}
 
-/* Rooms & events card layout (5.3.2) */
+/* Rooms & events card layout (5.4.0) */
 #view-sites .event-item{grid-template-columns:minmax(105px,.28fr) minmax(0,1fr) auto;align-items:start}
 #view-sites .event-item>div{display:grid;gap:4px;min-width:0}
 #view-sites .event-item>div strong,#view-sites .event-item>div small{display:block;line-height:1.35}
@@ -494,4 +494,49 @@ html[data-reduced-motion="true"] *,html[data-reduced-motion="true"] *::before,ht
   #view-sites .event-item{grid-template-columns:1fr}
   #view-sites .event-item>small,#view-sites .event-item>div,#view-sites .event-item>.mini-button{grid-column:1;grid-row:auto}
   #view-sites .event-item>.mini-button{justify-self:start}
+}
+
+/* Guided room workflow, inline validation and system self-test (5.4.0) */
+.workflow-grid{align-items:stretch}
+.workflow-step{position:relative;overflow:hidden}
+.workflow-step::before{content:attr(data-step);position:absolute;right:18px;top:10px;font-size:4.5rem;line-height:1;font-weight:850;color:color-mix(in srgb,var(--accent) 8%,transparent);pointer-events:none}
+.workflow-heading{display:flex;align-items:flex-start;gap:12px;margin-bottom:15px;padding-right:42px}
+.workflow-heading h3,.workflow-heading p{margin:0}
+.workflow-heading p{margin-top:4px}
+.workflow-number{display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;border-radius:50%;background:var(--accent);color:white;font-weight:850;box-shadow:0 5px 14px color-mix(in srgb,var(--accent) 24%,transparent)}
+.workflow-disabled{opacity:.78}
+.workflow-disabled .workflow-number{background:var(--muted)}
+.form-fieldset{display:grid;gap:14px;margin:0;padding:0;border:0;min-width:0}
+.form-fieldset:disabled{opacity:.62}
+.field-error{display:block;margin-top:5px;color:var(--danger);font-size:.75rem;font-weight:720;line-height:1.35;overflow-wrap:anywhere}
+input[aria-invalid="true"],select[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--danger);box-shadow:0 0 0 3px color-mix(in srgb,var(--danger) 14%,transparent)}
+.form-status{margin:2px 0 0;padding:9px 11px;border-radius:10px;font-size:.79rem;font-weight:700;line-height:1.4;background:var(--surface-2);border:1px solid var(--border);overflow-wrap:anywhere}
+.form-status.pending{border-color:color-mix(in srgb,var(--blue) 38%,var(--border))}
+.form-status.success{border-color:color-mix(in srgb,var(--success) 48%,var(--border));color:var(--success)}
+.form-status.error{border-color:color-mix(in srgb,var(--danger) 48%,var(--border));color:var(--danger)}
+.notice.info{border-color:color-mix(in srgb,var(--blue) 40%,var(--border));background:color-mix(in srgb,var(--blue) 6%,var(--surface));color:var(--text)}
+.assignment-list{display:grid;gap:10px}
+.assignment-item{display:grid;grid-template-columns:minmax(140px,.32fr) minmax(0,1fr);gap:14px;align-items:start;padding:13px 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2);min-width:0}
+.assignment-item>div{display:grid;gap:4px;min-width:0}
+.assignment-item small{color:var(--muted);line-height:1.4;overflow-wrap:anywhere}
+.assignment-item strong{line-height:1.35;overflow-wrap:anywhere}
+.self-test-panel{margin-bottom:18px}
+.self-test-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:12px 0 15px}
+.self-test-actions p{margin:0;min-width:0;overflow-wrap:anywhere}
+.self-test-list{display:grid;gap:9px}
+.self-test-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:11px;align-items:center;padding:11px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2);min-width:0}
+.self-test-item>div{display:grid;gap:3px;min-width:0}
+.self-test-item strong,.self-test-item small{overflow-wrap:anywhere}
+.self-test-item small{color:var(--muted);line-height:1.35}
+.self-test-icon{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;font-weight:850;background:var(--surface);border:1px solid var(--border)}
+.self-test-item.ok .self-test-icon{color:var(--success);border-color:color-mix(in srgb,var(--success) 45%,var(--border))}
+.self-test-item.warning .self-test-icon{color:var(--warning);border-color:color-mix(in srgb,var(--warning) 45%,var(--border))}
+.self-test-item.error .self-test-icon{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 45%,var(--border))}
+@media(max-width:620px){
+  .workflow-step::before{font-size:3.4rem;right:12px}
+  .workflow-heading{padding-right:30px}
+  .assignment-item{grid-template-columns:1fr;gap:6px}
+  .self-test-item{grid-template-columns:auto minmax(0,1fr)}
+  .self-test-item>.badge{grid-column:2;justify-self:start}
+  .self-test-actions .button{width:100%}
 }
