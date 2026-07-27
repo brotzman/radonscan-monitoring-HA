@@ -291,7 +291,7 @@
   "main_navigation": "Navigazione principale",
   "mann_kendall_tau": "Tau di Mann-Kendall",
   "manual": "Manual",
-  "manual_note_v3": "Il manuale utente corrisponde alla versione 5.5.7. Il riferimento separato del protocollo SPIR rimane alla versione 3.0.0 perché descrive il protocollo del dispositivo, non la versione dell’app.",
+  "manual_note_v3": "Il manuale utente corrisponde alla versione 5.5.8. Il riferimento separato del protocollo SPIR rimane alla versione 3.0.0 perché descrive il protocollo del dispositivo, non la versione dell’app.",
   "manual_upload": "Caricamento manuale",
   "manual_upload_hint": "Carica solo l’ultima lettura oraria locale completata. Il protocollo pubblicato non consente di inviare timestamp storici.",
   "map_click_hint": "Fare clic sulla planimetria per impostare la posizione della stanza.",

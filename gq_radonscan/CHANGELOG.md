@@ -1,13 +1,13 @@
 # Changelog
 
-## 5.5.7 - Restore stable Home Assistant MQTT discovery
+## 5.5.8 - Valid Home Assistant MQTT discovery payloads
 
-- Fix the regression where the RadonScan device disappeared from Home Assistant MQTT Discovery after the legacy-entity cleanup.
-- Publish the three requested Radon entities immediately after every MQTT connection, even when the serial device is disconnected or no measurement has been imported yet.
-- Use the stable discovery node `gq_radonscan` and stable device identifier `radon_monitoring_gq_radonscan` instead of changing discovery nodes with runtime device IDs.
-- Remove device-ID guards from the value templates so the same three entities continue receiving values after the RadonScan is detected later in the same session.
-- Remove the three desired sensors from old dynamic discovery nodes and republish them on the stable device card, preventing duplicates and orphaned cards.
-- Keep Home Assistant limited to exactly three Bq/m³ sensors: completed hourly value, 24-hour mean and 7-day mean.
+- Fixed the actual reason the RadonScan device was absent from Home Assistant: the discovery payload used the unsupported origin field `sw` instead of the schema field `sw_version`, causing Home Assistant to reject the complete discovery message.
+- Removed the optional discovery `origin` block entirely to maximise compatibility across Home Assistant releases.
+- Removed the optional `radon` device class from MQTT discovery so the three sensors also work with Home Assistant versions that predate that device class; the unit remains `Bq/m³` and `state_class` remains `measurement`.
+- Publish retained discovery, availability and state messages with MQTT QoS 1.
+- Keep one stable device identifier and exactly three entities: completed hourly value, 24-hour mean and 7-day mean.
+- Continue cleaning obsolete diagnostic entities without deleting the three current sensors on the stable node.
 - No database, serial protocol, GMCMap or statistical changes.
 
 ## 5.5.4 - Correct public GMCMap upload endpoint

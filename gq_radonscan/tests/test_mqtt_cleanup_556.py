@@ -7,8 +7,8 @@ class FakeClient:
     def __init__(self):
         self.messages = []
 
-    def publish(self, topic, payload=None, retain=False):
-        self.messages.append((topic, payload, retain))
+    def publish(self, topic, payload=None, qos=0, retain=False):
+        self.messages.append((topic, payload, qos, retain))
         return SimpleNamespace(rc=0)
 
 
@@ -51,7 +51,7 @@ def state():
 def test_cleanup_covers_device_serial_and_generic_aliases():
     item = publisher()
     item._purge_legacy_discovery(state())
-    deleted = {topic for topic, payload, retain in item.client.messages if payload == "" and retain}
+    deleted = {topic for topic, payload, qos, retain in item.client.messages if payload == "" and retain}
 
     for node in ("rs_123", "serial_456", "radonscan", "gq_radonscan", "gq_radonscan_v4"):
         assert f"homeassistant/sensor/{node}/hour_index/config" in deleted
@@ -67,7 +67,7 @@ def test_mqtt_reconnect_forces_discovery_republish():
     item._runtime = lambda *args, **kwargs: None
     item._on_connect(item.client, None, None, 0)
     assert item._discovery_device_id == "gq_radonscan"
-    configs = [topic for topic, payload, retain in item.client.messages if payload not in (None, "")]
+    configs = [topic for topic, payload, qos, retain in item.client.messages if payload not in (None, "")]
     assert "homeassistant/sensor/gq_radonscan/radon_hourly/config" in configs
 
     item._discovery_device_id = "rs_123"

@@ -8,8 +8,8 @@ class FakeClient:
     def __init__(self):
         self.messages = []
 
-    def publish(self, topic, payload=None, retain=False):
-        self.messages.append((topic, payload, retain))
+    def publish(self, topic, payload=None, qos=0, retain=False):
+        self.messages.append((topic, payload, qos, retain))
         return SimpleNamespace(rc=0)
 
 
@@ -55,8 +55,9 @@ def test_home_assistant_discovery_exposes_only_three_bq_entities():
 
     configs = {}
     deletions = set()
-    for topic, payload, retain in publisher.client.messages:
+    for topic, payload, qos, retain in publisher.client.messages:
         assert retain is True
+        assert qos == 1
         if payload == "":
             deletions.add(topic)
         else:
@@ -71,8 +72,13 @@ def test_home_assistant_discovery_exposes_only_three_bq_entities():
 
     for payload in configs.values():
         assert payload["unit_of_measurement"] == "Bq/m³"
-        assert payload["device_class"] == "radon"
         assert payload["state_class"] == "measurement"
+        # Keep discovery compatible with Home Assistant releases that predate
+        # the dedicated radon device class and stricter origin validation.
+        assert "device_class" not in payload
+        assert "origin" not in payload
+        assert payload["device"]["sw_version"]
+        assert "serial_number" not in payload["device"]
         assert "json_attributes_topic" not in payload
         assert "pci_l" not in payload["value_template"]
 
@@ -99,7 +105,7 @@ def test_discovery_is_published_without_a_connected_or_known_device():
     publisher._publish_discovery({})
     configs = {
         topic: json.loads(payload)
-        for topic, payload, retain in publisher.client.messages
+        for topic, payload, qos, retain in publisher.client.messages
         if payload not in (None, "")
     }
     assert set(configs) == {

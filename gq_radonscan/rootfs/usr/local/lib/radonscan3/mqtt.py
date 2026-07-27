@@ -45,7 +45,7 @@ class MqttPublisher:
                 self.client.username_pw_set(self.username, self.password)
             self.client.on_connect = self._on_connect
             self.client.on_disconnect = self._on_disconnect
-            self.client.will_set(self.availability_topic, "offline", retain=True)
+            self.client.will_set(self.availability_topic, "offline", qos=1, retain=True)
 
     @property
     def state_topic(self) -> str:
@@ -74,7 +74,7 @@ class MqttPublisher:
             # reconnect. This is important after Home Assistant or Mosquitto was
             # restarted while the app process stayed alive.
             self._discovery_device_id = None
-            client.publish(self.availability_topic, "online", retain=True)
+            client.publish(self.availability_topic, "online", qos=1, retain=True)
             # Publish the three Home Assistant entities immediately. Discovery
             # must not depend on a currently connected RadonScan or on an
             # already imported measurement.
@@ -104,7 +104,7 @@ class MqttPublisher:
         if self.client is None:
             return
         try:
-            self.client.publish(self.availability_topic, "offline", retain=True)
+            self.client.publish(self.availability_topic, "offline", qos=1, retain=True)
             self.client.disconnect()
         except Exception:
             pass
@@ -153,11 +153,13 @@ class MqttPublisher:
                 self.client.publish(
                     f"{self.settings.discovery_prefix}/sensor/{node_id}/{object_id}/config",
                     "",
+                    qos=1,
                     retain=True,
                 )
                 self.client.publish(
                     f"{self.settings.discovery_prefix}/sensor/{node_id}_{object_id}/config",
                     "",
+                    qos=1,
                     retain=True,
                 )
             # Remove the three desired sensors only from historical dynamic
@@ -167,21 +169,25 @@ class MqttPublisher:
                     self.client.publish(
                         f"{self.settings.discovery_prefix}/sensor/{node_id}/{object_id}/config",
                         "",
+                        qos=1,
                         retain=True,
                     )
                     self.client.publish(
                         f"{self.settings.discovery_prefix}/sensor/{node_id}_{object_id}/config",
                         "",
+                        qos=1,
                         retain=True,
                     )
             self.client.publish(
                 f"{self.settings.discovery_prefix}/binary_sensor/{node_id}/connected/config",
                 "",
+                qos=1,
                 retain=True,
             )
             self.client.publish(
                 f"{self.settings.discovery_prefix}/binary_sensor/{node_id}_connected/config",
                 "",
+                qos=1,
                 retain=True,
             )
 
@@ -200,7 +206,6 @@ class MqttPublisher:
             "manufacturer": "GQ Electronics",
             "model": device_state.get("model") or "RadonScan",
             "sw_version": __version__,
-            "serial_number": device_state.get("serial_number"),
         }
         base = {
             "state_topic": self.state_topic,
@@ -208,7 +213,6 @@ class MqttPublisher:
             "payload_available": "online",
             "payload_not_available": "offline",
             "device": {k: v for k, v in device.items() if v},
-            "origin": {"name": "Radon Monitoring", "sw": __version__},
         }
 
         # Home Assistant intentionally exposes only the three user-facing radon
@@ -221,7 +225,6 @@ class MqttPublisher:
                 "name": t["hourly_value"],
                 "value_template": "{{ value_json.measurement.bq_m3 }}",
                 "unit_of_measurement": unit,
-                "device_class": "radon",
                 "state_class": "measurement",
                 "icon": "mdi:radioactive",
                 "suggested_display_precision": precision,
@@ -230,7 +233,6 @@ class MqttPublisher:
                 "name": t["average_24h"],
                 "value_template": "{{ value_json.statistics['24h']['mean_bq_m3'] }}",
                 "unit_of_measurement": unit,
-                "device_class": "radon",
                 "state_class": "measurement",
                 "icon": "mdi:clock-outline",
                 "suggested_display_precision": precision,
@@ -239,7 +241,6 @@ class MqttPublisher:
                 "name": t["average_7d"],
                 "value_template": "{{ value_json.statistics['7d']['mean_bq_m3'] }}",
                 "unit_of_measurement": unit,
-                "device_class": "radon",
                 "state_class": "measurement",
                 "icon": "mdi:calendar-week",
                 "suggested_display_precision": precision,
@@ -254,7 +255,7 @@ class MqttPublisher:
                 "unique_id": f"radon_monitoring_{device_id}_{object_id}",
             }
             topic = f"{self.settings.discovery_prefix}/sensor/{device_id}/{object_id}/config"
-            result = self.client.publish(topic, json.dumps(payload, ensure_ascii=False), retain=True)
+            result = self.client.publish(topic, json.dumps(payload, ensure_ascii=False), qos=1, retain=True)
             if getattr(result, "rc", 0) != 0:
                 LOGGER.warning("MQTT discovery publish failed for %s: rc=%s", topic, getattr(result, "rc", None))
 
@@ -265,6 +266,6 @@ class MqttPublisher:
         if self.client is None or not self.connected.is_set():
             return
         self._publish_discovery(state)
-        result = self.client.publish(self.state_topic, json.dumps(state, ensure_ascii=False, default=str), retain=True)
+        result = self.client.publish(self.state_topic, json.dumps(state, ensure_ascii=False, default=str), qos=1, retain=True)
         if getattr(result, "rc", 0) != 0:
             LOGGER.warning("MQTT state publish failed: rc=%s", getattr(result, "rc", None))
