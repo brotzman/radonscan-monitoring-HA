@@ -1,13 +1,13 @@
 # Changelog
 
-## 5.5.5 - Minimal Home Assistant entity set in Bq/m³
+## 5.5.6 - Reliable removal of legacy Home Assistant diagnostics
 
-- Reduced MQTT discovery to exactly three Home Assistant sensor entities: completed hourly Radon value, 24-hour mean and 7-day mean.
-- Forced all three Home Assistant entities to use `Bq/m³`, independently of the display unit selected inside the Radon Monitoring web interface.
-- Removed the 30-day mean, raw counts per hour, hour index, last-update timestamp, sample count and connectivity binary sensor from Home Assistant discovery.
-- Publish retained empty discovery payloads for the removed entities so Home Assistant deletes the obsolete MQTT entities automatically after the first successful MQTT connection following the upgrade.
-- Removed the full JSON state as attributes from the hourly Radon entity, leaving only the requested measurement state.
-- No database schema, measurement storage or application-view changes.
+- Keep the Home Assistant MQTT model limited to exactly three Bq/m³ sensors: completed hourly Radon value, 24-hour mean and 7-day mean.
+- Fix legacy MQTT cleanup so obsolete diagnostics are purged not only for the current device ID but also for serial-number, generic and historical discovery-node aliases.
+- Remove retained discovery configurations for Connected, Hour index, Last update, Raw CPH, Stored hours, 30-day mean and known legacy topic layouts.
+- Replay MQTT discovery and cleanup after every broker reconnect, including Home Assistant or Mosquitto restarts while the app remains running.
+- Keep the three current sensors outside the Diagnostic entity category and without internal JSON attributes.
+- No database schema, measurement storage, serial, GMCMap or statistical changes.
 
 ## 5.5.4 - Correct public GMCMap upload endpoint
 

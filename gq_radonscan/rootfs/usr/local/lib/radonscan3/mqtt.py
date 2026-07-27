@@ -69,6 +69,10 @@ class MqttPublisher:
         success = reason_code == 0 or str(reason_code).lower() == "success"
         if success:
             self.connected.set()
+            # Force discovery and legacy cleanup to be replayed after every MQTT
+            # reconnect. This is important after Home Assistant or Mosquitto was
+            # restarted while the app process stayed alive.
+            self._discovery_device_id = None
             client.publish(self.availability_topic, "online", retain=True)
             self._runtime(True)
             LOGGER.info("Connected to MQTT broker %s:%s", self.host, self.port)
@@ -77,6 +81,7 @@ class MqttPublisher:
 
     def _on_disconnect(self, client, userdata, *args) -> None:
         self.connected.clear()
+        self._discovery_device_id = None
         self._runtime(False, "disconnected")
 
     def start(self) -> None:
@@ -100,6 +105,64 @@ class MqttPublisher:
             pass
         finally:
             self.client.loop_stop()
+
+    def _legacy_discovery_node_ids(self, state: dict[str, Any]) -> tuple[str, ...]:
+        """Return all node identifiers used by current or historical releases.
+
+        Earlier releases built MQTT discovery topics from the detected device
+        identifier. When a device was temporarily unavailable, a generic node
+        identifier could be used instead. Purging all known aliases prevents
+        old diagnostic entities from surviving an upgrade as retained MQTT
+        discovery messages.
+        """
+        device = state.get("device") or {}
+        candidates = {
+            str(device.get("device_id") or ""),
+            str(device.get("serial_number") or ""),
+            str(self.settings.device_name or ""),
+            "radonscan",
+            "gq_radonscan",
+            "gq_radonscan_v4",
+        }
+        return tuple(sorted({slug(value) for value in candidates if value.strip()}))
+
+    def _purge_legacy_discovery(self, state: dict[str, Any]) -> None:
+        if self.client is None:
+            return
+        obsolete_sensor_ids = (
+            "average_30d",
+            "hour_index",
+            "raw_cph",
+            "last_update",
+            "sample_count",
+            "stored_hours",
+        )
+        for node_id in self._legacy_discovery_node_ids(state):
+            for object_id in obsolete_sensor_ids:
+                # Component discovery layout used by all released 4.x/5.x
+                # versions of this app.
+                self.client.publish(
+                    f"{self.settings.discovery_prefix}/sensor/{node_id}/{object_id}/config",
+                    "",
+                    retain=True,
+                )
+                # Also remove the older single-object layout if a development
+                # build or manual migration used it.
+                self.client.publish(
+                    f"{self.settings.discovery_prefix}/sensor/{node_id}_{object_id}/config",
+                    "",
+                    retain=True,
+                )
+            self.client.publish(
+                f"{self.settings.discovery_prefix}/binary_sensor/{node_id}/connected/config",
+                "",
+                retain=True,
+            )
+            self.client.publish(
+                f"{self.settings.discovery_prefix}/binary_sensor/{node_id}_connected/config",
+                "",
+                retain=True,
+            )
 
     def _publish_discovery(self, state: dict[str, Any]) -> None:
         if self.client is None:
@@ -168,24 +231,11 @@ class MqttPublisher:
             },
         }
 
-        # Delete retained MQTT discovery configurations from older releases so
-        # Home Assistant removes the obsolete entities automatically after the
-        # first successful MQTT connection following an upgrade.
-        obsolete_sensor_ids = (
-            "average_30d",
-            "hour_index",
-            "raw_cph",
-            "last_update",
-            "sample_count",
-        )
-        for object_id in obsolete_sensor_ids:
-            topic = f"{self.settings.discovery_prefix}/sensor/{device_id}/{object_id}/config"
-            self.client.publish(topic, "", retain=True)
-        self.client.publish(
-            f"{self.settings.discovery_prefix}/binary_sensor/{device_id}/connected/config",
-            "",
-            retain=True,
-        )
+        # Purge all known legacy discovery aliases before publishing the three
+        # current radon entities. Home Assistant removes a discovered component
+        # when its retained discovery configuration is replaced by an empty
+        # retained payload.
+        self._purge_legacy_discovery(state)
         for object_id, extra in sensors.items():
             payload = {
                 **base,

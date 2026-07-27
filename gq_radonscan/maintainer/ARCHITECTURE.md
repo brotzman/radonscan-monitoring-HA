@@ -1,4 +1,4 @@
-# Architecture - Radon Monitoring 5.5.5
+# Architecture - Radon Monitoring 5.5.6
 
 ## Runtime layers
 
