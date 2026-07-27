@@ -1,8 +1,8 @@
-# Radon Monitoring Home Assistant Repository 5.5.9
+# Radon Monitoring Home Assistant Repository 5.5.10
 
 This repository contains the Home Assistant app **Radon Monitoring** for compatible GQ RadonScan devices.
 
-Version 5.5.9 corrects the relationship between device-read time and measurement time. New hourly records are timestamped from the previous stored hour index, so a delayed poll no longer appears as the completion time of the measurement. Existing irregular timestamps are repaired once during the upgrade.
+Version 5.5.10 is a display-precision refinement. Bq/m³ values are shown with two visible decimal places throughout the app, and the three Home Assistant MQTT sensors now request two-decimal display precision. Stored values and calculations retain their existing higher precision.
 
 A newly appearing zero-count hour is now confirmed by a second successful device read before it is stored. Confirmed zeroes remain valid measurements and continue to contribute to the 24-hour and 7-day averages. The interface separately displays the last device read, the last completed measurement and the time for which the hour index has remained unchanged.
 
