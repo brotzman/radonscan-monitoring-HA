@@ -11,7 +11,7 @@ from reportlab.platypus import (
     Paragraph, Spacer, Table, TableStyle,
 )
 
-VERSION = "5.4.0"
+VERSION = "5.5.0"
 ORANGE = colors.HexColor("#F47B20")
 DARK = colors.HexColor("#172033")
 MUTED = colors.HexColor("#667085")
@@ -38,7 +38,7 @@ CONTENT = {
 ]),
 ("2. Installation, Upgrade und erster Start", [
 "Verbinden Sie das RadonScan Gerät per USB, stellen Sie MQTT für Home Assistant bereit und starten Sie die App. Für die automatische Erkennung kann serial_port leer beziehungsweise auf auto bleiben. Für eine feste Zuordnung ist ein Pfad unter /dev/serial/by-id/ vorzuziehen.",
-"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.4.0 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
+"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.5.0 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
 "Nur abgeschlossene Stunden werden übernommen. Nach dem ersten Anschließen kann deshalb zunächst noch kein aktueller Messwert verfügbar sein."
 ]),
 ("3. Übersicht", [
@@ -84,7 +84,7 @@ CONTENT = {
 ("10. Bedienung, Mobilansicht und Barrierefreiheit", [
 "Die Seitenleiste wird auf kleinen Bildschirmen als Menü eingeblendet. Tabellen und Wochen-Heatmap bleiben innerhalb ihrer Kachel horizontal scrollbar; die restliche Seite darf keinen horizontalen Überstand erzeugen.",
 "Die Oberfläche unterstützt Tastaturbedienung, sichtbare Fokusmarkierungen, einen Sprunglink zum Hauptinhalt, Escape zum Schließen des Menüs, reduzierte Animationen und Schriftvergrößerung bis 200 Prozent.",
-"Version 5.4.0 wurde in Chromium bei 320, 390, 768 und 1440 Pixeln, in allen acht Sprachen und mit langen Testbezeichnungen geprüft."
+"Version 5.5.0 wurde in Chromium bei 320, 390, 768 und 1440 Pixeln, in allen acht Sprachen und mit langen Testbezeichnungen geprüft."
 ]),
 ("11. Fehlerbehebung", [
 "Kein Gerät: USB-Zuordnung, Berechtigungen, konfigurierten Port und konkurrierende Prozesse prüfen.",
@@ -98,8 +98,8 @@ CONTENT = {
 "Messwerte und Metadaten bleiben standardmäßig lokal. Nur aktivierte externe Funktionen übertragen Daten. Die Standortkachel liest ihre Angaben ausschließlich über die lokale Home-Assistant-Core-API und verwendet keinen externen Geokodierungsdienst. Mit location_display_mode kann die Anzeige vollständig, reduziert oder ausgeblendet erfolgen. Prüfen Sie vor Bildschirmfotos, Berichten und World-Map-Uploads, ob die sichtbaren Standortangaben Ihren Datenschutzanforderungen entsprechen.",
 "Bewahren Sie Backups und Berichte geschützt auf. Sie können Gerätekennungen, Räume, Zeiträume und Gebäudedaten enthalten."
 ]),
-("13. Neu in Version 5.4.0", [
-"Version 5.4.0 ist ein Stabilitäts- und Wartbarkeitsrelease. Der Raum-Workflow wurde mit zentraler Eingabevalidierung, idempotentem Speichern, Unterstützung für Dezimalkommas sowie JSON-, Formular-, Query- und Header-Verarbeitung für Home Assistant Ingress abgesichert. Räume müssen nun vor einer Messzuordnung angelegt werden; Validierungsfehler stehen direkt am Feld, und vorhandene Zuordnungen sind sichtbar. Ein nicht destruktiver System-Selbsttest prüft die wichtigsten lokalen Komponenten. Die neuen Module room_metadata.py, diagnostics.py, rooms-events.js und system-diagnostics.js trennen diese Funktionen aus den zuvor sehr großen Kernmodulen. Eine Kompatibilitätsmatrix unterscheidet automatisiert geprüfte Eigenschaften klar von noch erforderlichen Feldtests. Bestehende Datenbanken und Messwerte bleiben kompatibel."
+("13. Neu in Version 5.5.0", [
+"Version 5.5.0 ist ein Stabilitäts- und Wartbarkeitsrelease. Der Raum-Workflow wurde mit zentraler Eingabevalidierung, idempotentem Speichern, Unterstützung für Dezimalkommas sowie JSON-, Formular-, Query- und Header-Verarbeitung für Home Assistant Ingress abgesichert. Räume müssen nun vor einer Messzuordnung angelegt werden; Validierungsfehler stehen direkt am Feld, und vorhandene Zuordnungen sind sichtbar. Ein nicht destruktiver System-Selbsttest prüft die wichtigsten lokalen Komponenten. Die neuen Module room_metadata.py, diagnostics.py, rooms-events.js und system-diagnostics.js trennen diese Funktionen aus den zuvor sehr großen Kernmodulen. Eine Kompatibilitätsmatrix unterscheidet automatisiert geprüfte Eigenschaften klar von noch erforderlichen Feldtests. Bestehende Datenbanken und Messwerte bleiben kompatibel."
 ])
 ],
 "options": [
@@ -128,7 +128,7 @@ CONTENT = {
 ]),
 ("2. Installation, upgrade and first start", [
 "Connect the RadonScan by USB, make MQTT available to Home Assistant and start the app. Leave serial_port empty or set to auto for discovery. For a stable fixed assignment, prefer a path under /dev/serial/by-id/.",
-"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.4.0. If an old Ingress view remains open, close the panel and reopen it.",
+"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.5.0. If an old Ingress view remains open, close the panel and reopen it.",
 "Only completed hours are imported. A newly connected device can therefore remain without a current value until a complete record is available."
 ]),
 ("3. Overview", [
@@ -174,7 +174,7 @@ CONTENT = {
 ("10. Operation, mobile layout and accessibility", [
 "On small screens the sidebar opens as a menu. Tables and the weekly heatmap remain horizontally scrollable inside their own cards; the rest of the page must not create horizontal page overflow.",
 "The interface supports keyboard operation, visible focus, a skip link, Escape to close the menu, reduced motion and text scaling to 200 percent.",
-"Version 5.4.0 was checked in Chromium at 320, 390, 768 and 1440 pixels, in all eight languages and with deliberately long labels."
+"Version 5.5.0 was checked in Chromium at 320, 390, 768 and 1440 pixels, in all eight languages and with deliberately long labels."
 ]),
 ("11. Troubleshooting", [
 "No device: check USB mapping, permissions, configured port and competing processes.",
@@ -188,8 +188,8 @@ CONTENT = {
 "Measurements and metadata remain local by default. Only enabled external functions transmit data. Location, address and building name are read only through the local Home Assistant Core API and are not manually duplicated. No external geocoding service is used. location_display_mode can show full, reduced or no location details. Before screenshots, reports and World Map publication, confirm that visible location data meets your privacy requirements.",
 "Protect backups and reports because they may contain device identifiers, rooms, periods and building information."
 ]),
-("13. New in version 5.4.0", [
-"Version 5.4.0 is a stability and maintainability release. The room workflow now uses central input validation, idempotent storage, decimal-comma support and JSON, form, query and header handling for Home Assistant Ingress. Rooms must be created before a measurement assignment; validation errors appear at the relevant field and existing assignments are visible. A non-destructive System self-test checks the most important local components. New room_metadata.py, diagnostics.py, rooms-events.js and system-diagnostics.js modules separate these functions from the previously large core modules. A compatibility matrix clearly distinguishes automated verification from field testing that is still required. Existing databases and measurements remain compatible."
+("13. New in version 5.5.0", [
+"Version 5.5.0 is a stability and maintainability release. The room workflow now uses central input validation, idempotent storage, decimal-comma support and JSON, form, query and header handling for Home Assistant Ingress. Rooms must be created before a measurement assignment; validation errors appear at the relevant field and existing assignments are visible. A non-destructive System self-test checks the most important local components. New room_metadata.py, diagnostics.py, rooms-events.js and system-diagnostics.js modules separate these functions from the previously large core modules. A compatibility matrix clearly distinguishes automated verification from field testing that is still required. Existing databases and measurements remain compatible."
 ])
 ],
 "options": [

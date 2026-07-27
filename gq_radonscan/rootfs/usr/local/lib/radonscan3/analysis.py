@@ -254,6 +254,144 @@ def _autocorrelation(values: Sequence[float], max_lag: int = 24) -> list[dict[st
     return out
 
 
+
+
+def _rolling_window_summaries(points: Sequence[tuple[datetime, float]], window_hours: int) -> list[dict[str, object]]:
+    if window_hours <= 0 or len(points) < window_hours:
+        return []
+    prefix = [0.0]
+    streak: list[int] = []
+    for index, (dt, value) in enumerate(points):
+        prefix.append(prefix[-1] + value)
+        if index == 0:
+            streak.append(1)
+        else:
+            continuous = (dt - points[index - 1][0]).total_seconds() <= 5400
+            streak.append(streak[-1] + 1 if continuous else 1)
+    out: list[dict[str, object]] = []
+    for index, (dt, _) in enumerate(points):
+        if streak[index] < window_hours:
+            continue
+        total = prefix[index + 1] - prefix[index + 1 - window_hours]
+        start_dt = points[index + 1 - window_hours][0]
+        out.append({
+            "start": iso(start_dt),
+            "end": iso(dt),
+            "samples": window_hours,
+            "mean_bq_m3": total / window_hours,
+        })
+    return out
+
+
+def _rolling_window_summary(points: Sequence[tuple[datetime, float]], window_hours: int) -> dict[str, object]:
+    windows = _rolling_window_summaries(points, window_hours)
+    if not windows:
+        return {
+            "available": False,
+            "window_hours": window_hours,
+            "current_mean_bq_m3": None,
+            "current_end": None,
+            "highest_mean_bq_m3": None,
+            "highest_end": None,
+            "windows": 0,
+        }
+    highest = max(windows, key=lambda item: float(item["mean_bq_m3"]))
+    current = windows[-1]
+    return {
+        "available": True,
+        "window_hours": window_hours,
+        "current_mean_bq_m3": current["mean_bq_m3"],
+        "current_end": current["end"],
+        "highest_mean_bq_m3": highest["mean_bq_m3"],
+        "highest_end": highest["end"],
+        "windows": len(windows),
+    }
+
+
+def _sampling_interval_hours(times: Sequence[datetime]) -> float | None:
+    if len(times) < 2:
+        return None
+    intervals = [(current - previous).total_seconds() / 3600.0 for previous, current in zip(times, times[1:])]
+    return statistics.fmean(intervals) if intervals else None
+
+
+def analyse_event_impacts(
+    records: Sequence[dict[str, object]],
+    events: Sequence[dict[str, object]],
+    *,
+    lookback_hours: int = 24,
+    lookahead_hours: int = 24,
+    recovery_hours: int = 48,
+) -> dict[str, object]:
+    points: list[tuple[datetime, float]] = []
+    for row in records:
+        dt = parse_dt(row.get("completed_at"))
+        value = row.get("bq_m3")
+        if dt is None or value is None:
+            continue
+        try:
+            numeric = float(value)
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(numeric):
+            points.append((dt, numeric))
+    points.sort(key=lambda item: item[0])
+    if not points:
+        return {"available": False, "reason": "no_data", "items": []}
+    items: list[dict[str, object]] = []
+    for event in events:
+        event_dt = parse_dt(event.get("occurred_at"))
+        if event_dt is None:
+            continue
+        before = [(dt, value) for dt, value in points if dt < event_dt and (event_dt - dt).total_seconds() <= lookback_hours * 3600]
+        after = [(dt, value) for dt, value in points if dt >= event_dt and (dt - event_dt).total_seconds() <= lookahead_hours * 3600]
+        if not before or not after:
+            continue
+        baseline_dt, baseline = before[-1]
+        minimum_dt, minimum = min(after, key=lambda item: item[1])
+        drop = baseline - minimum
+        drop_percent = (drop / baseline * 100.0) if baseline else None
+        recovery_target = baseline * 0.95
+        recovery_candidates = [
+            (dt, value)
+            for dt, value in points
+            if dt >= minimum_dt and (dt - event_dt).total_seconds() <= recovery_hours * 3600 and value >= recovery_target
+        ]
+        recovery_dt = recovery_candidates[0][0] if recovery_candidates else None
+        items.append(
+            {
+                "event_type": event.get("event_type"),
+                "title": event.get("title"),
+                "occurred_at": iso(event_dt),
+                "baseline_bq_m3": baseline,
+                "baseline_at": iso(baseline_dt),
+                "minimum_bq_m3": minimum,
+                "minimum_at": iso(minimum_dt),
+                "drop_bq_m3": drop,
+                "drop_percent": drop_percent,
+                "time_to_minimum_hours": (minimum_dt - event_dt).total_seconds() / 3600.0,
+                "recovery_at": iso(recovery_dt) if recovery_dt else None,
+                "recovery_hours": (recovery_dt - event_dt).total_seconds() / 3600.0 if recovery_dt else None,
+            }
+        )
+    if not items:
+        return {"available": False, "reason": "insufficient_event_windows", "items": []}
+    drops = [item["drop_bq_m3"] for item in items if item.get("drop_bq_m3") is not None]
+    drop_percents = [item["drop_percent"] for item in items if item.get("drop_percent") is not None]
+    minima = [item["time_to_minimum_hours"] for item in items if item.get("time_to_minimum_hours") is not None]
+    recoveries = [item["recovery_hours"] for item in items if item.get("recovery_hours") is not None]
+    return {
+        "available": True,
+        "items": items,
+        "evaluated_events": len(items),
+        "average_drop_bq_m3": statistics.fmean(drops) if drops else None,
+        "average_drop_percent": statistics.fmean(drop_percents) if drop_percents else None,
+        "average_time_to_minimum_hours": statistics.fmean(minima) if minima else None,
+        "average_recovery_hours": statistics.fmean(recoveries) if recoveries else None,
+        "recovered_events": len(recoveries),
+        "first_event_at": items[0]["occurred_at"] if items else None,
+    }
+
 def _change_point(
     points: Sequence[tuple[datetime, float]],
     minimum_segment: int = 24,
@@ -529,7 +667,10 @@ def analyse_records(
     span_hours = ((actual_end - actual_start).total_seconds() / 3600.0) if actual_start and actual_end else 0.0
     sufficient = bool(values) and coverage >= minimum_coverage_percent
 
-    longest_gap, gap_start, gap_end = _longest_gap([dt for dt, _ in points])
+    times = [dt for dt, _ in points]
+    longest_gap, gap_start, gap_end = _longest_gap(times)
+    gap_count = sum(1 for previous, current in zip(times, times[1:]) if (current - previous).total_seconds() > 5400)
+    average_interval_hours = _sampling_interval_hours(times)
     daily = _daily(points, zone)
     hourly_profile, weekday_profile, heatmap = _profiles(points, zone)
     trend = _linear_trend(points)
@@ -540,6 +681,9 @@ def analyse_records(
     nighttime = [v for dt, v in local_points if not 7 <= dt.hour < 19]
     geometric_mean, geometric_sd = _geometric(values)
     iqr = (percentile(sorted_values, 0.75) - percentile(sorted_values, 0.25)) if values else None
+    rolling_24h = _rolling_window_summary(points, 24)
+    rolling_7d = _rolling_window_summary(points, 168)
+    rolling_30d = _rolling_window_summary(points, 720)
 
     uncertainty = _poisson_uncertainty(normalized, values)
     quality_flags = _quality_flags(normalized, points)
@@ -580,15 +724,26 @@ def analyse_records(
         "variance_bq_m3": statistics.variance(values) if len(values) > 1 else None,
         "p05_bq_m3": percentile(sorted_values, 0.05),
         "p25_bq_m3": percentile(sorted_values, 0.25),
+        "p50_bq_m3": percentile(sorted_values, 0.50),
         "p75_bq_m3": percentile(sorted_values, 0.75),
+        "p90_bq_m3": percentile(sorted_values, 0.90),
         "p95_bq_m3": percentile(sorted_values, 0.95),
+        "p99_bq_m3": percentile(sorted_values, 0.99),
         "range_bq_m3": (max(values) - min(values)) if values else None,
         "interquartile_range_bq_m3": iqr,
         "median_absolute_deviation_bq_m3": _median_absolute_deviation(values),
+        "coefficient_of_variation_percent": ((statistics.stdev(values) / statistics.fmean(values)) * 100.0) if len(values) > 1 and statistics.fmean(values) else None,
         "geometric_mean_bq_m3": geometric_mean,
         "geometric_standard_deviation": geometric_sd,
         "theil_sen_slope_bq_m3_per_day": _theil_sen(points),
         "last_bq_m3": values[-1] if values else None,
+        "rolling_24h_mean_bq_m3": rolling_24h["current_mean_bq_m3"],
+        "rolling_24h_highest_mean_bq_m3": rolling_24h["highest_mean_bq_m3"],
+        "rolling_24h_highest_end": rolling_24h["highest_end"],
+        "rolling_7d_mean_bq_m3": rolling_7d["current_mean_bq_m3"],
+        "rolling_30d_mean_bq_m3": rolling_30d["current_mean_bq_m3"],
+        "gap_count": gap_count,
+        "average_interval_hours": average_interval_hours,
         "longest_gap_hours": longest_gap,
         "longest_gap_start": gap_start,
         "longest_gap_end": gap_end,

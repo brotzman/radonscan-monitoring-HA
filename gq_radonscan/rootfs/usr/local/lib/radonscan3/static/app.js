@@ -369,32 +369,131 @@
     return `${tr('analysis_summary_result')} ${tr(trendKey)} ${tr('analysis_summary_warning')} ${fmtNumber(thresholds.warning?.percent||0,1)} %. ${tr('analysis_summary_danger')} ${fmtNumber(thresholds.danger?.percent||0,1)} %. ${tr('analysis_summary_coverage')} ${fmtNumber(statistics.coverage_percent||0,1)} %.`;
   }
 
+  function deltaText(value, unitLabel='') {
+    if(value===null||value===undefined||!Number.isFinite(Number(value))) return '–';
+    const numeric=Number(value);
+    const sign=numeric>0?'+':'';
+    return `${sign}${fmtNumber(numeric,1)}${unitLabel?` ${unitLabel}`:''}`;
+  }
+
+  function deltaPairText(absolute, relative, unitLabel='') {
+    if(absolute===null||absolute===undefined||!Number.isFinite(Number(absolute))) return '–';
+    const rel=relative===null||relative===undefined||!Number.isFinite(Number(relative))?'':` · ${deltaText(relative,'%')}`;
+    return `${deltaText(absolute,unitLabel)}${rel}`;
+  }
+
+  function runSummary(run) {
+    if(!run) return '–';
+    return `${fmtInteger(run.events||0)} · ${tr('longest')}: ${fmtInteger(run.longest_hours||0)} h`;
+  }
+
+  function eventPhaseSummary(events) {
+    if(!events||!Number.isFinite(Number(events.event_count))) return '–';
+    const avg=events.event_count?`${fmtNumber((events.events||[]).reduce((sum,item)=>sum+Number(item.duration_hours||0),0)/Math.max(1,events.event_count),1)} h`:'–';
+    return `${fmtInteger(events.event_count||0)} · ${tr('average_duration')}: ${avg}`;
+  }
+
   function renderAnalysis() {
-    if(!analysisData)return;const s=analysisData.statistics||{},thresholds=analysisData.thresholds||{};
+    if(!analysisData)return;
+    const s=analysisData.statistics||{},thresholds=analysisData.thresholds||{};
     $('analysisSummaryText').textContent=analysisNarrative(s,thresholds);
-    $('analysisMean').textContent=radon(s.mean_bq_m3);$('analysisCoverage').textContent=`${tr('coverage')}: ${fmtNumber(s.coverage_percent,1)} %`;
-    $('analysisMedian').textContent=radon(s.median_bq_m3);$('analysisSamples').textContent=`${fmtInteger(s.samples)} / ${fmtInteger(s.expected_samples)} ${tr('samples')}`;
-    $('analysisP95').textContent=radon(s.p95_bq_m3);$('analysisStddev').textContent=`σ ${radon(s.standard_deviation_bq_m3)}`;
-    $('analysisTrend').textContent=s.slope_bq_m3_per_day===null?'–':`${fmtNumber(s.slope_bq_m3_per_day,2)} ${unit()}/${tr('day_short')}`;$('analysisR2').textContent=`R² ${fmtNumber(s.r_squared,2)}`;
-    $('analysisWarning').textContent=`${fmtNumber(thresholds.warning?.percent||0,1)} %`;$('analysisWarningRun').textContent=`${tr('longest')}: ${fmtInteger(thresholds.warning?.longest_hours||0)} h`;
-    $('analysisDanger').textContent=`${fmtNumber(thresholds.danger?.percent||0,1)} %`;$('analysisDangerRun').textContent=`${tr('longest')}: ${fmtInteger(thresholds.danger?.longest_hours||0)} h`;
+    const notice=$('analysisNotice');
+    notice.className=`notice ${s.sufficient?'hidden':'warning'}`;
+    notice.textContent=s.samples?`${tr('analysis_limited')}: ${fmtNumber(s.coverage_percent,1)} %`:tr('no_data');
+    $('analysisPeriodLabel').textContent=`${fmtDate(s.period_start)} – ${fmtDate(s.period_end)}`;
+
+    const te=analysisData.threshold_events||{},we=te.warning||{},de=te.danger||{};
+    const comparison=analysisData.comparison_previous||{};
+    const eventImpacts=analysisData.event_impacts||{};
     const u=analysisData.uncertainty||{},qc=analysisData.quality_control||{},cp=analysisData.change_point||{};
-    $('analysisScienceClass').textContent=s.scientific_quality_class||'–';$('analysisQcStatus').textContent=tr(qc.status==='clean'?'quality_control_clean':'quality_control_review');
     const ess=analysisData.effective_sample_size||{},ci=analysisData.confidence_intervals?.mean||{},mk=analysisData.mann_kendall||{};
-    $('analysisEffectiveN').textContent=ess.available?fmtNumber(ess.n_effective,1):'–';$('analysisCorrelation').textContent=ess.available?`${tr('from_observed')} ${fmtInteger(ess.n_observed)} · ${fmtInteger(ess.correlation_hours)} h` : tr('not_calculable');
+
+    $('analysisConcentrationFacts').innerHTML=[
+      fact(tr('mean'),radon(s.mean_bq_m3)),
+      fact(tr('median'),radon(s.median_bq_m3)),
+      fact(tr('current_24h_mean'),radon(s.rolling_24h_mean_bq_m3)),
+      fact(tr('highest_24h_mean'),radon(s.rolling_24h_highest_mean_bq_m3)),
+      fact(tr('highest_24h_mean_time'),s.rolling_24h_highest_end?fmtDate(s.rolling_24h_highest_end):'–'),
+      fact(tr('current_7d_mean'),radon(s.rolling_7d_mean_bq_m3)),
+      fact(tr('current_30d_mean'),radon(s.rolling_30d_mean_bq_m3)),
+      fact(tr('maximum'),radon(s.maximum_bq_m3)),
+    ].join('');
+
+    $('analysisThresholdFacts').innerHTML=[
+      fact(tr('above_warning'),`${fmtNumber(thresholds.warning?.percent||0,1)} %`),
+      fact(tr('warning_phases'),runSummary(thresholds.warning)),
+      fact(tr('warning_phase_details'),eventPhaseSummary(we)),
+      fact(tr('above_danger'),`${fmtNumber(thresholds.danger?.percent||0,1)} %`),
+      fact(tr('danger_phases'),runSummary(thresholds.danger)),
+      fact(tr('danger_phase_details'),eventPhaseSummary(de)),
+      fact(tr('warning_excess_area'),`${fmtNumber(we.total_excess_area_bq_h_m3||0,1)} Bq·h/m³`),
+      fact(tr('danger_excess_area'),`${fmtNumber(de.total_excess_area_bq_h_m3||0,1)} Bq·h/m³`),
+    ].join('');
+
+    $('analysisDistributionFacts').innerHTML=[
+      fact(tr('p50'),radon(s.p50_bq_m3)),
+      fact(tr('p90'),radon(s.p90_bq_m3)),
+      fact(tr('p95'),radon(s.p95_bq_m3)),
+      fact(tr('p99'),radon(s.p99_bq_m3)),
+      fact(tr('interquartile_range'),radon(s.interquartile_range_bq_m3)),
+      fact(tr('median_absolute_deviation'),radon(s.median_absolute_deviation_bq_m3)),
+      fact(tr('standard_deviation'),radon(s.standard_deviation_bq_m3)),
+      fact(tr('coefficient_of_variation'),s.coefficient_of_variation_percent===null?'–':`${fmtNumber(s.coefficient_of_variation_percent,1)} %`),
+    ].join('');
+
+    $('analysisTrendFacts').innerHTML=[
+      fact(tr('trend'),s.slope_bq_m3_per_day===null?'–':`${fmtNumber(s.slope_bq_m3_per_day,2)} ${unit()}/${tr('day_short')}`),
+      fact(tr('trend_quality_r2'),`R² ${fmtNumber(s.r_squared,2)}`),
+      fact(tr('mean_change_previous_period'),deltaPairText(comparison.delta_mean_bq_m3,comparison.delta_mean_percent,unit())),
+      fact(tr('median_change_previous_period'),deltaPairText(comparison.delta_median_bq_m3,comparison.delta_median_percent,unit())),
+      fact(tr('p95_change_previous_period'),deltaPairText(comparison.delta_p95_bq_m3,comparison.delta_p95_percent,unit())),
+      fact(tr('warning_change_previous_period'),deltaPairText(comparison.delta_warning_percent_points,comparison.delta_warning_percent,'% pts')),
+      fact(tr('danger_change_previous_period'),deltaPairText(comparison.delta_danger_percent_points,comparison.delta_danger_percent,'% pts')),
+      fact(tr('comparison_period'),comparison.available?`${fmtDate(comparison.period_start)} – ${fmtDate(comparison.period_end)}`:tr('not_available')),
+    ].join('');
+
+    $('analysisQualityFacts').innerHTML=[
+      fact(tr('quality'),tr(`quality_${s.quality}`)),
+      fact(tr('coverage'),`${fmtNumber(s.coverage_percent,1)} %`),
+      fact(tr('samples'),`${fmtInteger(s.samples)} / ${fmtInteger(s.expected_samples)}`),
+      fact(tr('missing_samples'),fmtInteger(s.missing_samples)),
+      fact(tr('data_gaps'),fmtInteger(s.gap_count||0)),
+      fact(tr('longest_gap'),`${fmtNumber(s.longest_gap_hours,1)} h`),
+      fact(tr('longest_gap_range'),s.longest_gap_start&&s.longest_gap_end?`${fmtDate(s.longest_gap_start)} – ${fmtDate(s.longest_gap_end)}`:'–'),
+      fact(tr('average_interval'),s.average_interval_hours===null?'–':`${fmtNumber(s.average_interval_hours,2)} h`),
+      fact(tr('data_span'),`${fmtNumber(s.data_span_hours,1)} h`),
+      fact(tr('exposure_index'),`${fmtNumber(s.exposure_index_bq_h_m3,1)} Bq·h/m³`),
+    ].join('');
+
+    $('analysisEventImpactFacts').innerHTML=[
+      fact(tr('evaluated_events'),fmtInteger(eventImpacts.evaluated_events||0)),
+      fact(tr('average_drop'),radon(eventImpacts.average_drop_bq_m3)),
+      fact(tr('average_drop_percent'),eventImpacts.average_drop_percent===null?'–':`${fmtNumber(eventImpacts.average_drop_percent,1)} %`),
+      fact(tr('time_to_minimum'),eventImpacts.average_time_to_minimum_hours===null?'–':`${fmtNumber(eventImpacts.average_time_to_minimum_hours,1)} h`),
+      fact(tr('recovery_time'),eventImpacts.average_recovery_hours===null?'–':`${fmtNumber(eventImpacts.average_recovery_hours,1)} h`),
+      fact(tr('recovered_events'),fmtInteger(eventImpacts.recovered_events||0)),
+    ].join('');
+    $('analysisEventImpactNote').textContent=eventImpacts.available?`${tr('event_impact_note')} ${eventImpacts.first_event_at?fmtDate(eventImpacts.first_event_at):''}`.trim():tr('event_impact_unavailable');
+
+    $('analysisScienceClass').textContent=s.scientific_quality_class||'–';
+    $('analysisQcStatus').textContent=tr(qc.status==='clean'?'quality_control_clean':'quality_control_review');
+    $('analysisEffectiveN').textContent=ess.available?fmtNumber(ess.n_effective,1):'–';
+    $('analysisCorrelation').textContent=ess.available?`${tr('from_observed')} ${fmtInteger(ess.n_observed)} · ${fmtInteger(ess.correlation_hours)} h` : tr('not_calculable');
     $('analysisMeanCi').textContent=ci.available?`${fmtNumber(radonValue(ci.lower),1)}–${fmtNumber(radonValue(ci.upper),1)} ${unit()}`:'–';
-    $('analysisUncertainty').textContent=u.available?`± ${radonValue(u.expanded_uncertainty_95_bq_m3).toLocaleString(locale(),{maximumFractionDigits:0})} ${unit()}`:'–';$('analysisUncertaintyNote').textContent=u.available?tr('counting_uncertainty_95'):tr('uncertainty_unavailable');
+    $('analysisUncertainty').textContent=u.available?`± ${radonValue(u.expanded_uncertainty_95_bq_m3).toLocaleString(locale(),{maximumFractionDigits:0})} ${unit()}`:'–';
+    $('analysisUncertaintyNote').textContent=u.available?tr('counting_uncertainty_95'):tr('uncertainty_unavailable');
+
     $('scientificFacts').innerHTML=[fact(tr('quality_class'),s.scientific_quality_class||'–'),fact(tr('qc_flags'),fmtInteger(qc.flagged_records||0)),fact(tr('autocorrelation_1h'),analysisData.autocorrelation?.[0]?fmtNumber(analysisData.autocorrelation[0].coefficient,2):'–'),fact(tr('candidate_change_point'),cp.available?fmtDate(cp.detected_at):tr('not_calculable')),fact(tr('change_amount'),cp.available?radon(cp.absolute_change_bq_m3):'–')].join('');
     $('scientificNotice').textContent=tr('scientific_notice');
     $('distributionFacts').innerHTML=[fact(tr('skewness'),s.skewness===null?'–':fmtNumber(s.skewness,2)),fact(tr('excess_kurtosis'),s.excess_kurtosis===null?'–':fmtNumber(s.excess_kurtosis,2)),fact(tr('mean_median_ratio'),s.mean_median_ratio===null?'–':fmtNumber(s.mean_median_ratio,2)),fact(tr('mann_kendall_tau'),mk.available?fmtNumber(mk.tau,2):'–'),fact(tr('p_value'),mk.available?fmtNumber(mk.p_value,3):'–'),fact(tr('sen_slope'),s.theil_sen_slope_bq_m3_per_day===null?'–':`${fmtNumber(s.theil_sen_slope_bq_m3_per_day,2)} ${unit()}/${tr('day_short')}`)].join('');
-    const te=analysisData.threshold_events||{},we=te.warning||{},de=te.danger||{};
     $('thresholdEventFacts').innerHTML=[fact(tr('warning_events'),fmtInteger(we.event_count||0)),fact(tr('warning_excess_area'),`${fmtNumber(we.total_excess_area_bq_h_m3||0,1)} Bq·h/m³`),fact(tr('danger_events'),fmtInteger(de.event_count||0)),fact(tr('danger_excess_area'),`${fmtNumber(de.total_excess_area_bq_h_m3||0,1)} Bq·h/m³`)].join('');
     const sens=analysisData.sensitivity||{};
     $('sensitivityFacts').innerHTML=[fact(tr('mean'),radon(sens.mean_bq_m3)),fact(tr('median'),radon(sens.median_bq_m3)),fact(tr('trimmed_mean_10'),radon(sens.trimmed_mean_10_bq_m3)),fact(tr('mean_trimmed_difference'),sens.difference_mean_vs_trimmed_percent===null?'–':`${fmtNumber(sens.difference_mean_vs_trimmed_percent,1)} %`)].join('');
-    const notice=$('analysisNotice');notice.className=`notice ${s.sufficient?'hidden':'warning'}`;notice.textContent=s.samples?`${tr('analysis_limited')}: ${fmtNumber(s.coverage_percent,1)} %`:tr('no_data');
-    $('analysisPeriodLabel').textContent=`${fmtDate(s.period_start)} – ${fmtDate(s.period_end)}`;
-    renderLineChart($('analysisChart'),analysisData.records||[],{moving:true,events:analysisData.events||[]});renderHistogram($('histogramChart'),analysisData.histogram||[]);renderHeatmap();renderProfiles();renderDaily();
-    $('analysisQualityFacts').innerHTML=[fact(tr('quality'),tr(`quality_${s.quality}`)),fact(tr('expected_samples'),fmtInteger(s.expected_samples)),fact(tr('missing_samples'),fmtInteger(s.missing_samples)),fact(tr('longest_gap'),`${fmtNumber(s.longest_gap_hours,1)} h`),fact(tr('data_span'),`${fmtNumber(s.data_span_hours,1)} h`),fact(tr('exposure_index'),`${fmtNumber(s.exposure_index_bq_h_m3,1)} Bq·h/m³`),fact(tr('weekday_mean'),radon(s.weekday_mean_bq_m3)),fact(tr('weekend_mean'),radon(s.weekend_mean_bq_m3)),fact(tr('day_mean'),radon(s.day_mean_bq_m3)),fact(tr('night_mean'),radon(s.night_mean_bq_m3))].join('');
+
+    renderLineChart($('analysisChart'),analysisData.records||[],{moving:true,events:analysisData.events||[]});
+    renderHistogram($('histogramChart'),analysisData.histogram||[]);
+    renderHeatmap();
+    renderDaily();
   }
 
   function renderHeatmap() {
@@ -402,10 +501,6 @@
     for(let h=0;h<24;h++)html+=`<div class="heatmap-hour">${h%3===0?String(h).padStart(2,'0'):''}</div>`;
     const warning=Number(state.settings.warning_threshold_bq_m3),danger=Number(state.settings.danger_threshold_bq_m3);
     heat.forEach((row,d)=>{html+=`<div class="heatmap-label">${names[d]}</div>`;row.forEach(cell=>{const v=cell.mean_bq_m3;let cls='missing';if(v!==null&&v!==undefined){cls=v>=danger?'danger':v>=warning?'warning':v>=warning*.6?'medium':'low';}html+=`<div class="heatmap-cell ${cls}" title="${escapeHtml(names[d])} ${String(cell.hour).padStart(2,'0')}:00 · ${v===null||v===undefined?tr('not_available'):radon(v)} · n=${cell.samples}">${v===null||v===undefined?'':fmtNumber(radonValue(v),0)}</div>`;});});html+='</div>';$('weeklyHeatmap').innerHTML=html;
-  }
-
-  function renderProfiles() {
-    const rows=analysisData.hourly_profile||[];const max=Math.max(...rows.map(r=>Number(r.mean_bq_m3||0)),1);$('profileBars').innerHTML=rows.map(r=>`<div class="profile-row"><span>${String(r.hour).padStart(2,'0')}:00</span><div class="profile-track"><div class="profile-fill" style="width:${Math.max(0,Number(r.mean_bq_m3||0)/max*100)}%"></div></div><span class="profile-value">${r.mean_bq_m3===null?'–':fmtNumber(radonValue(r.mean_bq_m3),0)}</span></div>`).join('');
   }
 
   function renderDaily() {

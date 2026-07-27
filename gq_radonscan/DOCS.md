@@ -1,4 +1,4 @@
-# Radon Monitoring 5.4.0 - App documentation
+# Radon Monitoring 5.5.0 - App documentation
 
 ## Purpose
 
@@ -16,7 +16,7 @@ The app is an orientation and documentation tool. It does not turn a consumer mo
 
 Only completed hours are imported. A newly connected device may therefore remain without a current value until a completed record is available.
 
-## Stability and workflow changes in 5.4.0
+## Stability and workflow changes in 5.5.0
 
 The room workflow no longer depends on a single request representation. The browser submits canonical JSON and adds encoded query/header fallbacks. The server accepts JSON, standard URL-encoded forms and bounded chunked transfer encoding, then passes all variants through one normaliser. Repeated submissions for the same room are idempotent, duplicate room names are rejected, decimal commas are accepted for measurement height and successful responses include the persisted record.
 
@@ -183,6 +183,6 @@ From the repository root:
 python3 -m pytest
 ```
 
-Version 5.4.0 includes tests for filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, automatic room resolution, read-only Home Assistant place/building data, guided room creation and assignment, inline validation, query/header/chunked Ingress fallbacks, idempotent room saves, the non-destructive System self-test, visible assignment cards, separation of local rooms from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
+Version 5.5.0 includes tests for filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, automatic room resolution, read-only Home Assistant place/building data, guided room creation and assignment, inline validation, query/header/chunked Ingress fallbacks, idempotent room saves, the non-destructive System self-test, visible assignment cards, separation of local rooms from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
 
 Real-device and real-Home-Assistant field testing remains necessary for USB hardware variations, Home Assistant upgrades and Recorder backends.

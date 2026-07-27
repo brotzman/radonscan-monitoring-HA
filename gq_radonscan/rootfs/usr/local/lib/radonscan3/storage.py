@@ -14,7 +14,7 @@ import threading
 from typing import Iterable
 import zipfile
 
-from .analysis import analyse_records, iso as analysis_iso, parse_dt, window_summary
+from .analysis import analyse_event_impacts, analyse_records, iso as analysis_iso, parse_dt, window_summary
 from .decoder import Snapshot
 from .room_metadata import RoomMetadataError, normalise_room_record
 
@@ -860,6 +860,66 @@ class Storage:
             minimum_coverage_percent=minimum_coverage_percent,
             timezone_name=timezone_name,
         )
+        current_events = self.events(start=analysis_iso(start_dt), end=analysis_iso(end_dt), location_id=location_id)
+        comparison = {"available": False}
+        if start_dt and end_dt and end_dt >= start_dt:
+            current_hours = int(((end_dt - start_dt).total_seconds() // 3600)) + 1
+            previous_end = start_dt - timedelta(hours=1)
+            previous_start = previous_end - timedelta(hours=max(0, current_hours - 1))
+            previous_records = self.history(
+                limit=100000,
+                start=analysis_iso(previous_start),
+                end=analysis_iso(previous_end),
+                location_id=location_id,
+                campaign_id=campaign_id,
+                device_id=device_id,
+                ascending=True,
+            )
+            previous_result = analyse_records(
+                previous_records,
+                start=previous_start,
+                end=previous_end,
+                warning_threshold=warning_threshold,
+                danger_threshold=danger_threshold,
+                minimum_coverage_percent=minimum_coverage_percent,
+                timezone_name=timezone_name,
+            )
+            current_stats = result.get("statistics", {})
+            previous_stats = previous_result.get("statistics", {})
+            current_thresholds = result.get("thresholds", {})
+            previous_thresholds = previous_result.get("thresholds", {})
+            if previous_stats.get("samples"):
+                def delta(cur, prev):
+                    if cur is None or prev is None:
+                        return None, None
+                    absolute = float(cur) - float(prev)
+                    relative = (absolute / float(prev) * 100.0) if float(prev) else None
+                    return absolute, relative
+                mean_abs, mean_rel = delta(current_stats.get("mean_bq_m3"), previous_stats.get("mean_bq_m3"))
+                median_abs, median_rel = delta(current_stats.get("median_bq_m3"), previous_stats.get("median_bq_m3"))
+                p95_abs, p95_rel = delta(current_stats.get("p95_bq_m3"), previous_stats.get("p95_bq_m3"))
+                warn_abs, warn_rel = delta(current_thresholds.get("warning", {}).get("percent"), previous_thresholds.get("warning", {}).get("percent"))
+                danger_abs, danger_rel = delta(current_thresholds.get("danger", {}).get("percent"), previous_thresholds.get("danger", {}).get("percent"))
+                comparison = {
+                    "available": True,
+                    "period_start": analysis_iso(previous_start),
+                    "period_end": analysis_iso(previous_end),
+                    "mean_bq_m3": previous_stats.get("mean_bq_m3"),
+                    "median_bq_m3": previous_stats.get("median_bq_m3"),
+                    "p95_bq_m3": previous_stats.get("p95_bq_m3"),
+                    "warning_percent": previous_thresholds.get("warning", {}).get("percent"),
+                    "danger_percent": previous_thresholds.get("danger", {}).get("percent"),
+                    "delta_mean_bq_m3": mean_abs,
+                    "delta_mean_percent": mean_rel,
+                    "delta_median_bq_m3": median_abs,
+                    "delta_median_percent": median_rel,
+                    "delta_p95_bq_m3": p95_abs,
+                    "delta_p95_percent": p95_rel,
+                    "delta_warning_percent_points": warn_abs,
+                    "delta_warning_percent": warn_rel,
+                    "delta_danger_percent_points": danger_abs,
+                    "delta_danger_percent": danger_rel,
+                }
         result["selection"] = {
             "start": analysis_iso(start_dt),
             "end": analysis_iso(end_dt),
@@ -869,7 +929,9 @@ class Storage:
             "device_id": device_id,
             "timezone": timezone_name,
         }
-        result["events"] = self.events(start=analysis_iso(start_dt), end=analysis_iso(end_dt), location_id=location_id)
+        result["events"] = current_events
+        result["comparison_previous"] = comparison
+        result["event_impacts"] = analyse_event_impacts(result.get("records", []), current_events)
         return result
 
     def csv_bytes(

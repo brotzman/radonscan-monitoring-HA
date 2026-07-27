@@ -1,4 +1,4 @@
-# Radon Monitoring 5.4.0
+# Radon Monitoring 5.5.0
 
 Radon Monitoring is a local Home Assistant app for read-only monitoring of compatible GQ RadonScan devices. It imports completed hourly values, stores raw and converted measurements in SQLite, publishes Home Assistant entities through MQTT, provides scientific time-series analysis, generates PDF reports and can optionally upload measurements to the GQ Radiation World Map.
 
@@ -23,9 +23,11 @@ Radon Monitoring is a local Home Assistant app for read-only monitoring of compa
 - optional complete Home Assistant Recorder purge for RadonScan entities, plus verification through the History API
 - interface and Home Assistant option translations in German, English, Spanish, French, Croatian, Italian, Dutch and Polish
 
-## Version 5.4.0
+## Version 5.5.0
 
-Version 5.4.0 concentrates on the reliability of existing workflows rather than adding another analysis view. **Rooms & events** is now explicitly ordered: first create or edit a room, then assign a device and measurement period. The second step remains disabled until a room exists. Saved assignments are shown below the room list so the user can verify room, device, period and sample count.
+Version 5.5.0 combines workflow hardening with a clearer **Analysis** view. The statistical page is now reordered into concentration level, thresholds and exceedances, distribution and variability, development and period comparison, data quality and event impact. The separate **Time patterns** tile was removed from Advanced statistics. New rolling 24-hour, 7-day and 30-day means, additional percentiles, variability metrics, previous-period comparison and exploratory event-impact estimates complement the existing scientific diagnostics.
+
+**Rooms & events** remains explicitly ordered: first create or edit a room, then assign a device and measurement period. The second step remains disabled until a room exists. Saved assignments are shown below the room list so the user can verify room, device, period and sample count.
 
 Validation messages are displayed directly below the affected field. Room names are normalised and length-checked, decimal commas are accepted for measurement height, repeated submissions update the same room, and renaming a room to an existing name is rejected. A successful save is accepted only when the server returns the stored record identifier.
 
@@ -39,13 +41,13 @@ The existing coherent Overview, 24-hour Radon traffic light, location privacy mo
 
 ## Upgrade notes
 
-The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.4.0 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
+The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.0 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
 
 Before upgrading:
 
 1. Create a Home Assistant backup and, where appropriate, an app database backup.
 2. Stop the app before replacing a local repository package.
-3. Start the updated app and confirm that the sidebar or Help view reports version 5.4.0.
+3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.0.
 4. Reopen the Ingress panel if an old iframe remains visible.
 5. Review `location_display_mode` if the Overview is shown in screenshots or shared displays.
 

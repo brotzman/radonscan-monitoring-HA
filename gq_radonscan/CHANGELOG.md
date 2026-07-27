@@ -1,7 +1,8 @@
 # Changelog
 
-## 5.4.0 - Stability, guided room workflow and System self-test
+## 5.5.0 - Analysis restructuring, guided room workflow and System self-test
 
+- Reordered the **Analysis** view into concentration level, thresholds, distribution, development, data quality and event impact sections; removed the separate **Time patterns** card from Advanced statistics and added new rolling, percentile and comparison statistics.
 - Reworked **Rooms & events** into a guided two-step workflow: create or edit a room first, then assign a device and time period.
 - Disabled the assignment form until at least one room exists and added clear next-step empty states.
 - Added inline validation beside room, measurement-height, assignment and event fields instead of relying only on transient toast messages.
