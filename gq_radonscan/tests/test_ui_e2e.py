@@ -13,7 +13,7 @@ VISIBLE_VIEWS = ("overview", "analysis", "sites", "history", "reports", "data", 
 
 def _state(language="de"):
     return {
-        "app": {"version": "5.5.9"},
+        "app": {"version": "5.5.10"},
         "settings": {
             "preferred_unit": "Bq/m3",
             "factor_bq_m3_per_cph": 1.54,
@@ -134,10 +134,10 @@ def _fixture_html(locale="de") -> str:
     tr = json.loads((LOCALES / f"{locale}.json").read_text())
     locale_names = {code: code.upper() for code in LOCALE_CODES}
     html = (STATIC / "index.html").read_text()
-    html = html.replace("__LOCALE__", locale).replace("__TRANSLATIONS__", json.dumps(tr)).replace("__LOCALE_NAMES__", json.dumps(locale_names)).replace("__VERSION__", "5.5.9").replace("__ACTION_TOKEN__", "test-token")
-    html = html.replace('<link rel="stylesheet" href="assets/app.css?v=5.5.9">', "<style>" + (STATIC / "app.css").read_text() + "</style>")
+    html = html.replace("__LOCALE__", locale).replace("__TRANSLATIONS__", json.dumps(tr)).replace("__LOCALE_NAMES__", json.dumps(locale_names)).replace("__VERSION__", "5.5.10").replace("__ACTION_TOKEN__", "test-token")
+    html = html.replace('<link rel="stylesheet" href="assets/app.css?v=5.5.10">', "<style>" + (STATIC / "app.css").read_text() + "</style>")
     for script in ("core.js", "accessibility.js", "data-management.js", "rooms-events.js", "system-diagnostics.js", "app.js"):
-        html = html.replace(f'<script src="assets/{script}?v=5.5.9"></script>', "<script>" + (STATIC / script).read_text() + "</script>")
+        html = html.replace(f'<script src="assets/{script}?v=5.5.10"></script>', "<script>" + (STATIC / script).read_text() + "</script>")
     return html
 
 
@@ -153,7 +153,7 @@ def _payloads(language="de"):
         "api/homeassistant/verify-purge": {"operation_id": "verify-test", "verified": True, "checked_entities": 4, "remaining_rows": 0, "checked_at": "2026-07-25T16:05:00+00:00", "period_start": "2026-06-25T16:05:00+00:00", "period_end": "2026-07-25T16:05:00+00:00", "limitation": "Recorder history API verification; long-term statistics may be retained separately."},
         "api/data/summary": {"measurements": 500, "first_measurement": "2026-07-01T00:00:00+00:00", "last_measurement": "2026-07-25T16:00:00+00:00", "database_size_bytes": 1000000, "integrity": "ok", "reports": 0, "report_size_bytes": 0, "schema_version": 8},
         "api/locations/assign": {"ok": True, "assigned": 24, "session_id": 12},
-        "api/self-test": {"ok": True, "status": "warning", "version": "5.5.9", "generated_at": "2026-07-25T16:05:00+00:00", "items": [{"id": "api", "status": "ok", "detail": "5.5.9"}, {"id": "database_integrity", "status": "ok", "detail": "ok"}, {"id": "room_persistence", "status": "ok", "detail": "insert/read/rollback"}, {"id": "device_connection", "status": "warning", "detail": "disconnected"}]},
+        "api/self-test": {"ok": True, "status": "warning", "version": "5.5.10", "generated_at": "2026-07-25T16:05:00+00:00", "items": [{"id": "api", "status": "ok", "detail": "5.5.10"}, {"id": "database_integrity", "status": "ok", "detail": "ok"}, {"id": "room_persistence", "status": "ok", "detail": "insert/read/rollback"}, {"id": "device_connection", "status": "warning", "detail": "disconnected"}]},
         "api/analysis": {"statistics": {}, "thresholds": {"warning": {}, "danger": {}}, "quality_control": {}, "uncertainty": {}, "scientific_quality": {}, "autocorrelation": {}, "change_point": {}, "records": [], "daily": [], "histogram": [], "weekday_profile": [], "hourly_profile": [], "weekly_heatmap": [], "events": []},
     }
 
@@ -303,9 +303,9 @@ def test_overview_renders_radon_traffic_light_from_24_hour_mean(shared_browser):
     page, errors = _new_page(shared_browser, 390, 844, "de")
     assert page.locator("#radonTrafficTitle").inner_text() == "Radonampel"
     assert page.locator("#radonTrafficStatus").inner_text() == "Unauffällig"
-    assert page.locator("#radonTrafficValue").inner_text() == "24-Stunden-Mittelwert: 80,0 Bq/m³"
+    assert page.locator("#radonTrafficValue").inner_text() == "24-Stunden-Mittelwert: 80,00 Bq/m³"
     assert page.locator("#radonTrafficBasis").inner_text() == "Bewertungsbasis: 24-Stunden-Mittelwert · Abdeckung: 100 %"
-    assert page.locator("#radonTrafficThresholds").inner_text() == "Grün: < 100,0 · Gelb: 100,0–< 300,0 · Rot: ≥ 300,0 Bq/m³"
+    assert page.locator("#radonTrafficThresholds").inner_text() == "Grün: < 100,00 · Gelb: 100,00–< 300,00 · Rot: ≥ 300,00 Bq/m³"
     assert page.locator(".radon-traffic-light.normal").evaluate('(el)=>el.classList.contains("active")')
     assert not page.locator(".radon-traffic-light.warning").evaluate('(el)=>el.classList.contains("active")')
     assert not page.locator(".radon-traffic-light.danger").evaluate('(el)=>el.classList.contains("active")')
@@ -319,7 +319,7 @@ def test_radon_traffic_light_falls_back_to_provisional_hourly_value(shared_brows
     page.evaluate("""() => {const p=window.__TEST_PAYLOADS__['api/state'].statistics['24h'];p.available=false;p.reason='period_not_reached';p.coverage_percent=54;}""")
     page.locator("#refreshButton").click()
     page.wait_for_timeout(350)
-    assert page.locator("#radonTrafficValue").inner_text() == "Aktueller Wert: 87,3 Bq/m³"
+    assert page.locator("#radonTrafficValue").inner_text() == "Aktueller Wert: 87,30 Bq/m³"
     assert page.locator("#radonTrafficBasis").inner_text() == "Bewertungsbasis: letzter abgeschlossener Stundenwert · vorläufig · Abdeckung: 54 %"
     assert not errors
     page.close()
@@ -331,7 +331,7 @@ def test_overview_context_is_persistent_filter_and_peak_replaces_overall_average
     assert page.locator("#overviewLocation").count() == 0
     assert page.locator("#homeAssistantRoom").inner_text() == "Raum: Keller · Messhöhe: 1,1 m"
     assert page.locator("#overviewCampaign").input_value() == "7"
-    assert page.locator("#peak24").inner_text() == "112,0 Bq/m³"
+    assert page.locator("#peak24").inner_text() == "112,00 Bq/m³"
     assert "25.07.2026" in page.locator("#peak24Time").inner_text()
     assert page.locator("#overviewDatabaseStatus").inner_text().startswith("24 / 500")
 
@@ -480,5 +480,17 @@ def test_device_read_and_measurement_times_are_separate(shared_browser):
     assert "Letzter abgeschlossener Messwert" in facts
     assert "Stundenindex unverändert" in protocol
     assert "Keine neue abgeschlossene Stunde" in protocol
+    assert not errors
+    page.close()
+
+
+def test_bq_values_use_two_visible_decimal_places(shared_browser):
+    page, errors = _new_page(shared_browser, 390, 844, "de")
+    assert page.locator("#currentValue").inner_text() == "87,30"
+    assert page.locator("#radonTrafficValue").inner_text().endswith("80,00 Bq/m³")
+    page.locator('[data-view="history"]').evaluate("(el)=>el.click()")
+    page.wait_for_timeout(100)
+    values = page.locator("#historyBody tr td:nth-child(2)").all_inner_texts()
+    assert values == ["75,00 Bq/m³", "112,00 Bq/m³", "87,30 Bq/m³"]
     assert not errors
     page.close()

@@ -1,17 +1,13 @@
 # Changelog
 
-## 5.5.9 - Reliable hourly timestamps and confirmed zero-count hours
+## 5.5.10 - Two-decimal Radon display
 
-- Reconstruct new measurement timestamps from the previous stored hour index instead of assigning the delayed poll time to the measurement.
-- Add a one-time migration that repairs irregular timestamps in existing campaigns from their authoritative hour-index spacing; for example, adjacent indices stored at 09:50 and 11:18 are realigned to 09:50 and 10:50.
-- Hold a newly appearing zero-count record at the current history tip until the next successful device read confirms the same index and value.
-- Preserve legitimate zero-count hours: confirmed zeroes remain in storage and in the 24-hour and 7-day means, and a pending zero is imported immediately if a newer hour index subsequently appears.
-- Distinguish logs for a newly imported hour, an unchanged already stored hour and a zero value awaiting confirmation.
-- Show the last successful device read separately from the last completed measurement in Overview and Devices & System.
-- Show how long the device hour index has remained unchanged and flag it after two hours.
-- Retain the Home Assistant MQTT Discovery compatibility fix, exactly three Bq/m³ sensors, the radon-only GMCMap upload and the fixed serial-port behaviour from previous releases.
+- Show Bq/m³ concentrations with two visible decimal places throughout the main interface, including the current value, Overview cards, Analysis facts, history tables, daily summaries, threshold labels and GMCMap history.
+- Keep pCi/L display precision at three decimal places.
+- Set Home Assistant MQTT Discovery `suggested_display_precision` to 2 for the hourly, 24-hour and 7-day Bq/m³ sensors.
+- Preserve the full stored calculation precision; this release changes presentation only and does not round database values or statistical calculations.
+- Keep all timestamp reconstruction, zero-count confirmation, MQTT compatibility, radon-only GMCMap and fixed serial-port behaviour from 5.5.9.
 - No database-schema change.
-
 
 ## 5.5.4 - Correct public GMCMap upload endpoint
 

@@ -219,7 +219,7 @@ class MqttPublisher:
         # entities requested for dashboards and history. Discovery and value
         # extraction are independent of the temporary serial connection state.
         unit = "Bq/m³"
-        precision = 1
+        precision = 2
         sensors = {
             "radon_hourly": {
                 "name": t["hourly_value"],

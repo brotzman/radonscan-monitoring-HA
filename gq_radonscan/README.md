@@ -1,4 +1,4 @@
-# Radon Monitoring 5.5.9
+# Radon Monitoring 5.5.10
 
 Radon Monitoring is a local Home Assistant app for read-only monitoring of compatible GQ RadonScan devices. It imports completed hourly values, stores raw and converted measurements in SQLite, publishes Home Assistant entities through MQTT, provides scientific time-series analysis, generates PDF reports and can optionally upload measurements to the GQ Radiation World Map.
 
@@ -24,27 +24,25 @@ Radon Monitoring is a local Home Assistant app for read-only monitoring of compa
 - optional complete Home Assistant Recorder purge for RadonScan entities, plus verification through the History API
 - interface and Home Assistant option translations in German, English, Spanish, French, Croatian, Italian, Dutch and Polish
 
-## Version 5.5.9
+## Version 5.5.10
 
-Version 5.5.9 separates the time at which the service successfully reads the RadonScan from the time represented by the latest completed hourly measurement. When the device hour index advances, the new timestamp is reconstructed from the previous stored index and its completion time. A delayed poll therefore no longer creates an irregular measurement interval.
+Version 5.5.10 increases the visible precision of Radon concentrations in the interface from one to two decimal places for Bq/m³. Values such as 3.06 and 3.14 Bq/m³ therefore no longer both appear as 3.1 Bq/m³ in cards, history tables or statistical summaries.
 
-During the first start of 5.5.9, existing campaigns are checked once. Consecutive records are aligned to the first stored timestamp plus their hour-index difference. This repairs older entries that were stored at poll time, while preserving the raw count, Bq/m³ value, factor, source and campaign.
+The change applies to the current hourly value, 24-hour and 7-day means, Overview and Analysis cards, thresholds, daily statistics, history rows and GMCMap history. pCi/L remains displayed with three decimal places.
 
-A newly appearing zero-count value at the current end of the device history is held for one additional successful read. If the same index still reports zero, the hour is stored normally and included in all averages. If a newer index appears first, the historical zero is imported together with the newer record so no legitimate zero hour is lost.
+Home Assistant MQTT Discovery now recommends two decimal places for the three exposed Bq/m³ sensors: completed hourly value, 24-hour mean and 7-day mean. Home Assistant may retain a user-defined precision override if one was previously configured on an entity.
 
-The log now distinguishes **new hour imported**, **already stored / no new completed hour** and **zero value awaiting confirmation**. Overview and Devices & System display the last successful device read separately from the last completed measurement. The duration for which the hour index has remained unchanged is shown and marked as unusually long after two hours.
-
-The MQTT compatibility correction from 5.5.8 remains included: one stable GQ RadonScan device with exactly the completed hourly value, 24-hour mean and 7-day mean in Bq/m³.
+The database continues to store calculated concentrations with its existing higher precision. Statistical calculations, comparisons and reports therefore remain based on the stored values rather than on the two-decimal presentation.
 
 ## Upgrade notes
 
-The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.9 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
+The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.10 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
 
 Before upgrading:
 
 1. Create a Home Assistant backup and, where appropriate, an app database backup.
 2. Stop the app before replacing a local repository package.
-3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.9.
+3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.10.
 4. Reopen the Ingress panel if an old iframe remains visible.
 5. Review `location_display_mode` if the Overview is shown in screenshots or shared displays.
 

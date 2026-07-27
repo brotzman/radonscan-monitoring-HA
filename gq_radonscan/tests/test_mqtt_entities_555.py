@@ -73,6 +73,7 @@ def test_home_assistant_discovery_exposes_only_three_bq_entities():
     for payload in configs.values():
         assert payload["unit_of_measurement"] == "Bq/m³"
         assert payload["state_class"] == "measurement"
+        assert payload["suggested_display_precision"] == 2
         # Keep discovery compatible with Home Assistant releases that predate
         # the dedicated radon device class and stricter origin validation.
         assert "device_class" not in payload

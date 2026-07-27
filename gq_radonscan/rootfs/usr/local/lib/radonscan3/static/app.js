@@ -16,7 +16,8 @@
 
   const unit = () => state?.settings?.preferred_unit === 'pCi/L' ? 'pCi/L' : 'Bq/m³';
   const radonValue = bq => unit()==='pCi/L' ? Number(bq)/37 : Number(bq);
-  const radon = bq => bq === null || bq === undefined ? '–' : `${fmtNumber(radonValue(bq), unit()==='pCi/L'?3:1)} ${unit()}`;
+  const radonDisplayDigits = () => unit()==='pCi/L' ? 3 : 2;
+  const radon = bq => bq === null || bq === undefined ? '–' : `${fmtNumber(radonValue(bq), radonDisplayDigits())} ${unit()}`;
   const bool = value => value ? tr('yes') : tr('no');
   const statusText = value => tr(value || 'unknown');
   const overviewStorageKeys = {
@@ -220,7 +221,7 @@
     }
 
     if(Number.isFinite(warning)&&Number.isFinite(danger)) {
-      const decimals=unit()==='pCi/L'?3:1;
+      const decimals=radonDisplayDigits();
       const threshold=value=>fmtNumber(radonValue(value),decimals);
       $('radonTrafficThresholds').textContent=`${tr('radon_traffic_green')}: < ${threshold(warning)} · ${tr('radon_traffic_yellow')}: ${threshold(warning)}–< ${threshold(danger)} · ${tr('radon_traffic_red')}: ≥ ${threshold(danger)} ${unit()}`;
     } else {
@@ -240,7 +241,7 @@
     applyFeatureVisibility();
     const connected=!!state.connection?.connected; setConnection(connected);
     const m=state.measurement||{};
-    $('currentValue').textContent=m.available?fmtNumber(unit()==='pCi/L'?m.pci_l:m.bq_m3,unit()==='pCi/L'?3:1):'–';
+    $('currentValue').textContent=m.available?fmtNumber(unit()==='pCi/L'?m.pci_l:m.bq_m3,radonDisplayDigits()):'–';
     $('currentUnit').textContent=unit(); $('currentTime').textContent=fmtDate(m.completed_at);
     $('currentAge').textContent=m.age_hours===null||m.age_hours===undefined?'':`${tr('data_age')}: ${fmtNumber(m.age_hours,1)} h`;
     $('currentRaw').textContent=m.raw_cph??'–'; $('sampleCount').textContent=fmtInteger(state.database?.sample_count||0);
@@ -610,8 +611,8 @@
       const badge=$('gmcmapStatusBadge'); badge.className=`badge ${st.enabled&&st.configured?'normal':'neutral'}`; badge.textContent=st.enabled?(st.configured?tr('ready'):tr('not_configured')):tr('disabled');
       $('gmcmapFacts').innerHTML=[fact(tr('enabled'),bool(st.enabled)),fact(tr('automatic_upload'),bool(st.auto_upload)),fact(tr('account_id'),st.account_id_masked||tr('not_configured')),fact(tr('device_id'),st.device_id_masked||tr('not_configured')),fact(tr('upload_interval'),`${st.interval_minutes||60} min`),fact(tr('pending_uploads'),st.queue?.pending_total??0),fact(tr('oldest_pending'),fmtDate(st.queue?.oldest_pending)),fact(tr('endpoint'),st.endpoint||'–'),fact(tr('gmcmap_upload_mode'),st.upload_mode==='radon_only'?tr('gmcmap_radon_only'):st.upload_mode||'–')].join('');
       $('gmcmapNotice').textContent=st.enabled&&st.configured?tr('gmcmap_ready_notice'):tr('gmcmap_setup_notice');
-      const latest=state?.measurement||{};$('gmcmapLatestValue').textContent=latest.available?`${fmtNumber(latest.bq_m3,1)} Bq/m³ · ${fmtNumber(latest.pci_l,3)} pCi/L`:tr('no_data');$('gmcmapLatestTime').textContent=fmtDate(latest.completed_at);
-      const rows=payload.uploads||[];$('gmcmapHistoryBody').innerHTML=rows.length?rows.map(r=>`<tr><td>${fmtDate(r.attempted_at)}</td><td>${fmtDate(r.measurement_at)}</td><td>${fmtNumber(r.bq_m3,1)}</td><td>${fmtNumber(r.pci_l,4)}</td><td>${escapeHtml(tr(r.trigger)||r.trigger)}</td><td><span class="badge ${r.ok?'normal':'danger'}">${r.ok?tr('successful'):tr('failed')}</span></td><td><code>${escapeHtml(r.response||'–')}</code></td></tr>`).join(''):`<tr><td colspan="7" class="empty-cell">${tr('no_uploads')}</td></tr>`;
+      const latest=state?.measurement||{};$('gmcmapLatestValue').textContent=latest.available?`${fmtNumber(latest.bq_m3,2)} Bq/m³ · ${fmtNumber(latest.pci_l,3)} pCi/L`:tr('no_data');$('gmcmapLatestTime').textContent=fmtDate(latest.completed_at);
+      const rows=payload.uploads||[];$('gmcmapHistoryBody').innerHTML=rows.length?rows.map(r=>`<tr><td>${fmtDate(r.attempted_at)}</td><td>${fmtDate(r.measurement_at)}</td><td>${fmtNumber(r.bq_m3,2)}</td><td>${fmtNumber(r.pci_l,4)}</td><td>${escapeHtml(tr(r.trigger)||r.trigger)}</td><td><span class="badge ${r.ok?'normal':'danger'}">${r.ok?tr('successful'):tr('failed')}</span></td><td><code>${escapeHtml(r.response||'–')}</code></td></tr>`).join(''):`<tr><td colspan="7" class="empty-cell">${tr('no_uploads')}</td></tr>`;
     } catch(err) {toast(err.message,true);}
   }
 
