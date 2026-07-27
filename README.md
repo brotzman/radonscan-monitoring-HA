@@ -1,10 +1,10 @@
-# Radon Monitoring Home Assistant Repository 5.5.8
+# Radon Monitoring Home Assistant Repository 5.5.9
 
 This repository contains the Home Assistant app **Radon Monitoring** for compatible GQ RadonScan devices.
 
-Version 5.5.8 fixes an invalid Home Assistant MQTT Discovery payload. The previous payload used the unsupported origin field `sw`, so Home Assistant could reject all three sensor configurations even though the app was connected to the MQTT broker. The optional origin block and optional radon device class are now omitted for broad compatibility, while retained QoS 1 discovery creates exactly the completed hourly value, 24-hour mean and 7-day mean in `Bq/m³`.
+Version 5.5.9 corrects the relationship between device-read time and measurement time. New hourly records are timestamped from the previous stored hour index, so a delayed poll no longer appears as the completion time of the measurement. Existing irregular timestamps are repaired once during the upgrade.
 
-Historical dynamic discovery nodes are cleaned up and the desired sensors are recreated on one stable device identifier, preventing both missing and duplicate RadonScan device cards.
+A newly appearing zero-count hour is now confirmed by a second successful device read before it is stored. Confirmed zeroes remain valid measurements and continue to contribute to the 24-hour and 7-day averages. The interface separately displays the last device read, the last completed measurement and the time for which the hour index has remained unchanged.
 
 The radon-only GQ World Map upload and fixed serial-port selection from earlier 5.5.x releases remain in place. `/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0` is used exclusively unless `serial_port` is explicitly set to `auto`, and unrelated Zigbee, Z-Wave and console adapters are skipped during automatic discovery.
 
