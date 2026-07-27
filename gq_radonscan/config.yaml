@@ -1,5 +1,5 @@
 name: Radon Monitoring
-version: 5.5.2
+version: 5.5.3
 slug: gq_radonscan
 description: >-
   Local monitoring for GQ RadonScan devices with read-only SPIR history,
@@ -34,7 +34,7 @@ options:
   minimum_data_coverage_percent: 95
   backfill_history: true
   history_retention_days: 1095
-  serial_port: ""
+  serial_port: /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0
   serial_timeout_seconds: 3.0
   mqtt_topic_prefix: gq_radonscan
   discovery_prefix: homeassistant

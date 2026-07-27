@@ -291,7 +291,7 @@
   "main_navigation": "Glavna navigacija",
   "mann_kendall_tau": "Mann-Kendallov tau",
   "manual": "Manual",
-  "manual_note_v3": "Korisnički priručnik odgovara verziji 5.5.2. Zasebna referenca SPIR protokola ostaje verzija 3.0.0 jer opisuje protokol uređaja, a ne izdanje aplikacije.",
+  "manual_note_v3": "Korisnički priručnik odgovara verziji 5.5.3. Zasebna referenca SPIR protokola ostaje verzija 3.0.0 jer opisuje protokol uređaja, a ne izdanje aplikacije.",
   "manual_upload": "Ručni prijenos",
   "manual_upload_hint": "Prenosi samo najnovije dovršeno lokalno satno očitanje. Objavljeni protokol ne omogućuje slanje povijesnih vremenskih oznaka.",
   "map_click_hint": "Kliknite tlocrt kako biste postavili položaj prostorije.",
@@ -612,5 +612,16 @@
   "event_impact_note": "Procijenjeno od prvog događaja u odabranom razdoblju:",
   "event_impact_unavailable": "U odabranom razdoblju nisu dostupni prozori događaja s dovoljno mjerenja prije i nakon događaja.",
   "gmcmap_upload_mode": "Način prijenosa",
-  "gmcmap_radon_only": "Samo radon"
+  "gmcmap_radon_only": "Samo radon",
+  "connection_detail": "Dijagnostika veze",
+  "checked_port": "Provjereni priključak",
+  "device_error_connected": "RadonScan je prepoznat i može se čitati.",
+  "device_error_port_busy": "Serijski priključak već koristi druga usluga.",
+  "device_error_port_not_found": "Konfigurirani serijski priključak ne postoji.",
+  "device_error_permission_denied": "Nema dopuštenja za otvaranje serijskog priključka.",
+  "device_error_no_response": "Priključak je otvoren, ali uređaj nije odgovorio na GETVER.",
+  "device_error_wrong_device": "Na ovom priključku odgovorio je drugi serijski uređaj, a ne RadonScan.",
+  "device_error_read_error": "Serijski priključak nije bilo moguće pouzdano čitati.",
+  "device_error_no_ports": "Nisu pronađeni prikladni serijski priključci.",
+  "device_error_not_detected": "Automatsko otkrivanje nije prepoznalo RadonScan."
 }

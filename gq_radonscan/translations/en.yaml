@@ -29,7 +29,7 @@ configuration:
     description: Remove local measurements from SQLite after this number of days.
   serial_port:
     name: Serial port
-    description: Leave empty for automatic detection or enter a fixed device path.
+    description: Use the fixed RadonScan path; enter auto only to deliberately enable discovery.
   serial_timeout_seconds:
     name: Serial timeout
     description: Maximum number of seconds to wait for a device reply.

@@ -28,7 +28,7 @@ configuration:
     description: Verwijdert lokale metingen uit SQLite na dit aantal dagen.
   serial_port:
     name: Seriële poort
-    description: Leeg laten voor automatische detectie of een vast apparaatpad invoeren.
+    description: Gebruik het vaste RadonScan-pad; voer auto alleen in om detectie bewust in te schakelen.
   serial_timeout_seconds:
     name: Seriële time-out
     description: Maximaal aantal seconden om op een apparaatantwoord te wachten.

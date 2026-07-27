@@ -53,6 +53,11 @@ def main() -> int:
     web.start()
     LOGGER.info("Radon Monitoring %s web interface listening on port %s", __version__, settings.web_port)
     LOGGER.info("Read-only polling interval: %s seconds", settings.scan_interval)
+    LOGGER.info(
+        "Serial mode: %s%s",
+        "fixed" if settings.serial_port and settings.serial_port.lower() not in {"auto", "automatic", "detect", "discovery"} else "automatic",
+        f" ({settings.serial_port})" if settings.serial_port and settings.serial_port.lower() not in {"auto", "automatic", "detect", "discovery"} else "",
+    )
 
     try:
         while not stop.is_set():
@@ -117,7 +122,19 @@ def main() -> int:
                                 LOGGER.debug("Could not emit Home Assistant event: %s", event_exc)
             else:
                 update_connection_runtime(storage, result)
-                LOGGER.warning("RadonScan not available: %s", result.error)
+                if result.port:
+                    LOGGER.warning(
+                        "RadonScan not available on %s [%s]: %s",
+                        result.port,
+                        result.error_code or "read_error",
+                        result.error,
+                    )
+                else:
+                    LOGGER.warning(
+                        "RadonScan not available [%s]: %s",
+                        result.error_code or "not_detected",
+                        result.error,
+                    )
 
             storage.prune(settings.history_retention_days)
             mqtt.publish(build_state(storage, settings))

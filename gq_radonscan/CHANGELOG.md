@@ -1,5 +1,16 @@
 # Changelog
 
+## 5.5.3 - Fixed RadonScan port and safer serial discovery
+
+- Treat a configured `serial_port` as exclusive instead of appending and probing every serial device on the Home Assistant host.
+- Set the installation default to `/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0` and migrate a retained empty option to that path during the upgrade.
+- Keep an explicit `auto` value automatic; automatic discovery now skips recognisable Sonoff, ITEAD, Zigbee, Z-Wave and `/dev/ttyAMA*` devices.
+- Prefer stable `/dev/serial/by-id/` aliases and de-duplicate aliases that resolve to the same physical serial port.
+- Classify disconnected states as port busy, port missing, permission denied, no response, wrong device, read error, no eligible ports or no RadonScan detected.
+- Show the checked port and translated connection diagnosis under Devices & System.
+- Replace the obsolete fixed `Starting Radon Monitoring 4.0` log line with the actual package version.
+- Keep the database schema, MQTT identifiers, measurements, analysis and Radon-only GMCMap upload unchanged.
+
 ## 5.5.2 - Radon-only GQ World Map uploads
 
 - Switched GQ World Map uploads from the generic `log2.asp` radiation endpoint to the dedicated `rdlog.asp` radon endpoint.

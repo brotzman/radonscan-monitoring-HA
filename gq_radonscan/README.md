@@ -1,4 +1,4 @@
-# Radon Monitoring 5.5.2
+# Radon Monitoring 5.5.3
 
 Radon Monitoring is a local Home Assistant app for read-only monitoring of compatible GQ RadonScan devices. It imports completed hourly values, stores raw and converted measurements in SQLite, publishes Home Assistant entities through MQTT, provides scientific time-series analysis, generates PDF reports and can optionally upload measurements to the GQ Radiation World Map.
 
@@ -23,23 +23,31 @@ Radon Monitoring is a local Home Assistant app for read-only monitoring of compa
 - optional complete Home Assistant Recorder purge for RadonScan entities, plus verification through the History API
 - interface and Home Assistant option translations in German, English, Spanish, French, Croatian, Italian, Dutch and Polish
 
-## Version 5.5.2
+## Version 5.5.3
 
-Version 5.5.2 fixes the GQ Radiation World Map protocol for pure RadonScan measurements. Uploads now use the dedicated `https://www.gmcmap.com/rdlog.asp` endpoint and submit only the account identifier (`AID`), device identifier (`GID`) and radon concentration (`pCi`).
+Version 5.5.3 fixes serial-device selection on Home Assistant systems with several USB adapters. A non-empty `serial_port` is now treated as an explicit operator choice and is used **exclusively**. For this installation the default stable path is:
 
-Earlier releases sent `CPM=0` through the generic `log2.asp` endpoint as a placeholder. GMCMap treated that field as a genuine radioactivity reading, which produced an unwanted zero-valued entry on the radioactivity map alongside the correct radon value. Version 5.5.2 explicitly omits `CPM`, `ACPM` and `uSV` and does not fall back to the generic radiation endpoint.
+```text
+/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0
+```
 
-The World Map view now shows the upload mode as **Radon only**. Existing queue records and local measurements remain compatible; only the outbound request is changed. Previously published zero-valued radioactivity entries are stored by GMCMap and are not removed by this application update.
+This prevents Radon Monitoring from sending `GETVER` to Sonoff/ITEAD Zigbee dongles, unrelated `/dev/ttyUSB*` devices or internal `/dev/ttyAMA*` interfaces. Existing installations that still store an empty port option automatically adopt the stable path during the upgrade. An explicit `auto` value remains automatic and is not overridden.
+
+Automatic discovery was also hardened. It skips recognisable Zigbee, Z-Wave and console adapters, prefers stable `/dev/serial/by-id/` aliases and removes duplicate aliases that resolve to the same physical device.
+
+Devices & System now reports the checked port and an actionable connection diagnosis: port busy, port missing, permission denied, no GETVER response, wrong serial device, general read error or no RadonScan detected. The service log uses the same error code, and the startup message now displays the actual application version rather than the obsolete fixed `4.0` label.
+
+The database schema, measurements, MQTT identifiers, Radon-only GMCMap upload and all analysis functions remain unchanged.
 
 ## Upgrade notes
 
-The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.2 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
+The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.3 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
 
 Before upgrading:
 
 1. Create a Home Assistant backup and, where appropriate, an app database backup.
 2. Stop the app before replacing a local repository package.
-3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.2.
+3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.3.
 4. Reopen the Ingress panel if an old iframe remains visible.
 5. Review `location_display_mode` if the Overview is shown in screenshots or shared displays.
 

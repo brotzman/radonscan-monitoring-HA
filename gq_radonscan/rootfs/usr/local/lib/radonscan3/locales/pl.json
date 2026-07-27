@@ -291,7 +291,7 @@
   "main_navigation": "Nawigacja główna",
   "mann_kendall_tau": "Tau Manna-Kendalla",
   "manual": "Manual",
-  "manual_note_v3": "Podręcznik użytkownika odpowiada wersji 5.5.2. Oddzielna dokumentacja protokołu SPIR pozostaje w wersji 3.0.0, ponieważ opisuje protokół urządzenia, a nie wersję aplikacji.",
+  "manual_note_v3": "Podręcznik użytkownika odpowiada wersji 5.5.3. Oddzielna dokumentacja protokołu SPIR pozostaje w wersji 3.0.0, ponieważ opisuje protokół urządzenia, a nie wersję aplikacji.",
   "manual_upload": "Przesyłanie ręczne",
   "manual_upload_hint": "Przesyła tylko najnowszy zakończony lokalny odczyt godzinowy. Opublikowany protokół nie pozwala przesyłać historycznych znaczników czasu.",
   "map_click_hint": "Kliknij plan, aby ustawić położenie pomieszczenia.",
@@ -612,5 +612,16 @@
   "event_impact_note": "Oceniono od pierwszego zdarzenia w wybranym okresie:",
   "event_impact_unavailable": "W wybranym okresie nie są dostępne okna zdarzeń z wystarczającą liczbą pomiarów przed i po zdarzeniu.",
   "gmcmap_upload_mode": "Tryb wysyłania",
-  "gmcmap_radon_only": "Tylko radon"
+  "gmcmap_radon_only": "Tylko radon",
+  "connection_detail": "Diagnostyka połączenia",
+  "checked_port": "Sprawdzony port",
+  "device_error_connected": "RadonScan został wykryty i można go odczytać.",
+  "device_error_port_busy": "Port szeregowy jest już używany przez inną usługę.",
+  "device_error_port_not_found": "Skonfigurowany port szeregowy nie istnieje.",
+  "device_error_permission_denied": "Brak uprawnień do otwarcia portu szeregowego.",
+  "device_error_no_response": "Port został otwarty, ale urządzenie nie odpowiedziało na GETVER.",
+  "device_error_wrong_device": "Na tym porcie odpowiedziało inne urządzenie szeregowe, nie RadonScan.",
+  "device_error_read_error": "Nie udało się niezawodnie odczytać portu szeregowego.",
+  "device_error_no_ports": "Nie znaleziono odpowiednich portów szeregowych.",
+  "device_error_not_detected": "Automatyczne wykrywanie nie rozpoznało urządzenia RadonScan."
 }

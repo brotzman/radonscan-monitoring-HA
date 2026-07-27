@@ -291,7 +291,7 @@
   "main_navigation": "Navigazione principale",
   "mann_kendall_tau": "Tau di Mann-Kendall",
   "manual": "Manual",
-  "manual_note_v3": "Il manuale utente corrisponde alla versione 5.5.2. Il riferimento separato del protocollo SPIR rimane alla versione 3.0.0 perché descrive il protocollo del dispositivo, non la versione dell’app.",
+  "manual_note_v3": "Il manuale utente corrisponde alla versione 5.5.3. Il riferimento separato del protocollo SPIR rimane alla versione 3.0.0 perché descrive il protocollo del dispositivo, non la versione dell’app.",
   "manual_upload": "Caricamento manuale",
   "manual_upload_hint": "Carica solo l’ultima lettura oraria locale completata. Il protocollo pubblicato non consente di inviare timestamp storici.",
   "map_click_hint": "Fare clic sulla planimetria per impostare la posizione della stanza.",
@@ -612,5 +612,16 @@
   "event_impact_note": "Valutato dal primo evento del periodo selezionato:",
   "event_impact_unavailable": "Nel periodo selezionato non sono disponibili finestre di evento con misure sufficienti prima e dopo l’evento.",
   "gmcmap_upload_mode": "Modalità di caricamento",
-  "gmcmap_radon_only": "Solo radon"
+  "gmcmap_radon_only": "Solo radon",
+  "connection_detail": "Diagnosi della connessione",
+  "checked_port": "Porta verificata",
+  "device_error_connected": "RadonScan rilevato e leggibile.",
+  "device_error_port_busy": "La porta seriale è già utilizzata da un altro servizio.",
+  "device_error_port_not_found": "La porta seriale configurata non esiste.",
+  "device_error_permission_denied": "Permesso negato per l’apertura della porta seriale.",
+  "device_error_no_response": "La porta è stata aperta, ma il dispositivo non ha risposto a GETVER.",
+  "device_error_wrong_device": "Su questa porta ha risposto un altro dispositivo seriale, non un RadonScan.",
+  "device_error_read_error": "Non è stato possibile leggere in modo affidabile la porta seriale.",
+  "device_error_no_ports": "Non sono state trovate porte seriali adatte.",
+  "device_error_not_detected": "Il rilevamento automatico non ha identificato un RadonScan."
 }

@@ -12,6 +12,7 @@ def update_connection_runtime(storage: Storage, result: ScanResult) -> dict[str,
         "last_scan": result.detected_at.isoformat(timespec="seconds"),
         "port": result.port,
         "error": None if result.connected else result.error,
+        "error_code": None if result.connected else result.error_code,
         "attempts": list(result.attempts),
     }
     storage.set_runtime("connection", payload)

@@ -291,7 +291,7 @@
   "main_navigation": "Main navigation",
   "mann_kendall_tau": "Mann–Kendall tau",
   "manual": "Manual",
-  "manual_note_v3": "The user manual matches version 5.5.2. The separate SPIR protocol reference remains version 3.0.0 because it describes the device protocol, not the app release.",
+  "manual_note_v3": "The user manual matches version 5.5.3. The separate SPIR protocol reference remains version 3.0.0 because it describes the device protocol, not the app release.",
   "manual_upload": "Manual upload",
   "manual_upload_hint": "Uploads only the latest completed local hourly reading. Historical timestamps cannot be sent by the published protocol.",
   "map_click_hint": "Click the floor plan to set the room position.",
@@ -612,5 +612,16 @@
   "event_impact_note": "Evaluated from the first event in the selected period:",
   "event_impact_unavailable": "No event windows with sufficient measurements before and after the event are available in the selected period.",
   "gmcmap_upload_mode": "Upload mode",
-  "gmcmap_radon_only": "Radon only"
+  "gmcmap_radon_only": "Radon only",
+  "connection_detail": "Connection diagnosis",
+  "checked_port": "Checked port",
+  "device_error_connected": "RadonScan detected and readable.",
+  "device_error_port_busy": "The serial port is already in use by another service.",
+  "device_error_port_not_found": "The configured serial port does not exist.",
+  "device_error_permission_denied": "Permission to open the serial port was denied.",
+  "device_error_no_response": "The port opened, but the device did not respond to GETVER.",
+  "device_error_wrong_device": "A different serial device responded on this port, not a RadonScan.",
+  "device_error_read_error": "The serial port could not be read reliably.",
+  "device_error_no_ports": "No eligible serial ports were found.",
+  "device_error_not_detected": "Automatic discovery did not identify a RadonScan."
 }

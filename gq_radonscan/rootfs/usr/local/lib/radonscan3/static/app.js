@@ -268,7 +268,11 @@
   const fact = (label,value) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value??tr('not_available'))}</dd></div>`;
   function renderFacts() {
     const d=state.device||{},p=state.protocol||{},c=state.connection||{};
-    $('deviceFacts').innerHTML=[fact(tr('status'),c.connected?tr('connected'):tr('disconnected')),fact(tr('model'),d.model),fact(tr('firmware'),fmtFirmware(d.firmware)),fact(tr('serial_number'),d.serial_number),fact(tr('serial_port'),d.serial_port),fact(tr('last_scan'),fmtDate(c.last_scan))].join('');
+    const connectionCode=String(c.error_code||'not_detected');
+    const connectionKey=`device_error_${connectionCode}`;
+    const connectionDetail=c.connected?tr('device_error_connected'):(tr(connectionKey)===connectionKey?tr('connection_error'):tr(connectionKey));
+    const checkedPort=c.port||d.serial_port||state.settings?.serial_port||tr('automatic');
+    $('deviceFacts').innerHTML=[fact(tr('status'),c.connected?tr('connected'):tr('disconnected')),fact(tr('connection_detail'),connectionDetail),fact(tr('checked_port'),checkedPort),fact(tr('model'),d.model),fact(tr('firmware'),fmtFirmware(d.firmware)),fact(tr('serial_number'),d.serial_number),fact(tr('last_scan'),fmtDate(c.last_scan))].join('');
     $('protocolFacts').innerHTML=[fact(tr('protocol'),p.transport||'GET/SPIR'),fact(tr('decoder'),p.decoder),fact(tr('detected_records'),p.hourly_record_count),fact(tr('latest_raw'),p.latest_raw_cph),fact(tr('hour_index'),p.latest_hour_index),fact(tr('conversion_factor'),`${state.settings.factor_bq_m3_per_cph} ${tr('factor_unit')}`)].join('');
     $('serviceFacts').innerHTML=[fact(tr('mqtt'),state.mqtt?.connected?tr('online'):tr('offline')),fact(tr('home_assistant'),state.homeassistant?.connected?tr('online'):tr('offline')),fact(tr('api'),tr('online')),fact(tr('version'),state.app?.version)].join('');
     $('databaseFacts').innerHTML=[fact(tr('sample_count'),fmtInteger(state.database?.sample_count)),fact(tr('database_size'),fmtBytes(state.database?.size_bytes)),fact(tr('schema'),state.database?.schema_version),fact(tr('integrity'),state.database?.integrity),fact(tr('start'),fmtDate(state.database?.first_measurement)),fact(tr('end'),fmtDate(state.database?.last_measurement))].join('');

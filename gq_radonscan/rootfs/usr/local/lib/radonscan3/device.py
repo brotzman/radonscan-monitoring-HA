@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import glob
 import hashlib
 import logging
+import os
 import re
 import time
 from typing import Iterable
@@ -28,6 +29,17 @@ from .protocol import (
 )
 
 LOGGER = logging.getLogger(__name__)
+AUTO_SERIAL_VALUES = {"", "auto", "automatic", "detect", "discovery"}
+AUTO_SKIP_TOKENS = (
+    "sonoff",
+    "itead",
+    "zigbee",
+    "z-wave",
+    "zwave",
+    "conbee",
+    "skyconnect",
+    "ember",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,6 +53,7 @@ class ScanResult:
     snapshot: Snapshot | None
     error: str | None
     attempts: tuple[str, ...]
+    error_code: str | None = None
 
     @property
     def device_id(self) -> str:
@@ -55,21 +68,95 @@ class Collector:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
 
-    def _ports(self) -> tuple[str, ...]:
-        candidates: list[str] = []
-        if self.settings.serial_port:
-            candidates.append(self.settings.serial_port)
-        if list_ports is not None:
-            candidates.extend(str(item.device) for item in list_ports.comports())
-        for pattern in ("/dev/serial/by-id/*", "/dev/ttyUSB*", "/dev/ttyACM*", "/dev/ttyAMA*"):
-            candidates.extend(glob.glob(pattern))
+    def _configured_port(self) -> str | None:
+        value = str(self.settings.serial_port or "").strip()
+        return None if value.lower() in AUTO_SERIAL_VALUES else value
+
+    @staticmethod
+    def _auto_candidate_allowed(port: str) -> bool:
+        lower = port.casefold()
+        if lower.startswith("/dev/ttyama"):
+            return False
+        return not any(token in lower for token in AUTO_SKIP_TOKENS)
+
+    @staticmethod
+    def _deduplicate_ports(candidates: Iterable[str]) -> tuple[str, ...]:
         result: list[str] = []
-        seen: set[str] = set()
-        for port in candidates:
-            if port and port not in seen:
-                seen.add(port)
-                result.append(port)
+        seen_paths: set[str] = set()
+        for candidate in candidates:
+            port = str(candidate or "").strip()
+            if not port:
+                continue
+            try:
+                identity = os.path.realpath(port)
+            except OSError:
+                identity = port
+            identity = identity or port
+            if identity in seen_paths:
+                continue
+            seen_paths.add(identity)
+            result.append(port)
         return tuple(result)
+
+    def _ports(self) -> tuple[str, ...]:
+        configured = self._configured_port()
+        if configured:
+            # A fixed path is an explicit operator decision and is therefore used
+            # exclusively. This prevents the app from probing unrelated Zigbee,
+            # Z-Wave or console adapters on the same Home Assistant host.
+            return (configured,)
+
+        candidates: list[str] = []
+        blocked_identities: set[str] = set()
+
+        def identity(port: str) -> str:
+            try:
+                return os.path.realpath(port) or port
+            except OSError:
+                return port
+
+        # Prefer stable by-id aliases. A recognisable Zigbee/Z-Wave alias also
+        # blocks its /dev/ttyUSB* target so the same adapter cannot re-enter the
+        # candidate list through a less descriptive path.
+        for port in glob.glob("/dev/serial/by-id/*"):
+            if self._auto_candidate_allowed(port):
+                candidates.append(port)
+            else:
+                blocked_identities.add(identity(port))
+
+        if list_ports is not None:
+            for item in list_ports.comports():
+                port = str(item.device)
+                descriptor = " ".join(
+                    str(getattr(item, field, "") or "")
+                    for field in ("device", "name", "description", "manufacturer", "product", "interface", "hwid")
+                )
+                if self._auto_candidate_allowed(descriptor):
+                    candidates.append(port)
+                else:
+                    blocked_identities.add(identity(port))
+
+        for pattern in ("/dev/ttyUSB*", "/dev/ttyACM*"):
+            for port in glob.glob(pattern):
+                if self._auto_candidate_allowed(port) and identity(port) not in blocked_identities:
+                    candidates.append(port)
+        return self._deduplicate_ports(candidates)
+
+    @staticmethod
+    def _classify_error(exc: Exception) -> str:
+        text = str(exc).casefold()
+        errno = getattr(exc, "errno", None)
+        if errno == 16 or "resource busy" in text or "device or resource busy" in text:
+            return "port_busy"
+        if errno in {2, 19} or "no such file" in text or "no such device" in text:
+            return "port_not_found"
+        if errno in {13} or "permission denied" in text:
+            return "permission_denied"
+        if isinstance(exc, TimeoutError) or "no response to getver" in text or "returned no data" in text:
+            return "no_response"
+        if "getver did not identify radonscan" in text:
+            return "wrong_device"
+        return "read_error"
 
     @staticmethod
     def _read_until_idle(handle, *, deadline_seconds: float, maximum: int = 512) -> bytes:
@@ -132,7 +219,7 @@ class Collector:
     def _scan_port(self, port: str) -> ScanResult:
         detected_at = datetime.now(timezone.utc)
         if serial is None:
-            return ScanResult(False, detected_at, port, None, None, None, None, "pyserial unavailable", (port,))
+            return ScanResult(False, detected_at, port, None, None, None, None, "pyserial unavailable", (port,), "read_error")
         handle = None
         try:
             handle = serial.Serial(
@@ -156,6 +243,8 @@ class Collector:
             version_payload = self._read_until_idle(
                 handle, deadline_seconds=self.settings.serial_timeout_seconds, maximum=64
             )
+            if not version_payload:
+                raise TimeoutError("no response to GETVER")
             version = version_payload.decode("ascii", errors="ignore").strip("\x00\r\n ")
             if not version.startswith("RadonScan"):
                 raise ValueError(f"GETVER did not identify RadonScan: {version_payload.hex()}")
@@ -183,9 +272,21 @@ class Collector:
                 snapshot,
                 None,
                 (port,),
+                None,
             )
         except Exception as exc:
-            return ScanResult(False, detected_at, port, None, None, None, None, str(exc), (port,))
+            return ScanResult(
+                False,
+                detected_at,
+                port,
+                None,
+                None,
+                None,
+                None,
+                str(exc),
+                (port,),
+                self._classify_error(exc),
+            )
         finally:
             if handle is not None:
                 try:
@@ -195,20 +296,32 @@ class Collector:
 
     def scan(self) -> ScanResult:
         ports = self._ports()
+        configured = self._configured_port()
         if self.settings.diagnostic_logging:
-            LOGGER.debug("Serial candidates: %s", list(ports))
+            LOGGER.debug(
+                "Serial candidates (%s mode): %s",
+                "fixed" if configured else "automatic",
+                list(ports),
+            )
         if not ports:
             return ScanResult(
                 False,
                 datetime.now(timezone.utc),
+                configured,
                 None,
                 None,
                 None,
                 None,
-                None,
-                "no serial ports found",
+                "no eligible serial ports found",
                 (),
+                "no_ports",
             )
+
+        # For a fixed port return the exact result so the UI can show a precise,
+        # actionable status such as busy, missing, no response or wrong device.
+        if configured:
+            return self._scan_port(configured)
+
         errors: list[str] = []
         for port in ports:
             result = self._scan_port(port)
@@ -225,4 +338,5 @@ class Collector:
             None,
             "; ".join(errors[-8:]),
             ports,
+            "not_detected" if errors else "no_ports",
         )

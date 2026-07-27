@@ -28,7 +28,7 @@ configuration:
     description: Usuwa lokalne pomiary z SQLite po tej liczbie dni.
   serial_port:
     name: Port szeregowy
-    description: Pozostaw puste dla automatycznego wykrywania lub podaj stałą ścieżkę urządzenia.
+    description: Użyj stałej ścieżki RadonScan; wpisz auto tylko w celu świadomego włączenia wykrywania.
   serial_timeout_seconds:
     name: Limit czasu portu
     description: Maksymalna liczba sekund oczekiwania na odpowiedź urządzenia.

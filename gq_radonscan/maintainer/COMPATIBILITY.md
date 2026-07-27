@@ -1,4 +1,4 @@
-# Compatibility matrix - Radon Monitoring 5.5.2
+# Compatibility matrix - Radon Monitoring 5.5.3
 
 This matrix distinguishes automated contract coverage from checks that require a real Home Assistant installation and physical RadonScan hardware. A green automated test does not imply that every Home Assistant release, browser WebView or USB adapter has been field-tested.
 

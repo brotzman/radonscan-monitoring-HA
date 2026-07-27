@@ -10,6 +10,7 @@ LOGGER = logging.getLogger(__name__)
 SUPPORTED_LANGUAGES = ("auto", "de", "en", "es", "fr", "hr", "it", "nl", "pl")
 SUPPORTED_UNITS = ("Bq/m3", "pCi/L")
 SUPPORTED_LOCATION_DISPLAY_MODES = ("full", "reduced", "hidden")
+DEFAULT_SERIAL_PORT = "/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0"
 
 
 def _as_bool(value: object, default: bool) -> bool:
@@ -90,6 +91,13 @@ class Settings:
         if location_display_mode not in SUPPORTED_LOCATION_DISPLAY_MODES:
             location_display_mode = "full"
 
+        serial_port = str(raw.get("serial_port", DEFAULT_SERIAL_PORT)).strip()
+        # Existing Home Assistant installations may retain an empty option value
+        # during an upgrade. Migrate that empty value to the known stable by-id
+        # path. An explicit "auto" choice remains automatic and is never overridden.
+        if not serial_port:
+            serial_port = DEFAULT_SERIAL_PORT
+
         return cls(
             data_dir=Path(os.environ.get("DATA_DIR", "/data")),
             web_port=int(os.environ.get("WEB_PORT", "8099")),
@@ -102,7 +110,7 @@ class Settings:
             factor_bq_m3_per_cph=factor,
             backfill_history=_as_bool(raw.get("backfill_history"), True),
             history_retention_days=max(30, min(3650, int(raw.get("history_retention_days", 1095)))),
-            serial_port=str(raw.get("serial_port", "")).strip(),
+            serial_port=serial_port,
             serial_timeout_seconds=max(0.5, min(15.0, float(raw.get("serial_timeout_seconds", 3.0)))),
             mqtt_topic_prefix=str(raw.get("mqtt_topic_prefix", "gq_radonscan")).strip(" /") or "gq_radonscan",
             discovery_prefix=str(raw.get("discovery_prefix", "homeassistant")).strip(" /") or "homeassistant",

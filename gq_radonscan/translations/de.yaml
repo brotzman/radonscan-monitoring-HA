@@ -30,8 +30,7 @@ configuration:
     description: Lokale Messwerte nach dieser Anzahl von Tagen aus SQLite entfernen.
   serial_port:
     name: Serieller Anschluss
-    description: Leer lassen für automatische Erkennung oder einen festen Gerätepfad
-      angeben.
+    description: Festen RadonScan-Pfad verwenden; auto nur für eine bewusst aktivierte automatische Erkennung.
   serial_timeout_seconds:
     name: Serielles Zeitlimit
     description: Maximale Wartezeit in Sekunden für eine Geräteantwort.

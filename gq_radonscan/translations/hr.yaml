@@ -28,7 +28,7 @@ configuration:
     description: Uklanja lokalna mjerenja iz SQLitea nakon ovog broja dana.
   serial_port:
     name: Serijski priključak
-    description: Ostavite prazno za automatsko otkrivanje ili unesite stalnu putanju uređaja.
+    description: Koristite stalnu putanju RadonScana; unesite auto samo za namjerno automatsko otkrivanje.
   serial_timeout_seconds:
     name: Vremensko ograničenje serijskog priključka
     description: Najveći broj sekundi čekanja na odgovor uređaja.

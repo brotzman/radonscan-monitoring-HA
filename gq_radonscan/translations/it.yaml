@@ -28,7 +28,7 @@ configuration:
     description: Rimuove le misure locali da SQLite dopo questo numero di giorni.
   serial_port:
     name: Porta seriale
-    description: Lasciare vuoto per il rilevamento automatico o indicare un percorso fisso.
+    description: Usare il percorso fisso del RadonScan; inserire auto solo per attivare deliberatamente il rilevamento.
   serial_timeout_seconds:
     name: Timeout seriale
     description: Numero massimo di secondi di attesa per una risposta del dispositivo.

@@ -291,7 +291,7 @@
   "main_navigation": "Hoofdnavigatie",
   "mann_kendall_tau": "Mann-Kendall-tau",
   "manual": "Manual",
-  "manual_note_v3": "De gebruikershandleiding hoort bij versie 5.5.2. De afzonderlijke SPIR-protocolreferentie blijft versie 3.0.0, omdat die het apparaatprotocol beschrijft en niet de appversie.",
+  "manual_note_v3": "De gebruikershandleiding hoort bij versie 5.5.3. De afzonderlijke SPIR-protocolreferentie blijft versie 3.0.0, omdat die het apparaatprotocol beschrijft en niet de appversie.",
   "manual_upload": "Handmatige upload",
   "manual_upload_hint": "Uploadt alleen de laatst voltooide lokale uurmeting. Historische tijdstempels kunnen niet via het gepubliceerde protocol worden verzonden.",
   "map_click_hint": "Klik op de plattegrond om de positie van de ruimte in te stellen.",
@@ -612,5 +612,16 @@
   "event_impact_note": "Beoordeeld vanaf de eerste gebeurtenis in de geselecteerde periode:",
   "event_impact_unavailable": "Er zijn in de geselecteerde periode geen gebeurtenisvensters met voldoende metingen voor en na de gebeurtenis beschikbaar.",
   "gmcmap_upload_mode": "Uploadmodus",
-  "gmcmap_radon_only": "Alleen radon"
+  "gmcmap_radon_only": "Alleen radon",
+  "connection_detail": "Verbindingsdiagnose",
+  "checked_port": "Gecontroleerde poort",
+  "device_error_connected": "RadonScan herkend en leesbaar.",
+  "device_error_port_busy": "De seriële poort wordt al door een andere service gebruikt.",
+  "device_error_port_not_found": "De geconfigureerde seriële poort bestaat niet.",
+  "device_error_permission_denied": "Geen toestemming om de seriële poort te openen.",
+  "device_error_no_response": "De poort werd geopend, maar het apparaat reageerde niet op GETVER.",
+  "device_error_wrong_device": "Op deze poort reageerde een ander serieel apparaat, geen RadonScan.",
+  "device_error_read_error": "De seriële poort kon niet betrouwbaar worden gelezen.",
+  "device_error_no_ports": "Er zijn geen geschikte seriële poorten gevonden.",
+  "device_error_not_detected": "Automatische detectie heeft geen RadonScan herkend."
 }

@@ -11,7 +11,7 @@ from reportlab.platypus import (
     Paragraph, Spacer, Table, TableStyle,
 )
 
-VERSION = "5.5.2"
+VERSION = "5.5.3"
 ORANGE = colors.HexColor("#F47B20")
 DARK = colors.HexColor("#172033")
 MUTED = colors.HexColor("#667085")
@@ -37,8 +37,8 @@ CONTENT = {
 "Ein hoher einzelner Stundenwert ist nicht automatisch eine Überschreitung eines Jahresreferenzwerts. Oberfläche und Berichte trennen aktuellen Wert, Zeitraumstatistik, Zählunsicherheit, Kalibrierinformation und fachliche Einordnung."
 ]),
 ("2. Installation, Upgrade und erster Start", [
-"Verbinden Sie das RadonScan Gerät per USB, stellen Sie MQTT für Home Assistant bereit und starten Sie die App. Für die automatische Erkennung kann serial_port leer beziehungsweise auf auto bleiben. Für eine feste Zuordnung ist ein Pfad unter /dev/serial/by-id/ vorzuziehen.",
-"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.5.2 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
+"Verbinden Sie das RadonScan Gerät per USB, stellen Sie MQTT für Home Assistant bereit und starten Sie die App. In Version 5.5.3 ist /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0 als stabiler Anschluss voreingestellt. Ein fester serial_port wird ausschließlich verwendet; auto aktiviert bewusst die automatische Suche.",
+"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.5.3 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
 "Nur abgeschlossene Stunden werden übernommen. Nach dem ersten Anschließen kann deshalb zunächst noch kein aktueller Messwert verfügbar sein."
 ]),
 ("3. Übersicht", [
@@ -85,7 +85,7 @@ CONTENT = {
 ("10. Bedienung, Mobilansicht und Barrierefreiheit", [
 "Die Seitenleiste wird auf kleinen Bildschirmen als Menü eingeblendet. Tabellen und Wochen-Heatmap bleiben innerhalb ihrer Kachel horizontal scrollbar; die restliche Seite darf keinen horizontalen Überstand erzeugen.",
 "Die Oberfläche unterstützt Tastaturbedienung, sichtbare Fokusmarkierungen, einen Sprunglink zum Hauptinhalt, Escape zum Schließen des Menüs, reduzierte Animationen und Schriftvergrößerung bis 200 Prozent.",
-"Version 5.5.2 enthält zusätzlich einen automatisierten Request-Test für den Radon-only-Upload: Ziel ist rdlog.asp, und die übermittelten Felder sind genau AID, GID und pCi. CPM, ACPM und uSV dürfen nicht enthalten sein. Die bestehenden Darstellungs- und Sprachtests bleiben erhalten."
+"Version 5.5.3 enthält zusätzlich automatisierte Tests für die exklusive Nutzung eines festen seriellen Anschlusses, das Überspringen erkennbarer Zigbee- und Konsolenadapter, die Zusammenführung doppelter Gerätepfade sowie verständliche Fehlercodes. Die bestehenden Radon-only-, Darstellungs- und Sprachtests bleiben erhalten."
 ]),
 ("11. Fehlerbehebung", [
 "Kein Gerät: USB-Zuordnung, Berechtigungen, konfigurierten Port und konkurrierende Prozesse prüfen.",
@@ -99,12 +99,12 @@ CONTENT = {
 "Messwerte und Metadaten bleiben standardmäßig lokal. Nur aktivierte externe Funktionen übertragen Daten. Die Standortkachel liest ihre Angaben ausschließlich über die lokale Home-Assistant-Core-API und verwendet keinen externen Geokodierungsdienst. Mit location_display_mode kann die Anzeige vollständig, reduziert oder ausgeblendet erfolgen. Prüfen Sie vor Bildschirmfotos, Berichten und World-Map-Uploads, ob die sichtbaren Standortangaben Ihren Datenschutzanforderungen entsprechen.",
 "Bewahren Sie Backups und Berichte geschützt auf. Sie können Gerätekennungen, Räume, Zeiträume und Gebäudedaten enthalten."
 ]),
-("13. Neu in Version 5.5.2", [
-"Version 5.5.2 korrigiert den Upload zur GQ Radiation World Map für reine RadonScan-Messungen. Statt des allgemeinen log2.asp-Endpunkts mit dem Platzhalter CPM=0 verwendet die App nun rdlog.asp und sendet ausschließlich AID, GID und pCi. Die Felder CPM, ACPM und uSV fehlen ausdrücklich, sodass neue Radon-Uploads nicht mehr zusätzlich als Radioaktivitätsmessung mit 0 CPM erscheinen. Der Upload-Modus wird in der Oberfläche als Nur Radon angezeigt. Datenbank, Warteschlange und lokale Messwerte bleiben kompatibel."
+("13. Neu in Version 5.5.3", [
+"Version 5.5.3 stabilisiert die Geräteverbindung auf Systemen mit mehreren seriellen Adaptern. Der konfigurierte Anschluss /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0 wird exklusiv verwendet. Die automatische Suche überspringt erkennbare Sonoff-, ITEAD-, Zigbee-, Z-Wave- und ttyAMA-Geräte und fasst Pfade zum selben physischen Anschluss zusammen. Unter Geräte & System erscheinen der geprüfte Anschluss und eine verständliche Diagnose, etwa Anschluss belegt, keine Antwort oder falscher Gerätetyp. Die Startmeldung zeigt nun die tatsächliche App-Version. Datenbank und Messwerte bleiben kompatibel."
 ])
 ],
 "options": [
-("serial_port", "Automatische Erkennung oder stabiler USB-Pfad"),
+("serial_port", "Fester RadonScan-Pfad; auto nur für bewusste Suche"),
 ("factor_bq_m3_per_cph", "Aktuell verwendeter Umrechnungsfaktor"),
 ("minimum_data_coverage_percent", "Mindestabdeckung für Zeitfenster und Qualitätsstatus"),
 ("analysis_timezone", "Zeitzone für Tages- und Wochenprofile"),
@@ -128,8 +128,8 @@ CONTENT = {
 "A high individual hourly value is not automatically an exceedance of an annual reference value. The interface and reports distinguish the current value, period statistics, counting uncertainty, calibration information and professional interpretation."
 ]),
 ("2. Installation, upgrade and first start", [
-"Connect the RadonScan by USB, make MQTT available to Home Assistant and start the app. Leave serial_port empty or set to auto for discovery. For a stable fixed assignment, prefer a path under /dev/serial/by-id/.",
-"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.5.2. If an old Ingress view remains open, close the panel and reopen it.",
+"Connect the RadonScan by USB, make MQTT available to Home Assistant and start the app. Version 5.5.3 defaults to /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0. A fixed serial_port is used exclusively; auto deliberately enables discovery.",
+"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.5.3. If an old Ingress view remains open, close the panel and reopen it.",
 "Only completed hours are imported. A newly connected device can therefore remain without a current value until a complete record is available."
 ]),
 ("3. Overview", [
@@ -176,7 +176,7 @@ CONTENT = {
 ("10. Operation, mobile layout and accessibility", [
 "On small screens the sidebar opens as a menu. Tables and the weekly heatmap remain horizontally scrollable inside their own cards; the rest of the page must not create horizontal page overflow.",
 "The interface supports keyboard operation, visible focus, a skip link, Escape to close the menu, reduced motion and text scaling to 200 percent.",
-"Version 5.5.2 adds an automated request test for the radon-only upload: the target must be rdlog.asp and the submitted fields must be exactly AID, GID and pCi. CPM, ACPM and uSV must be absent. Existing layout and language tests remain in place."
+"Version 5.5.3 adds automated tests for exclusive fixed-port use, skipping recognisable Zigbee and console adapters, de-duplicating device aliases and exposing actionable connection codes. Existing radon-only, layout and language tests remain in place."
 ]),
 ("11. Troubleshooting", [
 "No device: check USB mapping, permissions, configured port and competing processes.",
@@ -190,12 +190,12 @@ CONTENT = {
 "Measurements and metadata remain local by default. Only enabled external functions transmit data. Location, address and building name are read only through the local Home Assistant Core API and are not manually duplicated. No external geocoding service is used. location_display_mode can show full, reduced or no location details. Before screenshots, reports and World Map publication, confirm that visible location data meets your privacy requirements.",
 "Protect backups and reports because they may contain device identifiers, rooms, periods and building information."
 ]),
-("13. New in version 5.5.2", [
-"Version 5.5.2 corrects GQ Radiation World Map uploads for pure RadonScan measurements. Instead of using the generic log2.asp endpoint with the CPM=0 placeholder, the app now uses rdlog.asp and submits only AID, GID and pCi. CPM, ACPM and uSV are explicitly absent, so new radon uploads no longer appear as an additional 0 CPM radioactivity reading. The interface shows the upload mode as Radon only. The database, queue and local measurements remain compatible."
+("13. New in version 5.5.3", [
+"Version 5.5.3 stabilises device connectivity on hosts with several serial adapters. The configured /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0 path is used exclusively. Automatic discovery skips recognisable Sonoff, ITEAD, Zigbee, Z-Wave and ttyAMA devices and de-duplicates aliases for the same physical port. Devices & System shows the checked port and an actionable diagnosis such as port busy, no response or wrong device type. The startup message now reports the actual app version. The database and measurements remain compatible."
 ])
 ],
 "options": [
-("serial_port", "Automatic discovery or stable USB path"),
+("serial_port", "Fixed RadonScan path; use auto only for deliberate discovery"),
 ("factor_bq_m3_per_cph", "Currently configured conversion factor"),
 ("minimum_data_coverage_percent", "Minimum coverage for period results and quality"),
 ("analysis_timezone", "Time zone for daily and weekly profiles"),

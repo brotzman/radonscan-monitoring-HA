@@ -10,5 +10,6 @@ export MQTT_PORT="$(bashio::services mqtt 'port')"
 export MQTT_USERNAME="$(bashio::services mqtt 'username')"
 export MQTT_PASSWORD="$(bashio::services mqtt 'password')"
 
-bashio::log.info "Starting Radon Monitoring 4.0 read-only hourly SPIR service"
+APP_VERSION="$(python3 -c 'from radonscan3 import __version__; print(__version__)')"
+bashio::log.info "Starting Radon Monitoring ${APP_VERSION} read-only hourly SPIR service"
 exec python3 /usr/local/bin/gq_radonscan_service.py

@@ -9,23 +9,23 @@ LOCALES = LIB / 'locales'
 
 
 def test_release_versions_are_consistent():
-    assert 'version: 5.5.2' in (ROOT / 'config.yaml').read_text(encoding='utf-8')
-    assert 'BUILD_VERSION="5.5.2"' in (ROOT / 'Dockerfile').read_text(encoding='utf-8')
-    assert '__version__ = "5.5.2"' in (LIB / '__init__.py').read_text(encoding='utf-8')
-    assert 'Radon Monitoring 5.5.2' in (ROOT / 'README.md').read_text(encoding='utf-8')
+    assert 'version: 5.5.3' in (ROOT / 'config.yaml').read_text(encoding='utf-8')
+    assert 'BUILD_VERSION="5.5.3"' in (ROOT / 'Dockerfile').read_text(encoding='utf-8')
+    assert '__version__ = "5.5.3"' in (LIB / '__init__.py').read_text(encoding='utf-8')
+    assert 'Radon Monitoring 5.5.3' in (ROOT / 'README.md').read_text(encoding='utf-8')
 
 
 def test_current_manuals_exist_and_obsolete_manuals_are_removed():
     docs = ROOT / 'rootfs/usr/local/share/radonscan3/docs'
     for lang in ('de', 'en'):
-        path = docs / f'Radon_Monitoring_User_Manual_5.5.2_{lang}.pdf'
+        path = docs / f'Radon_Monitoring_User_Manual_5.5.3_{lang}.pdf'
         assert path.is_file() and path.stat().st_size > 10_000
     assert not list(docs.glob('Radon_Monitoring_User_Manual_4.2.1_*.pdf'))
     assert not list(docs.glob('Radon_Monitoring_User_Manual_4.9.0_*.pdf'))
     assert not list(docs.glob('Radon_Monitoring_User_Manual_5.1.0_*.pdf'))
     assert not list(docs.glob('Radon_Monitoring_User_Manual_5.3.0_*.pdf'))
     assert not list(docs.glob('Radon_Monitoring_User_Manual_5.3.2_*.pdf'))
-    assert 'Radon_Monitoring_User_Manual_5.5.2' in (LIB / 'web.py').read_text(encoding='utf-8')
+    assert 'Radon_Monitoring_User_Manual_5.5.3' in (LIB / 'web.py').read_text(encoding='utf-8')
 
 
 def test_frontend_assets_and_ids_are_consistent():
@@ -158,3 +158,29 @@ def test_non_english_locales_do_not_fall_back_to_english_at_scale():
         data = json.loads((LOCALES / f'{code}.json').read_text(encoding='utf-8'))
         same = [key for key in used if data.get(key) == english.get(key) and english.get(key) not in technical_or_shared]
         assert len(same) <= 25, f'{code}: too many English fallbacks ({len(same)}): {sorted(same)[:30]}'
+
+
+def test_fixed_radonscan_port_and_dynamic_start_version_are_packaged():
+    config = (ROOT / 'config.yaml').read_text(encoding='utf-8')
+    assert 'serial_port: /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0' in config
+    device_py = (LIB / 'device.py').read_text(encoding='utf-8')
+    assert 'return (configured,)' in device_py
+    assert 'AUTO_SKIP_TOKENS' in device_py
+    assert '"/dev/ttyAMA*"' not in device_py
+    run_script = (ROOT / 'rootfs/etc/services.d/gq_radonscan/run').read_text(encoding='utf-8')
+    assert 'from radonscan3 import __version__' in run_script
+    assert 'Starting Radon Monitoring 4.0' not in run_script
+
+
+def test_connection_diagnosis_translations_exist():
+    keys = {
+        'connection_detail', 'checked_port', 'device_error_connected',
+        'device_error_port_busy', 'device_error_port_not_found',
+        'device_error_permission_denied', 'device_error_no_response',
+        'device_error_wrong_device', 'device_error_read_error',
+        'device_error_no_ports', 'device_error_not_detected',
+    }
+    for locale_path in LOCALES.glob('*.json'):
+        data = json.loads(locale_path.read_text(encoding='utf-8'))
+        missing = sorted(key for key in keys if not str(data.get(key) or '').strip())
+        assert not missing, f'{locale_path.name}: missing serial diagnosis translations {missing}'

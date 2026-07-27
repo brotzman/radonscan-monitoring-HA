@@ -291,7 +291,7 @@
   "main_navigation": "Hauptnavigation",
   "mann_kendall_tau": "Mann–Kendall-Tau",
   "manual": "Manuell",
-  "manual_note_v3": "Das Benutzerhandbuch entspricht Version 5.5.2. Die separate SPIR-Protokollreferenz trägt weiterhin Version 3.0.0, da sie das Geräteprotokoll und nicht die App-Version beschreibt.",
+  "manual_note_v3": "Das Benutzerhandbuch entspricht Version 5.5.3. Die separate SPIR-Protokollreferenz trägt weiterhin Version 3.0.0, da sie das Geräteprotokoll und nicht die App-Version beschreibt.",
   "manual_upload": "Manueller Upload",
   "manual_upload_hint": "Es wird ausschließlich der letzte abgeschlossene lokale Stundenwert hochgeladen. Historische Zeitstempel können über das veröffentlichte Protokoll nicht übertragen werden.",
   "map_click_hint": "Klicken Sie auf den Grundriss, um die Position des Raumes festzulegen.",
@@ -612,5 +612,16 @@
   "event_impact_note": "Ausgewertet ab dem ersten Ereignis im ausgewählten Zeitraum:",
   "event_impact_unavailable": "Im ausgewählten Zeitraum liegen keine Ereignisfenster mit ausreichenden Messwerten vor und nach dem Ereignis vor.",
   "gmcmap_upload_mode": "Upload-Modus",
-  "gmcmap_radon_only": "Nur Radon"
+  "gmcmap_radon_only": "Nur Radon",
+  "connection_detail": "Verbindungsdiagnose",
+  "checked_port": "Geprüfter Anschluss",
+  "device_error_connected": "RadonScan erkannt und lesbar.",
+  "device_error_port_busy": "Der serielle Anschluss wird bereits von einem anderen Dienst verwendet.",
+  "device_error_port_not_found": "Der konfigurierte serielle Anschluss ist nicht vorhanden.",
+  "device_error_permission_denied": "Keine Berechtigung zum Öffnen des seriellen Anschlusses.",
+  "device_error_no_response": "Der Anschluss wurde geöffnet, aber das Gerät antwortete nicht auf GETVER.",
+  "device_error_wrong_device": "Am Anschluss antwortet ein anderes serielles Gerät, kein RadonScan.",
+  "device_error_read_error": "Der Anschluss konnte nicht zuverlässig gelesen werden.",
+  "device_error_no_ports": "Es wurden keine geeigneten seriellen Anschlüsse gefunden.",
+  "device_error_not_detected": "Bei der automatischen Suche wurde kein RadonScan erkannt."
 }
