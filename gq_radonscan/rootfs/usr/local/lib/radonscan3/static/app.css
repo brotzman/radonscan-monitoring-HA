@@ -417,7 +417,7 @@ html[data-reduced-motion="true"] *,html[data-reduced-motion="true"] *::before,ht
 @media(max-width:330px){.radon-traffic-layout{grid-template-columns:1fr}.radon-traffic-signal{width:100%;min-height:58px;flex-direction:row;border-radius:19px}.radon-traffic-light{width:36px;height:36px}}
 
 
-/* Overview context, event annotations and privacy controls (5.5.1) */
+/* Overview context, event annotations and privacy controls (5.5.2) */
 .overview-filter-panel{margin-bottom:18px;background:linear-gradient(135deg,var(--surface),color-mix(in srgb,var(--surface-2) 74%,var(--surface)))}
 .overview-filter-panel .panel-heading{margin-bottom:12px}
 .overview-filter-panel .panel-heading p{max-width:70rem}
@@ -467,7 +467,7 @@ html[data-reduced-motion="true"] *,html[data-reduced-motion="true"] *::before,ht
   .event-item>*:last-child,.report-item>*:last-child{grid-column:2;grid-row:1/4;align-self:start}
 }
 
-/* Room metadata sourced from Home Assistant (5.5.1) */
+/* Room metadata sourced from Home Assistant (5.5.2) */
 .overview-filter-grid-compact{grid-template-columns:repeat(2,minmax(150px,1fr)) auto}
 .micro-grid-two{grid-template-columns:repeat(2,minmax(0,1fr))}
 .ha-location-room{margin:10px 0 0;padding-top:10px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted);overflow-wrap:anywhere}
@@ -480,7 +480,7 @@ html[data-reduced-motion="true"] *,html[data-reduced-motion="true"] *::before,ht
 @media(max-width:1050px){.overview-filter-grid-compact{grid-template-columns:repeat(2,minmax(0,1fr))}.overview-filter-grid-compact .button{grid-column:span 2}}
 @media(max-width:620px){.overview-filter-grid-compact,.ha-source-facts{grid-template-columns:1fr}.overview-filter-grid-compact .button{grid-column:auto}.micro-grid-two{grid-template-columns:1fr 1fr}}
 
-/* Rooms & events card layout (5.5.1) */
+/* Rooms & events card layout (5.5.2) */
 #view-sites .event-item{grid-template-columns:minmax(105px,.28fr) minmax(0,1fr) auto;align-items:start}
 #view-sites .event-item>div{display:grid;gap:4px;min-width:0}
 #view-sites .event-item>div strong,#view-sites .event-item>div small{display:block;line-height:1.35}
@@ -496,7 +496,7 @@ html[data-reduced-motion="true"] *,html[data-reduced-motion="true"] *::before,ht
   #view-sites .event-item>.mini-button{justify-self:start}
 }
 
-/* Guided room workflow, inline validation and system self-test (5.5.1) */
+/* Guided room workflow, inline validation and system self-test (5.5.2) */
 .workflow-grid{align-items:stretch}
 .workflow-step{position:relative;overflow:hidden}
 .workflow-step::before{content:attr(data-step);position:absolute;right:18px;top:10px;font-size:4.5rem;line-height:1;font-weight:850;color:color-mix(in srgb,var(--accent) 8%,transparent);pointer-events:none}
@@ -542,7 +542,7 @@ input[aria-invalid="true"],select[aria-invalid="true"],textarea[aria-invalid="tr
 }
 
 
-/* Mobile polish and compact statistics cards (5.5.1) */
+/* Mobile polish and compact statistics cards (5.5.2) */
 #view-analysis .panel,
 #view-overview .panel,
 #view-data .panel{scroll-margin-top:96px}

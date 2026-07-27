@@ -10,7 +10,7 @@ from .config import Settings
 from .storage import Storage
 
 LOGGER = logging.getLogger(__name__)
-DEFAULT_ENDPOINT = "https://www.gmcmap.com/log2.asp"
+RADON_ENDPOINT = "https://www.gmcmap.com/rdlog.asp"
 
 
 class GmcMapError(RuntimeError):
@@ -46,7 +46,9 @@ class GmcMapClient:
             "interval_minutes": self.settings.gmcmap_upload_interval_minutes,
             "max_age_hours": self.settings.gmcmap_max_age_hours,
             "retry_limit": self.settings.gmcmap_retry_limit,
-            "endpoint": DEFAULT_ENDPOINT,
+            "endpoint": RADON_ENDPOINT,
+            "upload_mode": "radon_only",
+            "submitted_fields": ["AID", "GID", "pCi"],
             "latest_available": latest is not None,
             "latest_measurement_at": latest.get("completed_at") if latest else None,
             "last_upload": runtime if isinstance(runtime, dict) else {},
@@ -106,13 +108,16 @@ class GmcMapClient:
     def _upload_item(self, item: dict[str, object], *, trigger: str, user_name: str | None) -> dict[str, object]:
         bq_m3 = float(item["bq_m3"])
         pci_l = float(item.get("pci_l") or bq_m3 / 37.0)
+        # RadonScan readings must use the dedicated radon endpoint.  Sending
+        # CPM=0 to the generic radiation endpoint creates an artificial zero
+        # value on the radioactivity map, even though no Geiger measurement
+        # exists.  Keep this request strictly radon-only.
         params = {
             "AID": self.settings.gmcmap_account_id,
             "GID": self.settings.gmcmap_device_id,
-            "CPM": "0",
             "pCi": f"{pci_l:.4f}",
         }
-        url = f"{DEFAULT_ENDPOINT}?{urllib.parse.urlencode(params)}"
+        url = f"{RADON_ENDPOINT}?{urllib.parse.urlencode(params)}"
         attempted_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
         result: dict[str, object] = {
             "ok": False,
@@ -123,12 +128,14 @@ class GmcMapClient:
             "pci_l": round(pci_l, 4),
             "response": "",
             "queue_id": item.get("id"),
+            "upload_mode": "radon_only",
+            "endpoint": RADON_ENDPOINT,
         }
         error: str | None = None
         try:
             request = urllib.request.Request(
                 url,
-                headers={"User-Agent": "Radon-Monitoring/4.3.9", "Accept": "text/plain,text/html;q=0.9,*/*;q=0.8"},
+                headers={"User-Agent": "Radon-Monitoring/5.5.2", "Accept": "text/plain,text/html;q=0.9,*/*;q=0.8"},
                 method="GET",
             )
             with urllib.request.urlopen(request, timeout=15) as response:

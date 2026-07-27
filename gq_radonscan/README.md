@@ -1,4 +1,4 @@
-# Radon Monitoring 5.5.1
+# Radon Monitoring 5.5.2
 
 Radon Monitoring is a local Home Assistant app for read-only monitoring of compatible GQ RadonScan devices. It imports completed hourly values, stores raw and converted measurements in SQLite, publishes Home Assistant entities through MQTT, provides scientific time-series analysis, generates PDF reports and can optionally upload measurements to the GQ Radiation World Map.
 
@@ -23,23 +23,23 @@ Radon Monitoring is a local Home Assistant app for read-only monitoring of compa
 - optional complete Home Assistant Recorder purge for RadonScan entities, plus verification through the History API
 - interface and Home Assistant option translations in German, English, Spanish, French, Croatian, Italian, Dutch and Polish
 
-## Version 5.5.1
+## Version 5.5.2
 
-Version 5.5.1 is a **presentation-focused refinement release**. It keeps the analytical structure introduced in 5.5.0 but improves the mobile experience with more compact statistic cards, tighter panel spacing and better wrapping behaviour in Overview, Analysis and Data Management. On smaller screens, two-column card layouts remain available longer before falling back to a single-column layout on very narrow displays.
+Version 5.5.2 fixes the GQ Radiation World Map protocol for pure RadonScan measurements. Uploads now use the dedicated `https://www.gmcmap.com/rdlog.asp` endpoint and submit only the account identifier (`AID`), device identifier (`GID`) and radon concentration (`pCi`).
 
-Statistical fact grids were tuned for more readable label/value pairs in narrow widths, chart legends were tightened, and the Advanced statistics summary now wraps long helper text more cleanly. The goal is less horizontal tension and less vertical scrolling while preserving readability, spacing and touch usability.
+Earlier releases sent `CPM=0` through the generic `log2.asp` endpoint as a placeholder. GMCMap treated that field as a genuine radioactivity reading, which produced an unwanted zero-valued entry on the radioactivity map alongside the correct radon value. Version 5.5.2 explicitly omits `CPM`, `ACPM` and `uSV` and does not fall back to the generic radiation endpoint.
 
-All workflows, data structures, API routes and statistical calculations remain unchanged. Existing 5.5.0 functionality — including the reordered Analysis view, the removed Time patterns tile, rolling means, added percentiles, previous-period comparison, guided Rooms & events workflow and System self-test — remains fully intact.
+The World Map view now shows the upload mode as **Radon only**. Existing queue records and local measurements remain compatible; only the outbound request is changed. Previously published zero-valued radioactivity entries are stored by GMCMap and are not removed by this application update.
 
 ## Upgrade notes
 
-The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.1 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
+The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.2 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
 
 Before upgrading:
 
 1. Create a Home Assistant backup and, where appropriate, an app database backup.
 2. Stop the app before replacing a local repository package.
-3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.1.
+3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.2.
 4. Reopen the Ingress panel if an old iframe remains visible.
 5. Review `location_display_mode` if the Overview is shown in screenshots or shared displays.
 

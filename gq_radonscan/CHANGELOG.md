@@ -1,5 +1,14 @@
 # Changelog
 
+## 5.5.2 - Radon-only GQ World Map uploads
+
+- Switched GQ World Map uploads from the generic `log2.asp` radiation endpoint to the dedicated `rdlog.asp` radon endpoint.
+- Removed the artificial `CPM=0` field and now submit only `AID`, `GID` and `pCi` for RadonScan measurements.
+- Explicitly prevent `CPM`, `ACPM` and `uSV` from being included in RadonScan uploads so new zero-valued radioactivity entries are no longer created.
+- Added a visible **Radon only** upload mode and updated the protocol notice in all eight interface languages.
+- Added request-level regression tests that verify the endpoint and exact submitted query fields.
+- Kept the database schema, local measurements, queue format and Home Assistant identifiers unchanged.
+
 ## 5.5.1 - Mobile UI polish and compact statistics cards
 
 - Added a focused **UI polishing** pass for narrow screens and Home Assistant mobile WebViews.

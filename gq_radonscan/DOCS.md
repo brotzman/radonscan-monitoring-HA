@@ -1,4 +1,4 @@
-# Radon Monitoring 5.5.1 - App documentation
+# Radon Monitoring 5.5.2 - App documentation
 
 ## Purpose
 
@@ -16,7 +16,7 @@ The app is an orientation and documentation tool. It does not turn a consumer mo
 
 Only completed hours are imported. A newly connected device may therefore remain without a current value until a completed record is available.
 
-## Mobile presentation polish in 5.5.1
+## Radon-only World Map uploads in 5.5.2
 
 The room workflow no longer depends on a single request representation. The browser submits canonical JSON and adds encoded query/header fallbacks. The server accepts JSON, standard URL-encoded forms and bounded chunked transfer encoding, then passes all variants through one normaliser. Repeated submissions for the same room are idempotent, duplicate room names are rejected, decimal commas are accepted for measurement height and successful responses include the persisted record.
 
@@ -62,7 +62,9 @@ Shows device, protocol, service and database status in one consolidated view. Th
 
 Uploads are optional and disabled by default. When `gmcmap_enabled` is false, the view is also hidden from the sidebar. When enabled, the view contains only external upload status, queue and history functions; local rooms, assignments and events remain in their own view.
 
-The persistent queue retries temporary failures and prevents duplicate publication. The app sends the radon value and GQ identifiers required by the configured protocol. Public location settings are managed in the GQ account; the app does not transmit its Home Assistant coordinates through this feature.
+The persistent queue retries temporary failures and prevents duplicate publication. RadonScan measurements use the dedicated `rdlog.asp` endpoint and submit only `AID`, `GID` and `pCi`. The application deliberately omits `CPM`, `ACPM` and `uSV`; no artificial radioactivity value is generated. There is no automatic fallback to the generic `log2.asp` radiation endpoint.
+
+Public location settings are managed in the GQ account; the app does not transmit its Home Assistant coordinates through this feature. Previously uploaded zero-valued radioactivity records remain on the external GMCMap service and cannot be deleted by the local application.
 
 ### History
 
@@ -111,6 +113,8 @@ Use a dedicated long-lived Home Assistant token and remove it when Recorder main
 - `location_display_mode`: `full`, `reduced` or `hidden`
 
 ### GQ Radiation World Map
+
+RadonScan uploads are radon-only and use `rdlog.asp` with `AID`, `GID` and `pCi`. No Geiger-counter fields are submitted.
 
 - `gmcmap_enabled`
 - `gmcmap_auto_upload`
@@ -183,6 +187,6 @@ From the repository root:
 python3 -m pytest
 ```
 
-Version 5.5.1 includes tests for filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, automatic room resolution, read-only Home Assistant place/building data, guided room creation and assignment, inline validation, query/header/chunked Ingress fallbacks, idempotent room saves, the non-destructive System self-test, visible assignment cards, separation of local rooms from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
+Version 5.5.2 includes request-level tests for radon-only GMCMap uploads and tests for filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, automatic room resolution, read-only Home Assistant place/building data, guided room creation and assignment, inline validation, query/header/chunked Ingress fallbacks, idempotent room saves, the non-destructive System self-test, visible assignment cards, separation of local rooms from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
 
 Real-device and real-Home-Assistant field testing remains necessary for USB hardware variations, Home Assistant upgrades and Recorder backends.

@@ -1,4 +1,4 @@
-# Architecture - Radon Monitoring 5.5.1
+# Architecture - Radon Monitoring 5.5.2
 
 ## Runtime layers
 
@@ -10,7 +10,7 @@
 - `analysis.py`: deterministic statistical analysis of selected records.
 - `reports.py`: PDF composition; chart points are reduced separately from full-data calculations.
 - `homeassistant.py`: Home Assistant Core/Supervisor communication, Recorder purge and history verification.
-- `gmcmap.py`: GQ Radiation World Map queue and transport.
+- `gmcmap.py`: GQ Radiation World Map queue and radon-only transport through `rdlog.asp`; outbound fields are limited to `AID`, `GID` and `pCi`.
 - `operations.py`: orchestration and audit metadata for destructive database and Recorder workflows.
 - `security.py`: central redaction of tokens and sensitive fields.
 - `polling.py`: connection-runtime transitions for successful and failed USB scans.

@@ -1,4 +1,4 @@
-# Testing - Radon Monitoring 5.5.1
+# Testing - Radon Monitoring 5.5.2
 
 ## Standard command
 
@@ -19,6 +19,7 @@ Root `pyproject.toml` supplies the app library path and test directory. The app 
 - token and error redaction
 - USB disconnect/reconnect runtime state
 - GQ World Map queue and manual POST route
+- Radon-only GMCMap request contract: `rdlog.asp` with exactly `AID`, `GID` and `pCi`; no `CPM`, `ACPM` or `uSV`
 - actual web-server static assets and protected endpoints
 - three-year hourly database/report performance
 - release version, manuals, translations, HTML IDs and asset integrity
@@ -61,6 +62,7 @@ Automated tests do not replace tests with a real RadonScan and Home Assistant in
 - long-running history import
 - MQTT outage and recovery
 - GQ World Map outage and queued retry
+- Confirm in a real GMCMap account that new RadonScan uploads appear only on the radon map and do not create a 0 CPM radioactivity point
 - Recorder purge on the target Recorder backend
 - mobile Home Assistant app WebView
 - complete room create/edit/assign flow and built-in System self-test result

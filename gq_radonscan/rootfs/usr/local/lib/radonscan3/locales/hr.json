@@ -221,7 +221,7 @@
   "gmcmap_privacy_1": "Kada je omogućeno, vrijednost radona i identifikatori koje dodjeljuje GMCMap napuštaju lokalni sustav Home Assistant.",
   "gmcmap_privacy_2": "Javnom lokacijom upravlja se u profilu uređaja GMCMap. Ova aplikacija ne šalje GPS koordinate.",
   "gmcmap_privacy_title": "Napomene o privatnosti i protokolu",
-  "gmcmap_protocol_note": "Prijenos koristi GQ-ov objavljeni protokol log2.asp s AID, GID, CPM=0 i pCi.",
+  "gmcmap_protocol_note": "Prijenos koristi namjenski GQ radonski endpoint rdlog.asp samo s poljima AID, GID i pCi. Polja CPM, ACPM i uSV ne šalju se.",
   "gmcmap_ready_notice": "Integracija je konfigurirana. Dostupni su ručni i, ako su omogućeni, automatski prijenosi.",
   "gmcmap_setup_notice": "Omogućite integraciju, unesite ID računa i ID uređaja GMCMap u konfiguraciju aplikacije te ponovno pokrenite aplikaciju.",
   "gmcmap_title": "GQ Radiation World Map",
@@ -291,7 +291,7 @@
   "main_navigation": "Glavna navigacija",
   "mann_kendall_tau": "Mann-Kendallov tau",
   "manual": "Manual",
-  "manual_note_v3": "Korisnički priručnik odgovara verziji 5.5.1. Zasebna referenca SPIR protokola ostaje verzija 3.0.0 jer opisuje protokol uređaja, a ne izdanje aplikacije.",
+  "manual_note_v3": "Korisnički priručnik odgovara verziji 5.5.2. Zasebna referenca SPIR protokola ostaje verzija 3.0.0 jer opisuje protokol uređaja, a ne izdanje aplikacije.",
   "manual_upload": "Ručni prijenos",
   "manual_upload_hint": "Prenosi samo najnovije dovršeno lokalno satno očitanje. Objavljeni protokol ne omogućuje slanje povijesnih vremenskih oznaka.",
   "map_click_hint": "Kliknite tlocrt kako biste postavili položaj prostorije.",
@@ -610,5 +610,7 @@
   "recovery_time": "Vrijeme oporavka",
   "recovered_events": "Oporavljeni događaji",
   "event_impact_note": "Procijenjeno od prvog događaja u odabranom razdoblju:",
-  "event_impact_unavailable": "U odabranom razdoblju nisu dostupni prozori događaja s dovoljno mjerenja prije i nakon događaja."
+  "event_impact_unavailable": "U odabranom razdoblju nisu dostupni prozori događaja s dovoljno mjerenja prije i nakon događaja.",
+  "gmcmap_upload_mode": "Način prijenosa",
+  "gmcmap_radon_only": "Samo radon"
 }

@@ -221,7 +221,7 @@
   "gmcmap_privacy_1": "Lorsque cette option est activée, la valeur de radon et les identifiants attribués par GMCMap quittent le système Home Assistant local.",
   "gmcmap_privacy_2": "La position publique est gérée dans le profil de l’appareil GMCMap. Cette application ne transmet pas de coordonnées GPS.",
   "gmcmap_privacy_title": "Notes relatives à la confidentialité et au protocole",
-  "gmcmap_protocol_note": "L’envoi utilise le protocole log2.asp publié par GQ avec AID, GID, CPM=0 et pCi.",
+  "gmcmap_protocol_note": "L’envoi utilise le point de terminaison radon dédié rdlog.asp de GQ avec uniquement AID, GID et pCi. Aucun champ CPM, ACPM ou uSV n’est envoyé.",
   "gmcmap_ready_notice": "L’intégration est configurée. Les envois manuels et, s’ils sont activés, automatiques sont disponibles.",
   "gmcmap_setup_notice": "Activez l’intégration, saisissez l’identifiant du compte et de l’appareil GMCMap dans la configuration, puis redémarrez l’application.",
   "gmcmap_title": "GQ Radiation World Map",
@@ -291,7 +291,7 @@
   "main_navigation": "Navigation principale",
   "mann_kendall_tau": "Tau de Mann-Kendall",
   "manual": "Manual",
-  "manual_note_v3": "Le manuel utilisateur correspond à la version 5.5.1. La référence séparée du protocole SPIR reste en version 3.0.0, car elle décrit le protocole de l’appareil et non la version de l’application.",
+  "manual_note_v3": "Le manuel utilisateur correspond à la version 5.5.2. La référence séparée du protocole SPIR reste en version 3.0.0, car elle décrit le protocole de l’appareil et non la version de l’application.",
   "manual_upload": "Envoi manuel",
   "manual_upload_hint": "Envoie uniquement le dernier relevé horaire local terminé. Le protocole publié ne permet pas d’envoyer des horodatages historiques.",
   "map_click_hint": "Cliquez sur le plan pour définir la position de la pièce.",
@@ -610,5 +610,7 @@
   "recovery_time": "Temps de récupération",
   "recovered_events": "Événements récupérés",
   "event_impact_note": "Évalué à partir du premier événement de la période sélectionnée :",
-  "event_impact_unavailable": "Aucune fenêtre d’événement avec suffisamment de mesures avant et après l’événement n’est disponible dans la période sélectionnée."
+  "event_impact_unavailable": "Aucune fenêtre d’événement avec suffisamment de mesures avant et après l’événement n’est disponible dans la période sélectionnée.",
+  "gmcmap_upload_mode": "Mode d’envoi",
+  "gmcmap_radon_only": "Radon uniquement"
 }

@@ -11,7 +11,7 @@ from reportlab.platypus import (
     Paragraph, Spacer, Table, TableStyle,
 )
 
-VERSION = "5.5.1"
+VERSION = "5.5.2"
 ORANGE = colors.HexColor("#F47B20")
 DARK = colors.HexColor("#172033")
 MUTED = colors.HexColor("#667085")
@@ -28,7 +28,7 @@ CONTENT = {
 "title": "Radon Monitoring",
 "subtitle": "Benutzerhandbuch",
 "tagline": "Lokale Überwachung für GQ RadonScan Geräte",
-"date": "Stand 26.07.2026",
+"date": "Stand 27.07.2026",
 "contents": "Inhalt",
 "sections": [
 ("1. Zweck, Messprinzip und Grenzen", [
@@ -38,7 +38,7 @@ CONTENT = {
 ]),
 ("2. Installation, Upgrade und erster Start", [
 "Verbinden Sie das RadonScan Gerät per USB, stellen Sie MQTT für Home Assistant bereit und starten Sie die App. Für die automatische Erkennung kann serial_port leer beziehungsweise auf auto bleiben. Für eine feste Zuordnung ist ein Pfad unter /dev/serial/by-id/ vorzuziehen.",
-"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.5.1 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
+"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.5.2 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
 "Nur abgeschlossene Stunden werden übernommen. Nach dem ersten Anschließen kann deshalb zunächst noch kein aktueller Messwert verfügbar sein."
 ]),
 ("3. Übersicht", [
@@ -68,7 +68,8 @@ CONTENT = {
 ("7. GQ Radiation World Map", [
 "Der Upload ist optional und standardmäßig deaktiviert. Ist gmcmap_enabled ausgeschaltet, wird die World-Map-Ansicht vollständig aus der Seitenleiste ausgeblendet. Bei Aktivierung enthält sie ausschließlich externe Upload-, Warteschlangen- und Verlaufsfunktionen; lokale Räume, Zuordnungen und Ereignisse verbleiben in ihrer eigenen Ansicht. Account-ID und Geräte-ID werden nur maskiert angezeigt.",
 "Eine persistente Warteschlange verhindert Doppelübertragungen, wiederholt temporäre Fehler mit zunehmendem Abstand und kann zu alte Werte nach einer konfigurierbaren Grenze verwerfen. Der manuelle Upload ist eine geschützte POST-Aktion.",
-"Die öffentliche Position wird im GQ-Konto verwaltet. Radon Monitoring übermittelt keine eigenen GPS-Koordinaten."
+"RadonScan-Werte werden über den speziellen Radon-Endpunkt rdlog.asp ausschließlich mit AID, GID und pCi gesendet. Die App übermittelt keine Felder CPM, ACPM oder uSV und verwendet keinen Rückfall auf den allgemeinen Radioaktivitäts-Endpunkt log2.asp. Dadurch entstehen bei neuen Uploads keine künstlichen Radioaktivitätswerte von 0 CPM.",
+"Die öffentliche Position wird im GQ-Konto verwaltet. Radon Monitoring übermittelt keine eigenen GPS-Koordinaten. Bereits früher an GMCMap gesendete Nullwerte werden durch ein App-Update nicht vom externen Dienst gelöscht."
 ]),
 ("8. Wissenschaftliche PDF-Berichte", [
 "Kompakte und detaillierte Berichte enthalten Zeitraum, Raum, Messhöhe, Home-Assistant-Standort und -Gebäude, Gerät, Faktor, Datenabdeckung, Kennwerte, Zeitreihe, Methodik, Qualitätsinformationen, Softwareversion und SHA-256-Prüfsummen.",
@@ -84,7 +85,7 @@ CONTENT = {
 ("10. Bedienung, Mobilansicht und Barrierefreiheit", [
 "Die Seitenleiste wird auf kleinen Bildschirmen als Menü eingeblendet. Tabellen und Wochen-Heatmap bleiben innerhalb ihrer Kachel horizontal scrollbar; die restliche Seite darf keinen horizontalen Überstand erzeugen.",
 "Die Oberfläche unterstützt Tastaturbedienung, sichtbare Fokusmarkierungen, einen Sprunglink zum Hauptinhalt, Escape zum Schließen des Menüs, reduzierte Animationen und Schriftvergrößerung bis 200 Prozent.",
-"Version 5.5.1 wurde in Chromium bei 320, 390, 768 und 1440 Pixeln, in allen acht Sprachen und mit langen Testbezeichnungen geprüft. Gegenüber 5.5.0 liegt der Schwerpunkt auf einem kompakteren mobilen Layout für Statistik- und Analysekarten."
+"Version 5.5.2 enthält zusätzlich einen automatisierten Request-Test für den Radon-only-Upload: Ziel ist rdlog.asp, und die übermittelten Felder sind genau AID, GID und pCi. CPM, ACPM und uSV dürfen nicht enthalten sein. Die bestehenden Darstellungs- und Sprachtests bleiben erhalten."
 ]),
 ("11. Fehlerbehebung", [
 "Kein Gerät: USB-Zuordnung, Berechtigungen, konfigurierten Port und konkurrierende Prozesse prüfen.",
@@ -98,8 +99,8 @@ CONTENT = {
 "Messwerte und Metadaten bleiben standardmäßig lokal. Nur aktivierte externe Funktionen übertragen Daten. Die Standortkachel liest ihre Angaben ausschließlich über die lokale Home-Assistant-Core-API und verwendet keinen externen Geokodierungsdienst. Mit location_display_mode kann die Anzeige vollständig, reduziert oder ausgeblendet erfolgen. Prüfen Sie vor Bildschirmfotos, Berichten und World-Map-Uploads, ob die sichtbaren Standortangaben Ihren Datenschutzanforderungen entsprechen.",
 "Bewahren Sie Backups und Berichte geschützt auf. Sie können Gerätekennungen, Räume, Zeiträume und Gebäudedaten enthalten."
 ]),
-("13. Neu in Version 5.5.1", [
-"Version 5.5.1 ist ein Feinschliff-Release für die Darstellung. Statistik- und Analysekarten auf Übersicht, Analyse und Datenverwaltung wurden für mobile WebViews kompakter gestaltet: geringere Abstände, bessere Zeilenumbrüche, länger erhaltene Zwei-Spalten-Layouts und klarere Faktenraster reduzieren Scrollen und Überlappungen. Fachliche Funktionen, Berechnungen, Datenstrukturen und APIs bleiben gegenüber 5.5.0 unverändert. Bestehende Datenbanken und Messwerte bleiben kompatibel."
+("13. Neu in Version 5.5.2", [
+"Version 5.5.2 korrigiert den Upload zur GQ Radiation World Map für reine RadonScan-Messungen. Statt des allgemeinen log2.asp-Endpunkts mit dem Platzhalter CPM=0 verwendet die App nun rdlog.asp und sendet ausschließlich AID, GID und pCi. Die Felder CPM, ACPM und uSV fehlen ausdrücklich, sodass neue Radon-Uploads nicht mehr zusätzlich als Radioaktivitätsmessung mit 0 CPM erscheinen. Der Upload-Modus wird in der Oberfläche als Nur Radon angezeigt. Datenbank, Warteschlange und lokale Messwerte bleiben kompatibel."
 ])
 ],
 "options": [
@@ -118,7 +119,7 @@ CONTENT = {
 "title": "Radon Monitoring",
 "subtitle": "User manual",
 "tagline": "Local monitoring for GQ RadonScan devices",
-"date": "Updated 26 July 2026",
+"date": "Updated 27 July 2026",
 "contents": "Contents",
 "sections": [
 ("1. Purpose, measurement principle and limitations", [
@@ -128,7 +129,7 @@ CONTENT = {
 ]),
 ("2. Installation, upgrade and first start", [
 "Connect the RadonScan by USB, make MQTT available to Home Assistant and start the app. Leave serial_port empty or set to auto for discovery. For a stable fixed assignment, prefer a path under /dev/serial/by-id/.",
-"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.5.1. If an old Ingress view remains open, close the panel and reopen it.",
+"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.5.2. If an old Ingress view remains open, close the panel and reopen it.",
 "Only completed hours are imported. A newly connected device can therefore remain without a current value until a complete record is available."
 ]),
 ("3. Overview", [
@@ -158,7 +159,8 @@ CONTENT = {
 ("7. GQ Radiation World Map", [
 "Upload is optional and disabled by default. When gmcmap_enabled is off, the World Map view is omitted from the sidebar. When enabled it contains only external upload, queue and history functions; local rooms, assignments and events remain in their dedicated view. Account ID and device ID are shown only in masked form.",
 "A persistent queue prevents duplicates, retries temporary failures with increasing delay and can discard measurements older than a configured limit. Manual upload is a protected POST action.",
-"The public position is managed in the GQ account. Radon Monitoring does not transmit its own GPS coordinates."
+"RadonScan values are sent through the dedicated rdlog.asp radon endpoint using only AID, GID and pCi. The app does not submit CPM, ACPM or uSV and does not fall back to the generic log2.asp radiation endpoint. New uploads therefore no longer create artificial 0 CPM radioactivity entries.",
+"The public position is managed in the GQ account. Radon Monitoring does not transmit its own GPS coordinates. Zero-valued records uploaded previously are stored by the external GMCMap service and are not removed by an application update."
 ]),
 ("8. Scientific PDF reports", [
 "Compact and detailed reports contain period, room, measurement height, Home Assistant location and building, device, factor, coverage, statistics, time series, method, quality information, software version and SHA-256 checksums.",
@@ -174,7 +176,7 @@ CONTENT = {
 ("10. Operation, mobile layout and accessibility", [
 "On small screens the sidebar opens as a menu. Tables and the weekly heatmap remain horizontally scrollable inside their own cards; the rest of the page must not create horizontal page overflow.",
 "The interface supports keyboard operation, visible focus, a skip link, Escape to close the menu, reduced motion and text scaling to 200 percent.",
-"Version 5.5.1 was checked in Chromium at 320, 390, 768 and 1440 pixels, in all eight languages and with deliberately long labels. Compared with 5.5.0, the focus is a more compact mobile layout for statistic and analysis cards."
+"Version 5.5.2 adds an automated request test for the radon-only upload: the target must be rdlog.asp and the submitted fields must be exactly AID, GID and pCi. CPM, ACPM and uSV must be absent. Existing layout and language tests remain in place."
 ]),
 ("11. Troubleshooting", [
 "No device: check USB mapping, permissions, configured port and competing processes.",
@@ -188,8 +190,8 @@ CONTENT = {
 "Measurements and metadata remain local by default. Only enabled external functions transmit data. Location, address and building name are read only through the local Home Assistant Core API and are not manually duplicated. No external geocoding service is used. location_display_mode can show full, reduced or no location details. Before screenshots, reports and World Map publication, confirm that visible location data meets your privacy requirements.",
 "Protect backups and reports because they may contain device identifiers, rooms, periods and building information."
 ]),
-("13. New in version 5.5.1", [
-"Version 5.5.1 is a presentation-polish release. Statistic and analysis cards on Overview, Analysis and Data management were made more compact for mobile WebViews: smaller spacing, cleaner wrapping, longer-lasting two-column layouts and clearer fact grids reduce scrolling and visual collisions. Functional behaviour, calculations, data structures and APIs remain unchanged compared with 5.5.0. Existing databases and measurements remain compatible."
+("13. New in version 5.5.2", [
+"Version 5.5.2 corrects GQ Radiation World Map uploads for pure RadonScan measurements. Instead of using the generic log2.asp endpoint with the CPM=0 placeholder, the app now uses rdlog.asp and submits only AID, GID and pCi. CPM, ACPM and uSV are explicitly absent, so new radon uploads no longer appear as an additional 0 CPM radioactivity reading. The interface shows the upload mode as Radon only. The database, queue and local measurements remain compatible."
 ])
 ],
 "options": [

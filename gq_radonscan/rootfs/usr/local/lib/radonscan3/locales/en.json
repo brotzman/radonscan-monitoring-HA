@@ -221,7 +221,7 @@
   "gmcmap_privacy_1": "When enabled, the radon value and the identifiers assigned by GMCMap leave the local Home Assistant system.",
   "gmcmap_privacy_2": "The public location is managed in the GMCMap device profile. This app does not transmit GPS coordinates.",
   "gmcmap_privacy_title": "Privacy and protocol notes",
-  "gmcmap_protocol_note": "The upload uses GQ’s published log2.asp protocol with AID, GID, CPM=0 and pCi.",
+  "gmcmap_protocol_note": "Uploads use the dedicated GQ rdlog.asp radon endpoint with AID, GID and pCi only. No CPM, ACPM or uSV field is sent.",
   "gmcmap_ready_notice": "The integration is configured. Manual and, when enabled, automatic uploads are available.",
   "gmcmap_setup_notice": "Enable the integration and enter GMCMap Account ID and Device ID in the app configuration, then restart the app.",
   "gmcmap_title": "GQ Radiation World Map",
@@ -291,7 +291,7 @@
   "main_navigation": "Main navigation",
   "mann_kendall_tau": "Mann–Kendall tau",
   "manual": "Manual",
-  "manual_note_v3": "The user manual matches version 5.5.1. The separate SPIR protocol reference remains version 3.0.0 because it describes the device protocol, not the app release.",
+  "manual_note_v3": "The user manual matches version 5.5.2. The separate SPIR protocol reference remains version 3.0.0 because it describes the device protocol, not the app release.",
   "manual_upload": "Manual upload",
   "manual_upload_hint": "Uploads only the latest completed local hourly reading. Historical timestamps cannot be sent by the published protocol.",
   "map_click_hint": "Click the floor plan to set the room position.",
@@ -610,5 +610,7 @@
   "recovery_time": "Recovery time",
   "recovered_events": "Recovered events",
   "event_impact_note": "Evaluated from the first event in the selected period:",
-  "event_impact_unavailable": "No event windows with sufficient measurements before and after the event are available in the selected period."
+  "event_impact_unavailable": "No event windows with sufficient measurements before and after the event are available in the selected period.",
+  "gmcmap_upload_mode": "Upload mode",
+  "gmcmap_radon_only": "Radon only"
 }

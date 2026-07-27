@@ -1,4 +1,4 @@
-# Compatibility matrix - Radon Monitoring 5.5.1
+# Compatibility matrix - Radon Monitoring 5.5.2
 
 This matrix distinguishes automated contract coverage from checks that require a real Home Assistant installation and physical RadonScan hardware. A green automated test does not imply that every Home Assistant release, browser WebView or USB adapter has been field-tested.
 
@@ -15,3 +15,8 @@ This matrix distinguishes automated contract coverage from checks that require a
 ## Release recording
 
 For every release, record the Home Assistant version, installation type, browser/WebView, architecture, RadonScan firmware, USB identifier and result of the built-in System self-test. Do not mark an environment as field-tested until the complete room workflow and at least one new completed hourly measurement have been verified.
+
+## GQ Radiation World Map
+
+- Automated: the outbound RadonScan request targets `rdlog.asp` and contains only `AID`, `GID` and `pCi`.
+- Field verification still required: confirm with the configured GMCMap account that new values appear exclusively in the radon view. Previously uploaded 0 CPM records are external data and are not removed by this release.

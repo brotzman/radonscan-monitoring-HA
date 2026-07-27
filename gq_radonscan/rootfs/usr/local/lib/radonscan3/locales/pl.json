@@ -221,7 +221,7 @@
   "gmcmap_privacy_1": "Po włączeniu wartość radonu i identyfikatory przypisane przez GMCMap opuszczają lokalny system Home Assistant.",
   "gmcmap_privacy_2": "Publiczną lokalizacją zarządza się w profilu urządzenia GMCMap. Ta aplikacja nie przesyła współrzędnych GPS.",
   "gmcmap_privacy_title": "Uwagi dotyczące prywatności i protokołu",
-  "gmcmap_protocol_note": "Przesyłanie używa opublikowanego przez GQ protokołu log2.asp z parametrami AID, GID, CPM=0 i pCi.",
+  "gmcmap_protocol_note": "Wysyłanie używa dedykowanego punktu końcowego GQ dla radonu rdlog.asp wyłącznie z AID, GID i pCi. Pola CPM, ACPM ani uSV nie są wysyłane.",
   "gmcmap_ready_notice": "Integracja jest skonfigurowana. Dostępne jest przesyłanie ręczne oraz, po włączeniu, automatyczne.",
   "gmcmap_setup_notice": "Włącz integrację, wpisz identyfikator konta i urządzenia GMCMap w konfiguracji aplikacji, a następnie uruchom aplikację ponownie.",
   "gmcmap_title": "GQ Radiation World Map",
@@ -291,7 +291,7 @@
   "main_navigation": "Nawigacja główna",
   "mann_kendall_tau": "Tau Manna-Kendalla",
   "manual": "Manual",
-  "manual_note_v3": "Podręcznik użytkownika odpowiada wersji 5.5.1. Oddzielna dokumentacja protokołu SPIR pozostaje w wersji 3.0.0, ponieważ opisuje protokół urządzenia, a nie wersję aplikacji.",
+  "manual_note_v3": "Podręcznik użytkownika odpowiada wersji 5.5.2. Oddzielna dokumentacja protokołu SPIR pozostaje w wersji 3.0.0, ponieważ opisuje protokół urządzenia, a nie wersję aplikacji.",
   "manual_upload": "Przesyłanie ręczne",
   "manual_upload_hint": "Przesyła tylko najnowszy zakończony lokalny odczyt godzinowy. Opublikowany protokół nie pozwala przesyłać historycznych znaczników czasu.",
   "map_click_hint": "Kliknij plan, aby ustawić położenie pomieszczenia.",
@@ -610,5 +610,7 @@
   "recovery_time": "Czas powrotu",
   "recovered_events": "Zregenerowane zdarzenia",
   "event_impact_note": "Oceniono od pierwszego zdarzenia w wybranym okresie:",
-  "event_impact_unavailable": "W wybranym okresie nie są dostępne okna zdarzeń z wystarczającą liczbą pomiarów przed i po zdarzeniu."
+  "event_impact_unavailable": "W wybranym okresie nie są dostępne okna zdarzeń z wystarczającą liczbą pomiarów przed i po zdarzeniu.",
+  "gmcmap_upload_mode": "Tryb wysyłania",
+  "gmcmap_radon_only": "Tylko radon"
 }
