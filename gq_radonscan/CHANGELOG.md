@@ -1,13 +1,14 @@
 # Changelog
 
-## 5.5.6 - Reliable removal of legacy Home Assistant diagnostics
+## 5.5.7 - Restore stable Home Assistant MQTT discovery
 
-- Keep the Home Assistant MQTT model limited to exactly three Bq/m³ sensors: completed hourly Radon value, 24-hour mean and 7-day mean.
-- Fix legacy MQTT cleanup so obsolete diagnostics are purged not only for the current device ID but also for serial-number, generic and historical discovery-node aliases.
-- Remove retained discovery configurations for Connected, Hour index, Last update, Raw CPH, Stored hours, 30-day mean and known legacy topic layouts.
-- Replay MQTT discovery and cleanup after every broker reconnect, including Home Assistant or Mosquitto restarts while the app remains running.
-- Keep the three current sensors outside the Diagnostic entity category and without internal JSON attributes.
-- No database schema, measurement storage, serial, GMCMap or statistical changes.
+- Fix the regression where the RadonScan device disappeared from Home Assistant MQTT Discovery after the legacy-entity cleanup.
+- Publish the three requested Radon entities immediately after every MQTT connection, even when the serial device is disconnected or no measurement has been imported yet.
+- Use the stable discovery node `gq_radonscan` and stable device identifier `radon_monitoring_gq_radonscan` instead of changing discovery nodes with runtime device IDs.
+- Remove device-ID guards from the value templates so the same three entities continue receiving values after the RadonScan is detected later in the same session.
+- Remove the three desired sensors from old dynamic discovery nodes and republish them on the stable device card, preventing duplicates and orphaned cards.
+- Keep Home Assistant limited to exactly three Bq/m³ sensors: completed hourly value, 24-hour mean and 7-day mean.
+- No database, serial protocol, GMCMap or statistical changes.
 
 ## 5.5.4 - Correct public GMCMap upload endpoint
 

@@ -11,7 +11,7 @@ from reportlab.platypus import (
     Paragraph, Spacer, Table, TableStyle,
 )
 
-VERSION = "5.5.6"
+VERSION = "5.5.7"
 ORANGE = colors.HexColor("#F47B20")
 DARK = colors.HexColor("#172033")
 MUTED = colors.HexColor("#667085")
@@ -37,8 +37,8 @@ CONTENT = {
 "Ein hoher einzelner Stundenwert ist nicht automatisch eine Überschreitung eines Jahresreferenzwerts. Oberfläche und Berichte trennen aktuellen Wert, Zeitraumstatistik, Zählunsicherheit, Kalibrierinformation und fachliche Einordnung."
 ]),
 ("2. Installation, Upgrade und erster Start", [
-"Verbinden Sie das RadonScan Gerät per USB, stellen Sie MQTT für Home Assistant bereit und starten Sie die App. In Version 5.5.6 ist /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0 als stabiler Anschluss voreingestellt. Ein fester serial_port wird ausschließlich verwendet; auto aktiviert bewusst die automatische Suche.",
-"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.5.6 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
+"Verbinden Sie das RadonScan Gerät per USB, stellen Sie MQTT für Home Assistant bereit und starten Sie die App. In Version 5.5.7 ist /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0 als stabiler Anschluss voreingestellt. Ein fester serial_port wird ausschließlich verwendet; auto aktiviert bewusst die automatische Suche.",
+"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.5.7 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
 "Nur abgeschlossene Stunden werden übernommen. Nach dem ersten Anschließen kann deshalb zunächst noch kein aktueller Messwert verfügbar sein."
 ]),
 ("3. Übersicht", [
@@ -55,7 +55,7 @@ CONTENT = {
 ]),
 ("5. Geräte & System, Faktor und Kalibrierung", [
 "Die frühere Expertenansicht wurde in Version 5.1.0 vollständig aus Oberfläche und Seitenleiste entfernt. Geräte-, Protokoll-, Dienst- und Datenbankstatus finden Sie gebündelt unter Geräte & System; konfigurierbare Schwellen und weitere Betriebsparameter stehen unter Einstellungen.",
-"Home Assistant erhält über MQTT nur drei Sensoren: den abgeschlossenen Stundenwert, den 24-Stunden-Mittelwert und den 7-Tage-Mittelwert. Alle drei verwenden unabhängig von der Anzeigeeinheit der App ausschließlich Bq/m³. Frühere Diagnoseentitäten und der 30-Tage-Sensor werden beim ersten erfolgreichen MQTT-Verbindungsaufbau nach dem Update automatisch aus der Discovery entfernt.",
+"Home Assistant erhält über MQTT nur drei Sensoren: den abgeschlossenen Stundenwert, den 24-Stunden-Mittelwert und den 7-Tage-Mittelwert. Alle drei verwenden unabhängig von der Anzeigeeinheit der App ausschließlich Bq/m³. Frühere Diagnoseentitäten und der 30-Tage-Sensor werden beim ersten erfolgreichen MQTT-Verbindungsaufbau nach dem Update automatisch aus der Discovery entfernt. Die drei gewünschten Sensoren werden auf einer festen RadonScan-Gerätekennung sofort neu veröffentlicht, auch wenn das USB-Gerät zu diesem Zeitpunkt noch nicht verbunden ist.",
 "Der System-Selbsttest prüft auf Anforderung API-Version, SQLite-Integrität, schreibgeschützten Raum-Rundlauf, Berichtsverzeichnis, Gerätestatus, MQTT und die lokale Home-Assistant-Verbindung. Das Ergebnis wird als verständliche Checkliste angezeigt und verändert keine gespeicherten Räume oder Messwerte.",
 "Der aktuell konfigurierte Faktor wird getrennt vom Faktor des ausgewählten historischen Messwerts dargestellt. Dadurch bleiben ältere Werte reproduzierbar, auch wenn die Konfiguration später geändert wird.",
 "Kalibrierungen können mit Datum, Labor, Zertifikatsreferenz, Faktor, Unsicherheit, Folgetermin und Notizen dokumentiert werden. Ein Eintrag verändert vorhandene Messwerte nicht automatisch."
@@ -86,7 +86,7 @@ CONTENT = {
 ("10. Bedienung, Mobilansicht und Barrierefreiheit", [
 "Die Seitenleiste wird auf kleinen Bildschirmen als Menü eingeblendet. Tabellen und Wochen-Heatmap bleiben innerhalb ihrer Kachel horizontal scrollbar; die restliche Seite darf keinen horizontalen Überstand erzeugen.",
 "Die Oberfläche unterstützt Tastaturbedienung, sichtbare Fokusmarkierungen, einen Sprunglink zum Hauptinhalt, Escape zum Schließen des Menüs, reduzierte Animationen und Schriftvergrößerung bis 200 Prozent.",
-"Version 5.5.6 enthält zusätzlich automatisierte Tests für das auf drei Bq/m³-Sensoren begrenzte MQTT-Discovery-Modell, die Bereinigung mehrerer historischer Discovery-Knoten und die erneute Veröffentlichung nach MQTT-Neuverbindungen. Die bestehenden Radon-only-, Anschluss-, Darstellungs- und Sprachtests bleiben erhalten."
+"Version 5.5.7 enthält zusätzlich automatisierte Tests für die sofortige MQTT-Discovery ohne angeschlossenes USB-Gerät, eine stabile Gerätekennung, die Bereinigung dynamischer Alt-Knoten und die erneute Veröffentlichung nach MQTT-Neuverbindungen. Die bestehenden Radon-only-, Anschluss-, Darstellungs- und Sprachtests bleiben erhalten."
 ]),
 ("11. Fehlerbehebung", [
 "Kein Gerät: USB-Zuordnung, Berechtigungen, konfigurierten Port und konkurrierende Prozesse prüfen.",
@@ -100,8 +100,8 @@ CONTENT = {
 "Messwerte und Metadaten bleiben standardmäßig lokal. Nur aktivierte externe Funktionen übertragen Daten. Die Standortkachel liest ihre Angaben ausschließlich über die lokale Home-Assistant-Core-API und verwendet keinen externen Geokodierungsdienst. Mit location_display_mode kann die Anzeige vollständig, reduziert oder ausgeblendet erfolgen. Prüfen Sie vor Bildschirmfotos, Berichten und World-Map-Uploads, ob die sichtbaren Standortangaben Ihren Datenschutzanforderungen entsprechen.",
 "Bewahren Sie Backups und Berichte geschützt auf. Sie können Gerätekennungen, Räume, Zeiträume und Gebäudedaten enthalten."
 ]),
-("13. Neu in Version 5.5.6", [
-"Version 5.5.6 hält die Home-Assistant-Integration bei genau drei MQTT-Sensoren: abgeschlossener Stundenwert, 24-Stunden-Mittelwert und 7-Tage-Mittelwert, jeweils ausschließlich in Bq/m³. Unerwünschte Diagnose-Entitäten aus älteren Versionen werden nun über aktuelle, serielle, generische und historische Discovery-Knoten hinweg mit leeren retained Nachrichten entfernt. Diese Bereinigung wird nach jeder MQTT-Neuverbindung erneut ausgeführt. Falls Home Assistant verwaiste nicht verfügbare Einträge weiterhin im Geräte-Register zeigt, ist einmalig ein Neustart von Home Assistant und gegebenenfalls das Entfernen der verbleibenden Einträge unter MQTT > Entitäten erforderlich. GMCMap-Radon-only-Upload und feste Portauswahl bleiben erhalten. Datenbank und Messwerte bleiben kompatibel."
+("13. Neu in Version 5.5.7", [
+"Version 5.5.7 behebt das Verschwinden des RadonScan-Geräts aus der MQTT-Discovery. Die drei gewünschten Sensoren - Stundenwert, 24-Stunden-Mittelwert und 7-Tage-Mittelwert - werden nun direkt nach jeder MQTT-Verbindung auf einer festen Gerätekennung veröffentlicht, unabhängig davon, ob das USB-Gerät bereits erkannt wurde oder Messdaten vorliegen. Alte dynamische Gerätekennungen werden bereinigt, sodass genau ein GQ-RadonScan-Gerät mit drei Sensoren bestehen bleibt. GMCMap-Radon-only-Upload und feste Portauswahl bleiben erhalten. Datenbank und Messwerte bleiben kompatibel."
 ])
 ],
 "options": [
@@ -129,8 +129,8 @@ CONTENT = {
 "A high individual hourly value is not automatically an exceedance of an annual reference value. The interface and reports distinguish the current value, period statistics, counting uncertainty, calibration information and professional interpretation."
 ]),
 ("2. Installation, upgrade and first start", [
-"Connect the RadonScan by USB, make MQTT available to Home Assistant and start the app. Version 5.5.6 defaults to /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0. A fixed serial_port is used exclusively; auto deliberately enables discovery.",
-"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.5.6. If an old Ingress view remains open, close the panel and reopen it.",
+"Connect the RadonScan by USB, make MQTT available to Home Assistant and start the app. Version 5.5.7 defaults to /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0. A fixed serial_port is used exclusively; auto deliberately enables discovery.",
+"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.5.7. If an old Ingress view remains open, close the panel and reopen it.",
 "Only completed hours are imported. A newly connected device can therefore remain without a current value until a complete record is available."
 ]),
 ("3. Overview", [
@@ -147,7 +147,7 @@ CONTENT = {
 ]),
 ("5. Devices & System, factor and calibration", [
 "The former Expert view was removed completely from the interface and sidebar in version 5.1.0. Device, protocol, service and database status is grouped under Devices & System; configured thresholds and other operating parameters are shown under Settings.",
-"Home Assistant receives only three MQTT sensors: the completed hourly value, the 24-hour mean and the 7-day mean. All three always use Bq/m³, independently of the display unit selected inside the app. Previous diagnostic entities and the 30-day sensor are removed from discovery after the first successful MQTT connection following the update.",
+"Home Assistant receives only three MQTT sensors: the completed hourly value, the 24-hour mean and the 7-day mean. All three always use Bq/m³, independently of the display unit selected inside the app. Previous diagnostic entities and the 30-day sensor are removed from discovery after the first successful MQTT connection following the update. The three requested sensors are immediately republished on a stable RadonScan device identifier, even if the USB device is not connected yet.",
 "The on-demand System self-test checks the API version, SQLite integrity, a rolled-back room persistence round trip, the report directory, device runtime, MQTT and the local Home Assistant connection. Results are shown as an actionable checklist and do not alter stored rooms or measurements.",
 "The currently configured factor is displayed separately from the factor stored with the selected historical measurement. Historical results therefore remain reproducible after later configuration changes.",
 "Calibration records can include date, laboratory, certificate reference, factor, uncertainty, next due date and notes. A calibration entry does not silently alter existing measurements."
@@ -178,7 +178,7 @@ CONTENT = {
 ("10. Operation, mobile layout and accessibility", [
 "On small screens the sidebar opens as a menu. Tables and the weekly heatmap remain horizontally scrollable inside their own cards; the rest of the page must not create horizontal page overflow.",
 "The interface supports keyboard operation, visible focus, a skip link, Escape to close the menu, reduced motion and text scaling to 200 percent.",
-"Version 5.5.6 adds automated tests for the MQTT discovery model limited to three Bq/m³ sensors, cleanup across historical discovery nodes and replay after MQTT reconnects. Existing radon-only, connection, layout and language tests remain in place."
+"Version 5.5.7 adds automated tests for immediate MQTT discovery without a connected USB device, a stable device identifier, cleanup of dynamic legacy nodes and replay after MQTT reconnects. Existing radon-only, connection, layout and language tests remain in place."
 ]),
 ("11. Troubleshooting", [
 "No device: check USB mapping, permissions, configured port and competing processes.",
@@ -192,8 +192,8 @@ CONTENT = {
 "Measurements and metadata remain local by default. Only enabled external functions transmit data. Location, address and building name are read only through the local Home Assistant Core API and are not manually duplicated. No external geocoding service is used. location_display_mode can show full, reduced or no location details. Before screenshots, reports and World Map publication, confirm that visible location data meets your privacy requirements.",
 "Protect backups and reports because they may contain device identifiers, rooms, periods and building information."
 ]),
-("13. New in version 5.5.6", [
-"Version 5.5.6 keeps Home Assistant integration at exactly three MQTT sensors: completed hourly value, 24-hour mean and 7-day mean, all exclusively in Bq/m³. Unwanted Diagnostic entities from older releases are now removed across current, serial, generic and historical discovery nodes with retained empty messages. Cleanup is replayed after every MQTT reconnect. If Home Assistant still shows orphaned unavailable registry entries, restart Home Assistant once and remove remaining entries under MQTT > Entities. The radon-only GMCMap upload and fixed-port selection remain in place. The database and measurements remain compatible."
+("13. New in version 5.5.7", [
+"Version 5.5.7 fixes the RadonScan device disappearing from MQTT Discovery. The three requested sensors - hourly value, 24-hour mean and 7-day mean - are now published immediately after every MQTT connection on a stable device identifier, independently of USB detection or existing measurements. Old dynamic device identifiers are cleaned up so exactly one GQ RadonScan device with three sensors remains. The radon-only GMCMap upload and fixed-port selection remain in place. The database and measurements remain compatible."
 ])
 ],
 "options": [

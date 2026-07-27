@@ -27,6 +27,7 @@ def publisher():
     item.username = None
     item.password = None
     item._discovery_device_id = "old_device"
+    item._last_state = {}
     item.client = FakeClient()
     return item
 
@@ -65,7 +66,9 @@ def test_mqtt_reconnect_forces_discovery_republish():
     item.connected = SimpleNamespace(set=lambda: None, clear=lambda: None)
     item._runtime = lambda *args, **kwargs: None
     item._on_connect(item.client, None, None, 0)
-    assert item._discovery_device_id is None
+    assert item._discovery_device_id == "gq_radonscan"
+    configs = [topic for topic, payload, retain in item.client.messages if payload not in (None, "")]
+    assert "homeassistant/sensor/gq_radonscan/radon_hourly/config" in configs
 
     item._discovery_device_id = "rs_123"
     item._on_disconnect(item.client, None)

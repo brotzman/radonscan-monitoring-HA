@@ -1,4 +1,4 @@
-# Radon Monitoring 5.5.6 - App documentation
+# Radon Monitoring 5.5.7 - App documentation
 
 ## Purpose
 
@@ -16,7 +16,7 @@ The app is an orientation and documentation tool. It does not turn a consumer mo
 
 Only completed hours are imported. A newly connected device may therefore remain without a current value until a completed record is available.
 
-## Home Assistant entities in 5.5.6
+## Home Assistant entities in 5.5.7
 
 MQTT discovery exposes exactly three sensor entities and all of them use `Bq/m³`:
 
@@ -26,7 +26,7 @@ MQTT discovery exposes exactly three sensor entities and all of them use `Bq/m³
 
 The web-interface preference for `pCi/L` affects only the app display and reports; it does not change the Home Assistant entity units. The 30-day mean, raw CPH, hour index, last update, sample count and connectivity binary sensor are no longer published as Home Assistant entities.
 
-During every successful MQTT connection, retained empty discovery payloads are published for those obsolete entity topics. Version 5.5.6 covers the current device ID, serial-number aliases, generic historical node IDs and both known discovery-topic layouts. Home Assistant should therefore remove the unwanted Diagnostic components automatically. The three retained sensors keep their existing unique IDs so their entity IDs and history remain associated with the same sensors wherever Home Assistant permits the unit transition. If stale unavailable registry entries remain visible, restart Home Assistant once and remove any residual unavailable entries from Settings > Devices & services > MQTT > Entities.
+During every successful MQTT connection, retained empty discovery payloads are published for those obsolete entity topics. Version 5.5.7 covers the current device ID, serial-number aliases, generic historical node IDs and both known discovery-topic layouts. Home Assistant should therefore remove the unwanted Diagnostic components automatically. The three retained sensors keep their existing unique IDs so their entity IDs and history remain associated with the same sensors wherever Home Assistant permits the unit transition. If stale unavailable registry entries remain visible, restart Home Assistant once and remove any residual unavailable entries from Settings > Devices & services > MQTT > Entities.
 
 ## Fixed serial-port selection retained from 5.5.3
 
@@ -207,6 +207,6 @@ From the repository root:
 python3 -m pytest
 ```
 
-Version 5.5.6 includes request-level tests for radon-only GMCMap uploads and tests for filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, automatic room resolution, read-only Home Assistant place/building data, guided room creation and assignment, inline validation, query/header/chunked Ingress fallbacks, idempotent room saves, the non-destructive System self-test, visible assignment cards, separation of local rooms from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
+Version 5.5.7 includes request-level tests for radon-only GMCMap uploads and tests for filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, automatic room resolution, read-only Home Assistant place/building data, guided room creation and assignment, inline validation, query/header/chunked Ingress fallbacks, idempotent room saves, the non-destructive System self-test, visible assignment cards, separation of local rooms from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
 
 Real-device and real-Home-Assistant field testing remains necessary for USB hardware variations, Home Assistant upgrades and Recorder backends.

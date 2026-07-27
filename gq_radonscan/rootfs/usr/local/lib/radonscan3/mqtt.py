@@ -33,6 +33,7 @@ class MqttPublisher:
         self.password = os.environ.get("MQTT_PASSWORD")
         self.connected = threading.Event()
         self._discovery_device_id: str | None = None
+        self._last_state: dict[str, Any] = {}
         self.client = None
         if mqtt is not None:
             try:
@@ -74,6 +75,10 @@ class MqttPublisher:
             # restarted while the app process stayed alive.
             self._discovery_device_id = None
             client.publish(self.availability_topic, "online", retain=True)
+            # Publish the three Home Assistant entities immediately. Discovery
+            # must not depend on a currently connected RadonScan or on an
+            # already imported measurement.
+            self._publish_discovery(self._last_state)
             self._runtime(True)
             LOGGER.info("Connected to MQTT broker %s:%s", self.host, self.port)
         else:
@@ -106,15 +111,19 @@ class MqttPublisher:
         finally:
             self.client.loop_stop()
 
-    def _legacy_discovery_node_ids(self, state: dict[str, Any]) -> tuple[str, ...]:
-        """Return all node identifiers used by current or historical releases.
+    @property
+    def discovery_node_id(self) -> str:
+        """Stable MQTT discovery node for the single RadonScan device.
 
-        Earlier releases built MQTT discovery topics from the detected device
-        identifier. When a device was temporarily unavailable, a generic node
-        identifier could be used instead. Purging all known aliases prevents
-        old diagnostic entities from surviving an upgrade as retained MQTT
-        discovery messages.
+        Discovery used to follow the runtime device id. That made the entity
+        disappear or move between device cards when the serial device was
+        unavailable during startup. A fixed node keeps the same three entities
+        present independently of connection state and measurement history.
         """
+        return "gq_radonscan"
+
+    def _legacy_discovery_node_ids(self, state: dict[str, Any]) -> tuple[str, ...]:
+        """Return node identifiers used by current and historical releases."""
         device = state.get("device") or {}
         candidates = {
             str(device.get("device_id") or ""),
@@ -137,22 +146,34 @@ class MqttPublisher:
             "sample_count",
             "stored_hours",
         )
+        current_sensor_ids = ("radon_hourly", "average_24h", "average_7d")
+        stable_node = self.discovery_node_id
         for node_id in self._legacy_discovery_node_ids(state):
             for object_id in obsolete_sensor_ids:
-                # Component discovery layout used by all released 4.x/5.x
-                # versions of this app.
                 self.client.publish(
                     f"{self.settings.discovery_prefix}/sensor/{node_id}/{object_id}/config",
                     "",
                     retain=True,
                 )
-                # Also remove the older single-object layout if a development
-                # build or manual migration used it.
                 self.client.publish(
                     f"{self.settings.discovery_prefix}/sensor/{node_id}_{object_id}/config",
                     "",
                     retain=True,
                 )
+            # Remove the three desired sensors only from historical dynamic
+            # node ids. They are republished below on the stable node.
+            if node_id != stable_node:
+                for object_id in current_sensor_ids:
+                    self.client.publish(
+                        f"{self.settings.discovery_prefix}/sensor/{node_id}/{object_id}/config",
+                        "",
+                        retain=True,
+                    )
+                    self.client.publish(
+                        f"{self.settings.discovery_prefix}/sensor/{node_id}_{object_id}/config",
+                        "",
+                        retain=True,
+                    )
             self.client.publish(
                 f"{self.settings.discovery_prefix}/binary_sensor/{node_id}/connected/config",
                 "",
@@ -164,19 +185,22 @@ class MqttPublisher:
                 retain=True,
             )
 
-    def _publish_discovery(self, state: dict[str, Any]) -> None:
+    def _publish_discovery(self, state: dict[str, Any] | None = None) -> None:
         if self.client is None:
             return
-        device_id = slug(str(state.get("device", {}).get("device_id") or "radonscan"))
+        state = state or {}
+        device_state = state.get("device") or {}
+        device_id = self.discovery_node_id
         if self._discovery_device_id == device_id:
             return
         t = load(resolve(self.settings.language))
         device = {
-            "identifiers": [f"gq_radonscan_{device_id}"],
+            "identifiers": ["radon_monitoring_gq_radonscan"],
             "name": self.settings.device_name,
             "manufacturer": "GQ Electronics",
-            "model": state.get("device", {}).get("model") or "RadonScan",
-            "sw_version": state.get("device", {}).get("firmware"),
+            "model": device_state.get("model") or "RadonScan",
+            "sw_version": __version__,
+            "serial_number": device_state.get("serial_number"),
         }
         base = {
             "state_topic": self.state_topic,
@@ -187,24 +211,15 @@ class MqttPublisher:
             "origin": {"name": "Radon Monitoring", "sw": __version__},
         }
 
-        expected_device = json.dumps(str(state.get("device", {}).get("device_id") or ""))
-
-        def guarded(expression: str, fallback: str = "{{ none }}") -> str:
-            return (
-                "{% if value_json.device.device_id == " + expected_device + " %}"
-                + expression
-                + "{% else %}" + fallback + "{% endif %}"
-            )
-
         # Home Assistant intentionally exposes only the three user-facing radon
-        # entities requested for dashboards and history.  These entities always
-        # use Bq/m³, independently of the display unit selected inside the app.
+        # entities requested for dashboards and history. Discovery and value
+        # extraction are independent of the temporary serial connection state.
         unit = "Bq/m³"
         precision = 1
         sensors = {
             "radon_hourly": {
                 "name": t["hourly_value"],
-                "value_template": guarded("{{ value_json.measurement.bq_m3 }}"),
+                "value_template": "{{ value_json.measurement.bq_m3 }}",
                 "unit_of_measurement": unit,
                 "device_class": "radon",
                 "state_class": "measurement",
@@ -213,7 +228,7 @@ class MqttPublisher:
             },
             "average_24h": {
                 "name": t["average_24h"],
-                "value_template": guarded("{{ value_json.statistics['24h']['mean_bq_m3'] }}"),
+                "value_template": "{{ value_json.statistics['24h']['mean_bq_m3'] }}",
                 "unit_of_measurement": unit,
                 "device_class": "radon",
                 "state_class": "measurement",
@@ -222,7 +237,7 @@ class MqttPublisher:
             },
             "average_7d": {
                 "name": t["average_7d"],
-                "value_template": guarded("{{ value_json.statistics['7d']['mean_bq_m3'] }}"),
+                "value_template": "{{ value_json.statistics['7d']['mean_bq_m3'] }}",
                 "unit_of_measurement": unit,
                 "device_class": "radon",
                 "state_class": "measurement",
@@ -231,24 +246,25 @@ class MqttPublisher:
             },
         }
 
-        # Purge all known legacy discovery aliases before publishing the three
-        # current radon entities. Home Assistant removes a discovered component
-        # when its retained discovery configuration is replaced by an empty
-        # retained payload.
         self._purge_legacy_discovery(state)
         for object_id, extra in sensors.items():
             payload = {
                 **base,
                 **extra,
-                "unique_id": f"gq_radonscan_{device_id}_{object_id}",
+                "unique_id": f"radon_monitoring_{device_id}_{object_id}",
             }
             topic = f"{self.settings.discovery_prefix}/sensor/{device_id}/{object_id}/config"
-            self.client.publish(topic, json.dumps(payload, ensure_ascii=False), retain=True)
+            result = self.client.publish(topic, json.dumps(payload, ensure_ascii=False), retain=True)
+            if getattr(result, "rc", 0) != 0:
+                LOGGER.warning("MQTT discovery publish failed for %s: rc=%s", topic, getattr(result, "rc", None))
 
         self._discovery_device_id = device_id
 
     def publish(self, state: dict[str, Any]) -> None:
+        self._last_state = state
         if self.client is None or not self.connected.is_set():
             return
         self._publish_discovery(state)
-        self.client.publish(self.state_topic, json.dumps(state, ensure_ascii=False, default=str), retain=True)
+        result = self.client.publish(self.state_topic, json.dumps(state, ensure_ascii=False, default=str), retain=True)
+        if getattr(result, "rc", 0) != 0:
+            LOGGER.warning("MQTT state publish failed: rc=%s", getattr(result, "rc", None))

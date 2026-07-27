@@ -30,6 +30,7 @@ def _publisher(preferred_unit="pCi/L"):
     publisher.password = None
     publisher.connected = None
     publisher._discovery_device_id = None
+    publisher._last_state = {}
     publisher.client = FakeClient()
     return publisher
 
@@ -62,9 +63,9 @@ def test_home_assistant_discovery_exposes_only_three_bq_entities():
             configs[topic] = json.loads(payload)
 
     expected_topics = {
-        "homeassistant/sensor/rs_123/radon_hourly/config",
-        "homeassistant/sensor/rs_123/average_24h/config",
-        "homeassistant/sensor/rs_123/average_7d/config",
+        "homeassistant/sensor/gq_radonscan/radon_hourly/config",
+        "homeassistant/sensor/gq_radonscan/average_24h/config",
+        "homeassistant/sensor/gq_radonscan/average_7d/config",
     }
     assert set(configs) == expected_topics
 
@@ -75,9 +76,9 @@ def test_home_assistant_discovery_exposes_only_three_bq_entities():
         assert "json_attributes_topic" not in payload
         assert "pci_l" not in payload["value_template"]
 
-    assert "measurement.bq_m3" in configs["homeassistant/sensor/rs_123/radon_hourly/config"]["value_template"]
-    assert "mean_bq_m3" in configs["homeassistant/sensor/rs_123/average_24h/config"]["value_template"]
-    assert "mean_bq_m3" in configs["homeassistant/sensor/rs_123/average_7d/config"]["value_template"]
+    assert "measurement.bq_m3" in configs["homeassistant/sensor/gq_radonscan/radon_hourly/config"]["value_template"]
+    assert "mean_bq_m3" in configs["homeassistant/sensor/gq_radonscan/average_24h/config"]["value_template"]
+    assert "mean_bq_m3" in configs["homeassistant/sensor/gq_radonscan/average_7d/config"]["value_template"]
 
     expected_deletions = {
         "homeassistant/sensor/rs_123/average_30d/config",
@@ -88,3 +89,25 @@ def test_home_assistant_discovery_exposes_only_three_bq_entities():
         "homeassistant/binary_sensor/rs_123/connected/config",
     }
     assert expected_deletions <= deletions
+    assert "homeassistant/sensor/rs_123/radon_hourly/config" in deletions
+    assert "homeassistant/sensor/rs_123/average_24h/config" in deletions
+    assert "homeassistant/sensor/rs_123/average_7d/config" in deletions
+
+
+def test_discovery_is_published_without_a_connected_or_known_device():
+    publisher = _publisher()
+    publisher._publish_discovery({})
+    configs = {
+        topic: json.loads(payload)
+        for topic, payload, retain in publisher.client.messages
+        if payload not in (None, "")
+    }
+    assert set(configs) == {
+        "homeassistant/sensor/gq_radonscan/radon_hourly/config",
+        "homeassistant/sensor/gq_radonscan/average_24h/config",
+        "homeassistant/sensor/gq_radonscan/average_7d/config",
+    }
+    for payload in configs.values():
+        assert payload["device"]["identifiers"] == ["radon_monitoring_gq_radonscan"]
+        assert payload["device"]["name"] == "GQ RadonScan"
+        assert "value_json.device.device_id" not in payload["value_template"]

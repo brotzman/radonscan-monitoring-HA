@@ -1,4 +1,4 @@
-# Radon Monitoring 5.5.6
+# Radon Monitoring 5.5.7
 
 Radon Monitoring is a local Home Assistant app for read-only monitoring of compatible GQ RadonScan devices. It imports completed hourly values, stores raw and converted measurements in SQLite, publishes Home Assistant entities through MQTT, provides scientific time-series analysis, generates PDF reports and can optionally upload measurements to the GQ Radiation World Map.
 
@@ -24,29 +24,29 @@ Radon Monitoring is a local Home Assistant app for read-only monitoring of compa
 - optional complete Home Assistant Recorder purge for RadonScan entities, plus verification through the History API
 - interface and Home Assistant option translations in German, English, Spanish, French, Croatian, Italian, Dutch and Polish
 
-## Version 5.5.6
+## Version 5.5.7
 
-Version 5.5.6 corrects the cleanup of obsolete Home Assistant MQTT entities. The published entity set remains exactly:
+Version 5.5.7 fixes an MQTT Discovery regression introduced by the broad legacy cleanup. In some installations the old RadonScan device card was removed correctly, but the replacement card was not reliably recreated when the serial device was disconnected or the runtime device identifier was not yet available.
+
+MQTT Discovery now uses a fixed node and device identifier instead of deriving them from the current serial-device record. The three requested entities are published immediately after every broker connection and therefore exist independently of USB connection state or stored measurements:
 
 - completed hourly Radon value in `Bq/m³`
 - 24-hour mean in `Bq/m³`
 - 7-day mean in `Bq/m³`
 
-The unwanted Diagnostic entries - Connected, Hour index, Last update, Raw CPH and Stored hours - are remnants of retained MQTT discovery messages from releases before 5.5.5. The previous cleanup addressed only the currently resolved device node. Version 5.5.6 additionally purges serial-number, generic and historical node aliases and both known discovery-topic layouts.
+The value templates no longer compare against a temporary device ID. When the RadonScan is detected later, the same entities receive the measurements instead of remaining unavailable or moving to another device card. Configurations for these three sensors on older dynamic discovery nodes are removed so that Home Assistant shows one stable **GQ RadonScan** device with exactly three entities.
 
-Discovery and cleanup are now replayed after every MQTT reconnect. This covers Home Assistant or Mosquitto restarts while Radon Monitoring itself remains running. The three current Radon sensors have no Diagnostic entity category and do not receive the internal JSON state as attributes.
-
-Home Assistant officially removes an MQTT-discovered component when an empty retained payload is published to its discovery topic. Depending on the Home Assistant entity-registry state, a single Home Assistant restart may still be required before stale unavailable entries disappear from the device page. No database-schema or measurement change is introduced.
+No database schema, measurement, serial, GMCMap or statistical behaviour changes in this release.
 
 ## Upgrade notes
 
-The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.6 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
+The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.7 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
 
 Before upgrading:
 
 1. Create a Home Assistant backup and, where appropriate, an app database backup.
 2. Stop the app before replacing a local repository package.
-3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.6.
+3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.7.
 4. Reopen the Ingress panel if an old iframe remains visible.
 5. Review `location_display_mode` if the Overview is shown in screenshots or shared displays.
 
