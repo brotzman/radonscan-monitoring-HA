@@ -1,10 +1,10 @@
-# Radon Monitoring Home Assistant Repository 5.5.1
+# Radon Monitoring Home Assistant Repository 5.5.2
 
 This repository contains the Home Assistant app **Radon Monitoring** for compatible GQ RadonScan devices.
 
-Version 5.5.1 is a **UI polishing release**. It focuses on the mobile presentation of Overview, Analysis and Data statistics by using more compact statistic cards, denser but still readable spacing, and improved wrapping of labels, helper texts and values in narrow Home Assistant WebViews.
+Version 5.5.2 corrects the GQ Radiation World Map integration for pure RadonScan measurements. Uploads now use the dedicated `rdlog.asp` radon endpoint and submit only `AID`, `GID` and `pCi`.
 
-The release keeps the existing analysis structure and functionality from 5.5.0, but presents them more efficiently on smaller screens. Two-column card layouts are preserved longer on mobile before collapsing to a single column on very narrow displays, and statistical fact grids are tuned for clearer label/value stacking.
+The former generic request included `CPM=0`. GMCMap interpreted that placeholder as a real radioactivity measurement and displayed an additional zero value on the radioactivity map. Version 5.5.2 no longer sends `CPM`, `ACPM` or `uSV`, so new uploads are classified as radon-only measurements.
 
 Place/address and building continue to come directly from Home Assistant. Only room and measurement height are maintained locally. Coordinates include degree units and cardinal directions, for example `51,60176° N, 7,45410° E`; no external geocoding service is used.
 
