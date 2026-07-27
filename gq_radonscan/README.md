@@ -1,4 +1,4 @@
-# Radon Monitoring 5.5.10
+# Radon Monitoring 5.5.11
 
 Radon Monitoring is a local Home Assistant app for read-only monitoring of compatible GQ RadonScan devices. It imports completed hourly values, stores raw and converted measurements in SQLite, publishes Home Assistant entities through MQTT, provides scientific time-series analysis, generates PDF reports and can optionally upload measurements to the GQ Radiation World Map.
 
@@ -24,25 +24,23 @@ Radon Monitoring is a local Home Assistant app for read-only monitoring of compa
 - optional complete Home Assistant Recorder purge for RadonScan entities, plus verification through the History API
 - interface and Home Assistant option translations in German, English, Spanish, French, Croatian, Italian, Dutch and Polish
 
-## Version 5.5.10
+## Version 5.5.11
 
-Version 5.5.10 increases the visible precision of Radon concentrations in the interface from one to two decimal places for Bq/m³. Values such as 3.06 and 3.14 Bq/m³ therefore no longer both appear as 3.1 Bq/m³ in cards, history tables or statistical summaries.
+Version 5.5.11 gives the **Hourly measurements** view a clearer visual hierarchy. The latest row is highlighted, calendar-day groups are separated, and alternating backgrounds make long histories easier to scan. Each Radon value now includes a proportional concentration bar, so values such as 1.54, 3.08, 6.16 and 20.02 Bq/m³ are visually distinct even though they all remain far below the configured warning threshold.
 
-The change applies to the current hourly value, 24-hour and 7-day means, Overview and Analysis cards, thresholds, daily statistics, history rows and GMCMap history. pCi/L remains displayed with three decimal places.
+The table header now includes compact summaries for measurement count, mean and maximum. Raw CPH, room and campaign use restrained badges, while device model and serial number are separated typographically. On narrow screens the table becomes a stack of responsive measurement cards instead of requiring horizontal scrolling.
 
-Home Assistant MQTT Discovery now recommends two decimal places for the three exposed Bq/m³ sensors: completed hourly value, 24-hour mean and 7-day mean. Home Assistant may retain a user-defined precision override if one was previously configured on an entity.
-
-The database continues to store calculated concentrations with its existing higher precision. Statistical calculations, comparisons and reports therefore remain based on the stored values rather than on the two-decimal presentation.
+This release changes presentation only. Bq/m³ remains visible with two decimal places, pCi/L remains at three decimal places, and stored measurement precision, calculations, MQTT entities, APIs and the database schema are unchanged.
 
 ## Upgrade notes
 
-The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.10 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
+The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.11 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
 
 Before upgrading:
 
 1. Create a Home Assistant backup and, where appropriate, an app database backup.
 2. Stop the app before replacing a local repository package.
-3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.10.
+3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.11.
 4. Reopen the Ingress panel if an old iframe remains visible.
 5. Review `location_display_mode` if the Overview is shown in screenshots or shared displays.
 

@@ -489,7 +489,7 @@ class WebServer:
 
                     if path in {"/docs/user-manual.pdf", "/docs/protocol-reference.pdf"}:
                         locale = self.locale(query)
-                        prefix = "Radon_Monitoring_User_Manual_5.5.10" if "user-manual" in path else "GQ_RadonScan_Protocol_Reference_3.0.0"
+                        prefix = "Radon_Monitoring_User_Manual_5.5.11" if "user-manual" in path else "GQ_RadonScan_Protocol_Reference_3.0.0"
                         candidates = [app.docs_dir / f"{prefix}_{locale}.pdf", app.docs_dir / f"{prefix}_en.pdf"]
                         manual = next((candidate for candidate in candidates if candidate.is_file()), None)
                         if manual is None:

@@ -1,8 +1,8 @@
-# Radon Monitoring 5.5.10 - App documentation
+# Radon Monitoring 5.5.11 - App documentation
 
-## Display precision in 5.5.10
+## Hourly history presentation in 5.5.11
 
-Bq/m³ values are presented with two decimal places in the web interface and in the recommended Home Assistant entity precision. Stored values and calculations retain their existing higher precision. pCi/L continues to use three decimal places.
+The hourly measurement history uses a highlighted latest row, subtle alternating backgrounds, calendar-day separators and proportional concentration bars. Summary chips show measurement count, mean and maximum. On narrow screens, measurements are shown as responsive cards rather than a horizontally scrolling table. The change is presentational only; stored values and calculations retain their existing precision.
 
 ## Purpose
 
@@ -20,7 +20,7 @@ The app is an orientation and documentation tool. It does not turn a consumer mo
 
 Only completed hours are imported. A newly connected device may therefore remain without a current value until a completed record is available.
 
-## Home Assistant entities in 5.5.10
+## Home Assistant entities
 
 MQTT discovery exposes exactly three sensor entities and all of them use `Bq/m³`:
 
@@ -30,7 +30,7 @@ MQTT discovery exposes exactly three sensor entities and all of them use `Bq/m³
 
 The web-interface preference for `pCi/L` affects only the app display and reports; it does not change the Home Assistant entity units. The 30-day mean, raw CPH, hour index, last update, sample count and connectivity binary sensor are no longer published as Home Assistant entities.
 
-Version 5.5.10 separates successful device-read time from completed measurement time. New records use the previous stored completion time plus the hour-index delta; an upgrade-time repair applies the same conservative rule to older irregular records. A newly appearing zero-count tip record requires one additional successful read before storage, while confirmed and historical zeroes remain valid measurements. The MQTT compatibility behaviour from 5.5.8 remains unchanged: `state_class: measurement`, `Bq/m³`, stable unique IDs, retained messages and MQTT QoS 1.
+The application separates successful device-read time from completed measurement time. New records use the previous stored completion time plus the hour-index delta; an upgrade-time repair applies the same conservative rule to older irregular records. A newly appearing zero-count tip record requires one additional successful read before storage, while confirmed and historical zeroes remain valid measurements. The MQTT compatibility behaviour from 5.5.8 remains unchanged: `state_class: measurement`, `Bq/m³`, stable unique IDs, retained messages and MQTT QoS 1.
 
 During every successful MQTT connection, retained empty discovery payloads are published for obsolete entity topics. The cleanup covers the current device ID, serial-number aliases, generic historical node IDs and both known discovery-topic layouts. The three retained sensors keep stable unique IDs so their entity IDs and history remain associated with the same sensors. If stale unavailable registry entries remain visible, restart Home Assistant once and remove any residual unavailable entries from Settings > Devices & services > MQTT > Entities.
 
@@ -213,6 +213,6 @@ From the repository root:
 python3 -m pytest
 ```
 
-Version 5.5.10 includes tests for reconstructed hourly timestamps, one-read zero confirmation, preservation of historical zeroes, upgrade-time timeline repair, request-level radon-only GMCMap uploads and filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, automatic room resolution, read-only Home Assistant place/building data, guided room creation and assignment, inline validation, query/header/chunked Ingress fallbacks, idempotent room saves, the non-destructive System self-test, visible assignment cards, separation of local rooms from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
+Version 5.5.11 includes tests for the responsive hourly-history hierarchy, reconstructed hourly timestamps, one-read zero confirmation, preservation of historical zeroes, upgrade-time timeline repair, request-level radon-only GMCMap uploads and filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, automatic room resolution, read-only Home Assistant place/building data, guided room creation and assignment, inline validation, query/header/chunked Ingress fallbacks, idempotent room saves, the non-destructive System self-test, visible assignment cards, separation of local rooms from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
 
 Real-device and real-Home-Assistant field testing remains necessary for USB hardware variations, Home Assistant upgrades and Recorder backends.

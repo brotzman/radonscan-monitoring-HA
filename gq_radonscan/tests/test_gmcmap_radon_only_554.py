@@ -99,7 +99,7 @@ def test_radon_upload_uses_public_endpoint_without_radioactivity_fields():
     assert result["ok"] is True
     assert result["upload_mode"] == "radon_only"
     assert result["endpoint"] == RADON_ENDPOINT
-    assert captured["user_agent"] == "Radon-Monitoring/5.5.10"
+    assert captured["user_agent"] == "Radon-Monitoring/5.5.11"
 
 
 def test_status_explicitly_describes_radon_only_submission():

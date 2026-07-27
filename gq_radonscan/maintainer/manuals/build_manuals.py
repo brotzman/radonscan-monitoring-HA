@@ -11,7 +11,7 @@ from reportlab.platypus import (
     Paragraph, Spacer, Table, TableStyle,
 )
 
-VERSION = "5.5.10"
+VERSION = "5.5.11"
 ORANGE = colors.HexColor("#F47B20")
 DARK = colors.HexColor("#172033")
 MUTED = colors.HexColor("#667085")
@@ -37,8 +37,8 @@ CONTENT = {
 "Ein hoher einzelner Stundenwert ist nicht automatisch eine Überschreitung eines Jahresreferenzwerts. Oberfläche und Berichte trennen aktuellen Wert, Zeitraumstatistik, Zählunsicherheit, Kalibrierinformation und fachliche Einordnung."
 ]),
 ("2. Installation, Upgrade und erster Start", [
-"Verbinden Sie das RadonScan Gerät per USB, stellen Sie MQTT für Home Assistant bereit und starten Sie die App. In Version 5.5.10 ist /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0 als stabiler Anschluss voreingestellt. Ein fester serial_port wird ausschließlich verwendet; auto aktiviert bewusst die automatische Suche.",
-"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.5.10 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
+"Verbinden Sie das RadonScan Gerät per USB, stellen Sie MQTT für Home Assistant bereit und starten Sie die App. In Version 5.5.11 ist /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0 als stabiler Anschluss voreingestellt. Ein fester serial_port wird ausschließlich verwendet; auto aktiviert bewusst die automatische Suche.",
+"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.5.11 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
 "Nur abgeschlossene Stunden werden übernommen. Nach dem ersten Anschließen kann deshalb zunächst noch kein aktueller Messwert verfügbar sein."
 ]),
 ("3. Übersicht", [
@@ -86,7 +86,7 @@ CONTENT = {
 ("10. Bedienung, Mobilansicht und Barrierefreiheit", [
 "Die Seitenleiste wird auf kleinen Bildschirmen als Menü eingeblendet. Tabellen und Wochen-Heatmap bleiben innerhalb ihrer Kachel horizontal scrollbar; die restliche Seite darf keinen horizontalen Überstand erzeugen.",
 "Die Oberfläche unterstützt Tastaturbedienung, sichtbare Fokusmarkierungen, einen Sprunglink zum Hauptinhalt, Escape zum Schließen des Menüs, reduzierte Animationen und Schriftvergrößerung bis 200 Prozent.",
-"Version 5.5.10 enthält zusätzlich automatisierte Tests für die zweistellige Bq/m³-Darstellung in Übersicht, Analyse und Verlauf sowie für die empfohlene zweistellige Anzeigepräzision der drei Home-Assistant-MQTT-Sensoren. Gespeicherte Werte und Berechnungen behalten ihre höhere interne Genauigkeit."
+"Version 5.5.11 enthält zusätzlich automatisierte Tests für die zweistellige Bq/m³-Darstellung in Übersicht, Analyse und Verlauf sowie für die empfohlene zweistellige Anzeigepräzision der drei Home-Assistant-MQTT-Sensoren. Gespeicherte Werte und Berechnungen behalten ihre höhere interne Genauigkeit."
 ]),
 ("11. Fehlerbehebung", [
 "Kein Gerät: USB-Zuordnung, Berechtigungen, konfigurierten Port und konkurrierende Prozesse prüfen.",
@@ -100,8 +100,8 @@ CONTENT = {
 "Messwerte und Metadaten bleiben standardmäßig lokal. Nur aktivierte externe Funktionen übertragen Daten. Die Standortkachel liest ihre Angaben ausschließlich über die lokale Home-Assistant-Core-API und verwendet keinen externen Geokodierungsdienst. Mit location_display_mode kann die Anzeige vollständig, reduziert oder ausgeblendet erfolgen. Prüfen Sie vor Bildschirmfotos, Berichten und World-Map-Uploads, ob die sichtbaren Standortangaben Ihren Datenschutzanforderungen entsprechen.",
 "Bewahren Sie Backups und Berichte geschützt auf. Sie können Gerätekennungen, Räume, Zeiträume und Gebäudedaten enthalten."
 ]),
-("13. Neu in Version 5.5.10", [
-"Version 5.5.10 zeigt Radonkonzentrationen in Bq/m³ in der Oberfläche mit zwei Nachkommastellen. Dadurch bleiben Unterschiede wie 3,06 und 3,14 Bq/m³ in Übersicht, Analyse, Verlauf und Tagesstatistik sichtbar. Die drei Home-Assistant-MQTT-Sensoren empfehlen ebenfalls zwei sichtbare Nachkommastellen. pCi/L bleibt dreistellig. Gespeicherte Werte und Berechnungen behalten ihre bisherige höhere Genauigkeit; Datenbankschema und Messdaten bleiben kompatibel."
+("13. Neu in Version 5.5.11", [
+"Version 5.5.11 verbessert die Darstellung der stündlichen Messhistorie. Der neueste Wert wird hervorgehoben, Tageswechsel werden getrennt und dezente Wechselzeilen erleichtern das Lesen. Proportionale Konzentrationsbalken machen Unterschiede zwischen niedrigen Werten sichtbar. Kompakte Kennzahlen zeigen Anzahl, Mittelwert und Maximum; auf schmalen Displays werden die Messungen als Karten ohne horizontales Scrollen dargestellt. Messwerte bleiben mit zwei Nachkommastellen sichtbar. Speicherung, Berechnungen, MQTT-Entitäten und Datenbankschema bleiben unverändert."
 ])
 ],
 "options": [
@@ -129,8 +129,8 @@ CONTENT = {
 "A high individual hourly value is not automatically an exceedance of an annual reference value. The interface and reports distinguish the current value, period statistics, counting uncertainty, calibration information and professional interpretation."
 ]),
 ("2. Installation, upgrade and first start", [
-"Connect the RadonScan by USB, make MQTT available to Home Assistant and start the app. Version 5.5.10 defaults to /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0. A fixed serial_port is used exclusively; auto deliberately enables discovery.",
-"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.5.10. If an old Ingress view remains open, close the panel and reopen it.",
+"Connect the RadonScan by USB, make MQTT available to Home Assistant and start the app. Version 5.5.11 defaults to /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0. A fixed serial_port is used exclusively; auto deliberately enables discovery.",
+"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.5.11. If an old Ingress view remains open, close the panel and reopen it.",
 "Only completed hours are imported. A newly connected device can therefore remain without a current value until a complete record is available."
 ]),
 ("3. Overview", [
@@ -178,7 +178,7 @@ CONTENT = {
 ("10. Operation, mobile layout and accessibility", [
 "On small screens the sidebar opens as a menu. Tables and the weekly heatmap remain horizontally scrollable inside their own cards; the rest of the page must not create horizontal page overflow.",
 "The interface supports keyboard operation, visible focus, a skip link, Escape to close the menu, reduced motion and text scaling to 200 percent.",
-"Version 5.5.10 adds automated tests for two-decimal Bq/m³ presentation in Overview, Analysis and history, and for the recommended two-decimal display precision of the three Home Assistant MQTT sensors. Stored values and calculations retain their higher internal precision."
+"Version 5.5.11 adds automated tests for two-decimal Bq/m³ presentation in Overview, Analysis and history, and for the recommended two-decimal display precision of the three Home Assistant MQTT sensors. Stored values and calculations retain their higher internal precision."
 ]),
 ("11. Troubleshooting", [
 "No device: check USB mapping, permissions, configured port and competing processes.",
@@ -192,8 +192,8 @@ CONTENT = {
 "Measurements and metadata remain local by default. Only enabled external functions transmit data. Location, address and building name are read only through the local Home Assistant Core API and are not manually duplicated. No external geocoding service is used. location_display_mode can show full, reduced or no location details. Before screenshots, reports and World Map publication, confirm that visible location data meets your privacy requirements.",
 "Protect backups and reports because they may contain device identifiers, rooms, periods and building information."
 ]),
-("13. New in version 5.5.10", [
-"Version 5.5.10 displays Radon concentrations in Bq/m³ with two decimal places throughout the interface. Differences such as 3.06 and 3.14 Bq/m³ therefore remain visible in Overview, Analysis, history and daily statistics. The three Home Assistant MQTT sensors also recommend two visible decimal places. pCi/L remains at three decimals. Stored values and calculations retain their existing higher precision; the database schema and measurements remain compatible."
+("13. New in version 5.5.11", [
+"Version 5.5.11 improves the hourly measurement history. The newest record is highlighted, calendar-day changes are separated and subtle alternating rows make long histories easier to scan. Proportional concentration bars reveal differences between low readings. Compact summaries show count, mean and maximum; on narrow displays each measurement becomes a card without horizontal scrolling. Values remain visible with two decimal places. Storage, calculations, MQTT entities and the database schema are unchanged."
 ])
 ],
 "options": [

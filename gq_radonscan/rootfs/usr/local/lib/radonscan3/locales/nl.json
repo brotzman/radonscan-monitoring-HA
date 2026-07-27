@@ -291,7 +291,7 @@
   "main_navigation": "Hoofdnavigatie",
   "mann_kendall_tau": "Mann-Kendall-tau",
   "manual": "Manual",
-  "manual_note_v3": "De gebruikershandleiding hoort bij versie 5.5.10. De afzonderlijke SPIR-protocolreferentie blijft versie 3.0.0, omdat die het apparaatprotocol beschrijft en niet de appversie.",
+  "manual_note_v3": "De gebruikershandleiding hoort bij versie 5.5.11. De afzonderlijke SPIR-protocolreferentie blijft versie 3.0.0, omdat die het apparaatprotocol beschrijft en niet de appversie.",
   "manual_upload": "Handmatige upload",
   "manual_upload_hint": "Uploadt alleen de laatst voltooide lokale uurmeting. Historische tijdstempels kunnen niet via het gepubliceerde protocol worden verzonden.",
   "map_click_hint": "Klik op de plattegrond om de positie van de ruimte in te stellen.",

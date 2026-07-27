@@ -1,13 +1,14 @@
 # Changelog
 
-## 5.5.10 - Two-decimal Radon display
+## 5.5.11 - Clearer hourly history table
 
-- Show Bq/m³ concentrations with two visible decimal places throughout the main interface, including the current value, Overview cards, Analysis facts, history tables, daily summaries, threshold labels and GMCMap history.
-- Keep pCi/L display precision at three decimal places.
-- Set Home Assistant MQTT Discovery `suggested_display_precision` to 2 for the hourly, 24-hour and 7-day Bq/m³ sensors.
-- Preserve the full stored calculation precision; this release changes presentation only and does not round database values or statistical calculations.
-- Keep all timestamp reconstruction, zero-count confirmation, MQTT compatibility, radon-only GMCMap and fixed serial-port behaviour from 5.5.9.
-- No database-schema change.
+- Reworked the **Hourly measurements** table with a stronger visual hierarchy instead of uniformly styled rows.
+- Added compact summary chips for measurement count, mean and maximum above the table.
+- Added proportional concentration bars so differences between low Radon values remain visible even when every value is below the warning threshold.
+- Highlighted the newest record, introduced subtle alternating rows and clearer separators between calendar days.
+- Presented raw counts, campaign and room as compact badges while separating device model and serial number for faster scanning.
+- Converted the history table into responsive measurement cards on narrow screens to avoid horizontal scrolling.
+- Kept two-decimal Bq/m³ display, stored values, statistical calculations, APIs and the database schema unchanged.
 
 ## 5.5.4 - Correct public GMCMap upload endpoint
 

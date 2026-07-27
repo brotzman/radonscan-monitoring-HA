@@ -603,7 +603,43 @@
     finally {if(button) button.disabled=false;}
   }
   async function loadHistoryFiltered(showError=true) {try{const payload=await api(`api/history?${historyQuery()}`);historyRecords=payload.items||[];renderHistory();const exportParams=historyQuery();exportParams.delete('limit');$('historyCsv').href=`export/history.csv?${exportParams}`;}catch(err){if(showError)toast(err.message,true);else console.warn('History refresh failed',err);}}
-  function renderHistory() {const body=$('historyBody');$('historySummary').textContent=`${fmtInteger(historyRecords.length)} ${tr('samples')}`;if(!historyRecords.length){body.innerHTML=`<tr><td colspan="7" class="empty-cell">${tr('history_empty')}</td></tr>`;return;}body.innerHTML=historyRecords.slice(0,1000).map(row=>`<tr><td>${fmtDate(row.completed_at)}</td><td>${radon(row.bq_m3)}</td><td>${row.raw_cph}</td><td>${escapeHtml([row.model,row.serial_number||row.device_id].filter(Boolean).join(' · '))}</td><td>${escapeHtml(row.location_name||tr('not_assigned'))}</td><td>#${row.campaign_id}</td><td>${tr('source_spir')}</td></tr>`).join('');}
+  function renderHistory() {
+    const body=$('historyBody'),summary=$('historySummary'),rows=historyRecords.slice(0,1000);
+    if(!rows.length){
+      summary.textContent=`0 ${tr('samples')}`;
+      body.innerHTML=`<tr><td colspan="7" class="empty-cell">${tr('history_empty')}</td></tr>`;
+      return;
+    }
+    const numeric=rows.map(row=>Number(row.bq_m3)).filter(Number.isFinite);
+    const mean=numeric.length?numeric.reduce((sum,value)=>sum+value,0)/numeric.length:0;
+    const maximum=numeric.length?Math.max(...numeric):0;
+    summary.innerHTML=[
+      `<span class="history-summary-item"><strong>${fmtInteger(historyRecords.length)}</strong><small>${tr('samples')}</small></span>`,
+      `<span class="history-summary-item"><strong>${radon(mean)}</strong><small>${tr('mean')}</small></span>`,
+      `<span class="history-summary-item"><strong>${radon(maximum)}</strong><small>${tr('maximum')}</small></span>`
+    ].join('');
+    const warning=Number(state?.settings?.warning_threshold_bq_m3||100),danger=Number(state?.settings?.danger_threshold_bq_m3||300);
+    const maxVisible=Math.max(...numeric,1);
+    const latestIndex=rows.reduce((best,row,index)=>{const current=Date.parse(row.completed_at)||0;const previous=Date.parse(rows[best]?.completed_at)||0;return current>previous?index:best;},0);
+    let previousDate='';
+    body.innerHTML=rows.map((row,index)=>{
+      const value=Number(row.bq_m3)||0,ratio=value<=0?0:Math.max(7,Math.min(100,(value/maxVisible)*100));
+      const date=new Date(row.completed_at),valid=!Number.isNaN(date.getTime());
+      const dateText=valid?date.toLocaleDateString(locale(),{year:'numeric',month:'2-digit',day:'2-digit'}):fmtDateOnly(row.completed_at);
+      const timeText=valid?date.toLocaleTimeString(locale(),{hour:'2-digit',minute:'2-digit'}):'';
+      const level=value>=danger?'danger':value>=warning?'warning':value===0?'zero':'normal';
+      const dayStart=index===0||dateText!==previousDate;previousDate=dateText;
+      const model=escapeHtml(row.model||'GQ RadonScan'),serial=escapeHtml(row.serial_number||row.device_id||'');
+      return `<tr class="history-row history-${level}${index===latestIndex?' history-latest':''}${dayStart?' history-day-start':''}">`+
+        `<td class="history-time-cell" data-label="${escapeHtml(tr('time'))}"><span class="history-date">${escapeHtml(dateText)}</span><span class="history-time">${escapeHtml(timeText)}</span></td>`+
+        `<td class="history-value-cell" data-label="${escapeHtml(tr('value'))}"><span class="history-value-text">${radon(row.bq_m3)}</span><span class="history-value-bar" style="--history-fill:${ratio.toFixed(1)}%" aria-hidden="true"></span></td>`+
+        `<td class="history-count-cell" data-label="${escapeHtml(tr('raw_cph'))}"><span class="history-count-badge">${fmtInteger(row.raw_cph)}</span></td>`+
+        `<td class="history-device-cell" data-label="${escapeHtml(tr('device'))}"><strong>${model}</strong>${serial?`<small>${serial}</small>`:''}</td>`+
+        `<td class="history-room-cell" data-label="${escapeHtml(tr('measurement_site'))}"><span class="history-room-chip">${escapeHtml(row.location_name||tr('not_assigned'))}</span></td>`+
+        `<td class="history-campaign-cell" data-label="${escapeHtml(tr('campaign'))}"><span class="history-campaign-badge">#${escapeHtml(String(row.campaign_id??'–'))}</span></td>`+
+        `<td class="history-source-cell" data-label="${escapeHtml(tr('source'))}">${escapeHtml(tr('source_spir'))}</td></tr>`;
+    }).join('');
+  }
 
   async function loadGmcmap() {
     try {
