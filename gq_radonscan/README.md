@@ -1,4 +1,4 @@
-# Radon Monitoring 5.5.12
+# Radon Monitoring 5.5.13
 
 Radon Monitoring is a local Home Assistant app for read-only monitoring of compatible GQ RadonScan devices. It imports completed hourly values, stores raw and converted measurements in SQLite, publishes Home Assistant entities through MQTT, provides scientific time-series analysis, generates PDF reports and can optionally upload measurements to the GQ Radiation World Map.
 
@@ -24,25 +24,23 @@ Radon Monitoring is a local Home Assistant app for read-only monitoring of compa
 - optional complete Home Assistant Recorder purge for RadonScan entities, plus verification through the History API
 - interface and Home Assistant option translations in German, English, Spanish, French, Croatian, Italian, Dutch and Polish
 
-## Version 5.5.12
+## Version 5.5.13
 
-Version 5.5.12 makes long histories easier to navigate. **Hourly measurements** and the **GQ World Map upload history** display ten entries at a time. Previous and next arrow buttons move through the list in fixed groups of ten, while a compact status line shows the current page and visible entry range.
+Version 5.5.13 fixes a load-order error that could leave the **Weekly heatmap** panel empty. When Analysis was opened before the initial application state had finished loading, the renderer tried to read threshold settings from an unavailable state object and stopped before creating the grid.
 
-Filtering the hourly history or refreshing the World Map list returns to the first page. Summary values above the hourly table continue to use the complete filtered data set, not only the ten currently visible rows. CSV export likewise remains unpaginated and contains the complete selected period.
+The heatmap now uses safe temporary thresholds, re-renders when the configured settings become available and always creates a complete grid of seven weekdays by 24 hours. If the API heatmap is absent or malformed, the browser reconstructs the hourly weekday means from the selected analysis records using the configured analysis time zone.
 
-The raw **Administration log** panel has been removed from Data management. The application still records audit events internally for operational traceability and diagnostics, but users are no longer presented with the dense raw-JSON table shown in earlier releases.
-
-This release changes presentation and navigation only. Stored measurements, statistical calculations, MQTT entities, GMCMap upload behaviour, APIs and the database schema are unchanged.
+Cells without sufficient data remain visibly hatched. Existing measurements, statistical calculations, ten-entry history pagination, MQTT entities, World Map uploads, APIs and the database schema remain unchanged.
 
 ## Upgrade notes
 
-The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.12 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
+The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.13 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
 
 Before upgrading:
 
 1. Create a Home Assistant backup and, where appropriate, an app database backup.
 2. Stop the app before replacing a local repository package.
-3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.12.
+3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.13.
 4. Reopen the Ingress panel if an old iframe remains visible.
 5. Review `location_display_mode` if the Overview is shown in screenshots or shared displays.
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## 5.5.13 - Reliable weekly heatmap rendering
+
+- Fixed the blank **Weekly heatmap** that could occur when Analysis loaded before the initial application state and threshold settings were available.
+- Made heatmap rendering independent of the state-loading order by using safe warning and danger threshold defaults until settings arrive.
+- Re-render the heatmap automatically when the application state becomes available, so configured thresholds and the analysis time zone are applied.
+- Added a client-side fallback that rebuilds the 7 x 24 weekly grid from the selected analysis records when the API heatmap is missing or malformed.
+- Always render all seven weekday rows and 24 hourly cells; missing combinations remain visibly hatched instead of leaving the panel empty.
+- Added a browser regression test for opening Analysis before the delayed state response.
+- Kept stored measurements, calculations, MQTT entities, pagination, APIs and the database schema unchanged.
+
 ## 5.5.12 - Ten-entry pagination and cleaner data management
 
 - Limited the visible **Hourly measurements** list to ten rows per page.

@@ -510,11 +510,67 @@
     renderDaily();
   }
 
+  function emptyHeatmap() {
+    return Array.from({length:7},(_,weekday)=>Array.from({length:24},(_,hour)=>({weekday,hour,samples:0,mean_bq_m3:null})));
+  }
+
+  function heatmapFromRecords(records) {
+    const grid=emptyHeatmap(),sums=Array.from({length:7},()=>Array(24).fill(0));
+    const timezone=state?.settings?.analysis_timezone||Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC';
+    let formatter=null;
+    try {formatter=new Intl.DateTimeFormat('en-GB',{timeZone:timezone,weekday:'short',hour:'2-digit',hourCycle:'h23'});} catch(_err) {formatter=null;}
+    const dayMap={Mon:0,Tue:1,Wed:2,Thu:3,Fri:4,Sat:5,Sun:6};
+    (records||[]).forEach(record=>{
+      const date=new Date(record.completed_at),value=Number(record.bq_m3);
+      if(Number.isNaN(date.getTime())||!Number.isFinite(value))return;
+      let weekday=(date.getDay()+6)%7,hour=date.getHours();
+      if(formatter){
+        const parts=Object.fromEntries(formatter.formatToParts(date).map(part=>[part.type,part.value]));
+        if(dayMap[parts.weekday]!==undefined)weekday=dayMap[parts.weekday];
+        const parsedHour=Number(parts.hour);if(Number.isInteger(parsedHour)&&parsedHour>=0&&parsedHour<24)hour=parsedHour;
+      }
+      sums[weekday][hour]+=value;
+      const cell=grid[weekday][hour];cell.samples+=1;cell.mean_bq_m3=sums[weekday][hour]/cell.samples;
+    });
+    return grid;
+  }
+
+  function normalizedHeatmap() {
+    const fallback=heatmapFromRecords(analysisData?.records||[]),source=analysisData?.weekly_heatmap;
+    if(!Array.isArray(source)||source.length!==7)return fallback;
+    return fallback.map((fallbackRow,weekday)=>{
+      const row=Array.isArray(source[weekday])?source[weekday]:[];
+      return fallbackRow.map((fallbackCell,hour)=>{
+        const candidate=row.find(cell=>Number(cell?.hour)===hour)||row[hour];
+        if(!candidate||typeof candidate!=='object')return fallbackCell;
+        const value=candidate.mean_bq_m3;
+        return {
+          weekday,
+          hour,
+          samples:Number.isFinite(Number(candidate.samples))?Number(candidate.samples):fallbackCell.samples,
+          mean_bq_m3:value===null||value===undefined||!Number.isFinite(Number(value))?fallbackCell.mean_bq_m3:Number(value),
+        };
+      });
+    });
+  }
+
   function renderHeatmap() {
-    const heat=analysisData.weekly_heatmap||[];const names=locale()==='de'?['Mo','Di','Mi','Do','Fr','Sa','So']:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];let html='<div class="heatmap-grid"><div></div>';
+    const target=$('weeklyHeatmap');if(!target)return;
+    const heat=normalizedHeatmap();
+    const names=locale()==='de'?['Mo','Di','Mi','Do','Fr','Sa','So']:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    let html='<div class="heatmap-grid"><div></div>';
     for(let h=0;h<24;h++)html+=`<div class="heatmap-hour">${h%3===0?String(h).padStart(2,'0'):''}</div>`;
-    const warning=Number(state.settings.warning_threshold_bq_m3),danger=Number(state.settings.danger_threshold_bq_m3);
-    heat.forEach((row,d)=>{html+=`<div class="heatmap-label">${names[d]}</div>`;row.forEach(cell=>{const v=cell.mean_bq_m3;let cls='missing';if(v!==null&&v!==undefined){cls=v>=danger?'danger':v>=warning?'warning':v>=warning*.6?'medium':'low';}html+=`<div class="heatmap-cell ${cls}" title="${escapeHtml(names[d])} ${String(cell.hour).padStart(2,'0')}:00 · ${v===null||v===undefined?tr('not_available'):radon(v)} · n=${cell.samples}">${v===null||v===undefined?'':fmtNumber(radonValue(v),0)}</div>`;});});html+='</div>';$('weeklyHeatmap').innerHTML=html;
+    const warningSetting=Number(state?.settings?.warning_threshold_bq_m3),dangerSetting=Number(state?.settings?.danger_threshold_bq_m3);
+    const warning=Number.isFinite(warningSetting)?warningSetting:100,danger=Number.isFinite(dangerSetting)?dangerSetting:300;
+    heat.forEach((row,d)=>{
+      html+=`<div class="heatmap-label">${names[d]}</div>`;
+      row.forEach(cell=>{
+        const v=cell.mean_bq_m3;let cls='missing';
+        if(v!==null&&v!==undefined){cls=v>=danger?'danger':v>=warning?'warning':v>=warning*.6?'medium':'low';}
+        html+=`<div class="heatmap-cell ${cls}" title="${escapeHtml(names[d])} ${String(cell.hour).padStart(2,'0')}:00 · ${v===null||v===undefined?tr('not_available'):radon(v)} · n=${cell.samples}">${v===null||v===undefined?'':fmtNumber(radonValue(v),0)}</div>`;
+      });
+    });
+    html+='</div>';target.innerHTML=html;
   }
 
   function renderDaily() {
@@ -701,6 +757,7 @@
     const refreshed=await api(`api/state${suffix}`);
     state=refreshed;
     renderState();
+    if(analysisData)renderHeatmap();
     const ha=state.homeassistant||{};
     const haStatus=$('haStatus');
     if(haStatus)haStatus.textContent=ha.connected?`${tr('connected')} · ${ha.location_name||''} · ${ha.version||''}`:(ha.error||tr('offline'));
@@ -715,6 +772,7 @@
       const s=await api(`api/state${suffix}`);
       state=s;
       renderState();
+      if(analysisData)renderHeatmap();
       const ha=state.homeassistant||{};
       $('haStatus').textContent=ha.connected?`${tr('connected')} · ${ha.location_name||''} · ${ha.version||''}`:(ha.error||tr('offline'));
       initialLoadComplete=true;

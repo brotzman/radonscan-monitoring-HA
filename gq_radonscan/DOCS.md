@@ -1,12 +1,12 @@
-# Radon Monitoring 5.5.12 - App documentation
+# Radon Monitoring 5.5.13 - App documentation
 
-## List pagination and data-management simplification in 5.5.12
+## Weekly heatmap reliability in 5.5.13
 
-The hourly measurement history and GQ World Map upload history show ten records per page. Arrow buttons move backwards or forwards by exactly ten entries. The page indicator reports the current page and visible range. Applying new history filters or refreshing World Map data resets the respective list to page one.
+The Analysis heatmap now renders independently of the initial state-loading order. Opening Analysis immediately after the Ingress page loads no longer leaves the heatmap panel empty when threshold settings are still being requested.
 
-Hourly-history summary values and CSV exports continue to use the complete filtered selection. Pagination affects only how many rows are visible at once.
+The browser always creates a 7 x 24 weekday/hour grid. It uses the API-provided heatmap when valid and rebuilds the grid from the selected analysis records when the API value is missing or malformed. Once the application state arrives, the grid is rendered again with the configured warning and danger thresholds and the configured analysis time zone.
 
-The Administration log panel has been removed from the Data management view. Audit events continue to be recorded in SQLite and remain available to internal diagnostics and API consumers, but the normal interface no longer exposes the raw JSON audit table.
+Missing weekday/hour combinations are shown as hatched cells. This release does not change stored measurements, statistical calculations or the database schema.
 
 ## Purpose
 
@@ -217,6 +217,6 @@ From the repository root:
 python3 -m pytest
 ```
 
-Version 5.5.12 includes tests for the responsive hourly-history hierarchy, reconstructed hourly timestamps, one-read zero confirmation, preservation of historical zeroes, upgrade-time timeline repair, request-level radon-only GMCMap uploads and filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, automatic room resolution, read-only Home Assistant place/building data, guided room creation and assignment, inline validation, query/header/chunked Ingress fallbacks, idempotent room saves, the non-destructive System self-test, visible assignment cards, separation of local rooms from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
+Version 5.5.13 includes tests for the responsive hourly-history hierarchy, reconstructed hourly timestamps, one-read zero confirmation, preservation of historical zeroes, upgrade-time timeline repair, request-level radon-only GMCMap uploads and filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, automatic room resolution, read-only Home Assistant place/building data, guided room creation and assignment, inline validation, query/header/chunked Ingress fallbacks, idempotent room saves, the non-destructive System self-test, visible assignment cards, separation of local rooms from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
 
 Real-device and real-Home-Assistant field testing remains necessary for USB hardware variations, Home Assistant upgrades and Recorder backends.

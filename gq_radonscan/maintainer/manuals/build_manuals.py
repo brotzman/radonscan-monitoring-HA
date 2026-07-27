@@ -11,7 +11,7 @@ from reportlab.platypus import (
     Paragraph, Spacer, Table, TableStyle,
 )
 
-VERSION = "5.5.12"
+VERSION = "5.5.13"
 ORANGE = colors.HexColor("#F47B20")
 DARK = colors.HexColor("#172033")
 MUTED = colors.HexColor("#667085")
@@ -37,8 +37,8 @@ CONTENT = {
 "Ein hoher einzelner Stundenwert ist nicht automatisch eine Überschreitung eines Jahresreferenzwerts. Oberfläche und Berichte trennen aktuellen Wert, Zeitraumstatistik, Zählunsicherheit, Kalibrierinformation und fachliche Einordnung."
 ]),
 ("2. Installation, Upgrade und erster Start", [
-"Verbinden Sie das RadonScan Gerät per USB, stellen Sie MQTT für Home Assistant bereit und starten Sie die App. In Version 5.5.12 ist /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0 als stabiler Anschluss voreingestellt. Ein fester serial_port wird ausschließlich verwendet; auto aktiviert bewusst die automatische Suche.",
-"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.5.12 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
+"Verbinden Sie das RadonScan Gerät per USB, stellen Sie MQTT für Home Assistant bereit und starten Sie die App. In Version 5.5.13 ist /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0 als stabiler Anschluss voreingestellt. Ein fester serial_port wird ausschließlich verwendet; auto aktiviert bewusst die automatische Suche.",
+"Vor Upgrades und destruktiven Aktionen sollte ein Home-Assistant-Backup erstellt werden. Nach dem Upgrade muss in Seitenleiste oder Hilfe Version 5.5.13 erscheinen. Bleibt eine alte Ingress-Ansicht geöffnet, schließen Sie das Panel und öffnen Sie es erneut.",
 "Nur abgeschlossene Stunden werden übernommen. Nach dem ersten Anschließen kann deshalb zunächst noch kein aktueller Messwert verfügbar sein."
 ]),
 ("3. Übersicht", [
@@ -86,7 +86,7 @@ CONTENT = {
 ("10. Bedienung, Mobilansicht und Barrierefreiheit", [
 "Die Seitenleiste wird auf kleinen Bildschirmen als Menü eingeblendet. Tabellen und Wochen-Heatmap bleiben innerhalb ihrer Kachel horizontal scrollbar; die restliche Seite darf keinen horizontalen Überstand erzeugen. Stündlicher Verlauf und World-Map-Uploadliste zeigen jeweils zehn Einträge pro Seite und werden mit Pfeiltasten in Zehnerschritten durchblättert.",
 "Die Oberfläche unterstützt Tastaturbedienung, sichtbare Fokusmarkierungen, einen Sprunglink zum Hauptinhalt, Escape zum Schließen des Menüs, reduzierte Animationen und Schriftvergrößerung bis 200 Prozent.",
-"Version 5.5.12 enthält zusätzliche automatisierte Tests für die Zehner-Paginierung beider Verlaufslisten, übersetzte und barrierefreie Pfeilnavigation, mobile Überlauffreiheit sowie das vollständige Entfernen des Verwaltungsprotokolls aus der Oberfläche. Gespeicherte Werte und Berechnungen bleiben unverändert."
+"Version 5.5.13 enthält einen zusätzlichen Browsertest für das frühe Öffnen der Analyse bei verzögert geladener App-Konfiguration. Die Wochen-Heatmap wird dabei vollständig mit sieben Wochentagen und 24 Stunden gerendert; vorhandene Messzellen bleiben sichtbar und fehlende Kombinationen werden schraffiert. Gespeicherte Werte und Berechnungen bleiben unverändert."
 ]),
 ("11. Fehlerbehebung", [
 "Kein Gerät: USB-Zuordnung, Berechtigungen, konfigurierten Port und konkurrierende Prozesse prüfen.",
@@ -100,8 +100,8 @@ CONTENT = {
 "Messwerte und Metadaten bleiben standardmäßig lokal. Nur aktivierte externe Funktionen übertragen Daten. Die Standortkachel liest ihre Angaben ausschließlich über die lokale Home-Assistant-Core-API und verwendet keinen externen Geokodierungsdienst. Mit location_display_mode kann die Anzeige vollständig, reduziert oder ausgeblendet erfolgen. Prüfen Sie vor Bildschirmfotos, Berichten und World-Map-Uploads, ob die sichtbaren Standortangaben Ihren Datenschutzanforderungen entsprechen.",
 "Bewahren Sie Backups und Berichte geschützt auf. Sie können Gerätekennungen, Räume, Zeiträume und Gebäudedaten enthalten."
 ]),
-("13. Neu in Version 5.5.12", [
-"Version 5.5.12 begrenzt den sichtbaren stündlichen Messverlauf und die World-Map-Uploadliste auf jeweils zehn Einträge. Pfeile blättern in Zehnerschritten; eine Statuszeile zeigt Seite und sichtbaren Bereich. Filter, Zusammenfassungen und CSV-Export arbeiten weiterhin mit der vollständigen Auswahl. Das bisherige Verwaltungsprotokoll wurde vollständig aus der Datenverwaltungsansicht entfernt, während interne Audit-Daten erhalten bleiben. Speicherung, Berechnungen, MQTT-Entitäten und Datenbankschema bleiben unverändert."
+("13. Neu in Version 5.5.13", [
+"Version 5.5.13 behebt eine leere Wochen-Heatmap, die auftreten konnte, wenn die Analyse schneller geladen wurde als die allgemeinen App-Einstellungen. Das Raster wird nun unabhängig von der Ladereihenfolge vollständig aufgebaut und nach Eintreffen der konfigurierten Schwellenwerte erneut gefärbt. Fehlt das vorberechnete Heatmap-Raster in der API-Antwort, wird es aus den ausgewählten Messwerten rekonstruiert. Alle sieben Wochentage und 24 Stunden bleiben sichtbar; nicht belegte Felder sind schraffiert. Speicherung, Berechnungen, MQTT-Entitäten und Datenbankschema bleiben unverändert."
 ])
 ],
 "options": [
@@ -129,8 +129,8 @@ CONTENT = {
 "A high individual hourly value is not automatically an exceedance of an annual reference value. The interface and reports distinguish the current value, period statistics, counting uncertainty, calibration information and professional interpretation."
 ]),
 ("2. Installation, upgrade and first start", [
-"Connect the RadonScan by USB, make MQTT available to Home Assistant and start the app. Version 5.5.12 defaults to /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0. A fixed serial_port is used exclusively; auto deliberately enables discovery.",
-"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.5.12. If an old Ingress view remains open, close the panel and reopen it.",
+"Connect the RadonScan by USB, make MQTT available to Home Assistant and start the app. Version 5.5.13 defaults to /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0. A fixed serial_port is used exclusively; auto deliberately enables discovery.",
+"Create a Home Assistant backup before upgrades and destructive actions. After upgrading, the sidebar or Help view must show version 5.5.13. If an old Ingress view remains open, close the panel and reopen it.",
 "Only completed hours are imported. A newly connected device can therefore remain without a current value until a complete record is available."
 ]),
 ("3. Overview", [
@@ -178,7 +178,7 @@ CONTENT = {
 ("10. Operation, mobile layout and accessibility", [
 "On small screens the sidebar opens as a menu. Tables and the weekly heatmap remain horizontally scrollable inside their own cards; the rest of the page must not create horizontal page overflow. Hourly history and World Map uploads show ten entries per page and use arrow buttons to move in groups of ten.",
 "The interface supports keyboard operation, visible focus, a skip link, Escape to close the menu, reduced motion and text scaling to 200 percent.",
-"Version 5.5.12 adds automated tests for ten-entry pagination in both histories, translated and accessible arrow navigation, mobile overflow protection and complete removal of the Administration log from the interface. Stored values and calculations remain unchanged."
+"Version 5.5.13 adds a browser regression test for opening Analysis while the application configuration is still loading. The weekly heatmap is rendered as a complete seven-day by 24-hour grid; measured cells remain visible and missing combinations are hatched. Stored values and calculations remain unchanged."
 ]),
 ("11. Troubleshooting", [
 "No device: check USB mapping, permissions, configured port and competing processes.",
@@ -192,8 +192,8 @@ CONTENT = {
 "Measurements and metadata remain local by default. Only enabled external functions transmit data. Location, address and building name are read only through the local Home Assistant Core API and are not manually duplicated. No external geocoding service is used. location_display_mode can show full, reduced or no location details. Before screenshots, reports and World Map publication, confirm that visible location data meets your privacy requirements.",
 "Protect backups and reports because they may contain device identifiers, rooms, periods and building information."
 ]),
-("13. New in version 5.5.12", [
-"Version 5.5.12 limits the visible hourly measurement history and World Map upload history to ten entries each. Arrow buttons move in groups of ten and a status line reports page and visible range. Filters, summaries and CSV export continue to use the complete selection. The former Administration log has been removed entirely from Data management while internal audit data remains stored. Storage, calculations, MQTT entities and the database schema are unchanged."
+("13. New in version 5.5.13", [
+"Version 5.5.13 fixes an empty Weekly heatmap that could occur when Analysis loaded faster than the general application settings. The grid is now built independently of loading order and recoloured when the configured thresholds arrive. If the precomputed API heatmap is missing, it is reconstructed from the selected measurement records. All seven weekdays and 24 hours remain visible, with unpopulated cells shown as hatched. Storage, calculations, MQTT entities and the database schema are unchanged."
 ])
 ],
 "options": [

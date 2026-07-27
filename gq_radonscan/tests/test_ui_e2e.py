@@ -13,7 +13,7 @@ VISIBLE_VIEWS = ("overview", "analysis", "sites", "history", "reports", "data", 
 
 def _state(language="de"):
     return {
-        "app": {"version": "5.5.12"},
+        "app": {"version": "5.5.13"},
         "settings": {
             "preferred_unit": "Bq/m3",
             "factor_bq_m3_per_cph": 1.54,
@@ -134,10 +134,10 @@ def _fixture_html(locale="de") -> str:
     tr = json.loads((LOCALES / f"{locale}.json").read_text())
     locale_names = {code: code.upper() for code in LOCALE_CODES}
     html = (STATIC / "index.html").read_text()
-    html = html.replace("__LOCALE__", locale).replace("__TRANSLATIONS__", json.dumps(tr)).replace("__LOCALE_NAMES__", json.dumps(locale_names)).replace("__VERSION__", "5.5.12").replace("__ACTION_TOKEN__", "test-token")
-    html = html.replace('<link rel="stylesheet" href="assets/app.css?v=5.5.12">', "<style>" + (STATIC / "app.css").read_text() + "</style>")
+    html = html.replace("__LOCALE__", locale).replace("__TRANSLATIONS__", json.dumps(tr)).replace("__LOCALE_NAMES__", json.dumps(locale_names)).replace("__VERSION__", "5.5.13").replace("__ACTION_TOKEN__", "test-token")
+    html = html.replace('<link rel="stylesheet" href="assets/app.css?v=5.5.13">', "<style>" + (STATIC / "app.css").read_text() + "</style>")
     for script in ("core.js", "accessibility.js", "data-management.js", "rooms-events.js", "system-diagnostics.js", "app.js"):
-        html = html.replace(f'<script src="assets/{script}?v=5.5.12"></script>', "<script>" + (STATIC / script).read_text() + "</script>")
+        html = html.replace(f'<script src="assets/{script}?v=5.5.13"></script>', "<script>" + (STATIC / script).read_text() + "</script>")
     return html
 
 
@@ -153,8 +153,8 @@ def _payloads(language="de"):
         "api/homeassistant/verify-purge": {"operation_id": "verify-test", "verified": True, "checked_entities": 4, "remaining_rows": 0, "checked_at": "2026-07-25T16:05:00+00:00", "period_start": "2026-06-25T16:05:00+00:00", "period_end": "2026-07-25T16:05:00+00:00", "limitation": "Recorder history API verification; long-term statistics may be retained separately."},
         "api/data/summary": {"measurements": 500, "first_measurement": "2026-07-01T00:00:00+00:00", "last_measurement": "2026-07-25T16:00:00+00:00", "database_size_bytes": 1000000, "integrity": "ok", "reports": 0, "report_size_bytes": 0, "schema_version": 8},
         "api/locations/assign": {"ok": True, "assigned": 24, "session_id": 12},
-        "api/self-test": {"ok": True, "status": "warning", "version": "5.5.12", "generated_at": "2026-07-25T16:05:00+00:00", "items": [{"id": "api", "status": "ok", "detail": "5.5.12"}, {"id": "database_integrity", "status": "ok", "detail": "ok"}, {"id": "room_persistence", "status": "ok", "detail": "insert/read/rollback"}, {"id": "device_connection", "status": "warning", "detail": "disconnected"}]},
-        "api/analysis": {"statistics": {}, "thresholds": {"warning": {}, "danger": {}}, "quality_control": {}, "uncertainty": {}, "scientific_quality": {}, "autocorrelation": {}, "change_point": {}, "records": [], "daily": [], "histogram": [], "weekday_profile": [], "hourly_profile": [], "weekly_heatmap": [], "events": []},
+        "api/self-test": {"ok": True, "status": "warning", "version": "5.5.13", "generated_at": "2026-07-25T16:05:00+00:00", "items": [{"id": "api", "status": "ok", "detail": "5.5.13"}, {"id": "database_integrity", "status": "ok", "detail": "ok"}, {"id": "room_persistence", "status": "ok", "detail": "insert/read/rollback"}, {"id": "device_connection", "status": "warning", "detail": "disconnected"}]},
+        "api/analysis": {"statistics": {}, "thresholds": {"warning": {}, "danger": {}}, "quality_control": {}, "uncertainty": {}, "scientific_quality": {}, "autocorrelation": {}, "change_point": {}, "records": [{"completed_at": "2026-07-25T14:00:00+00:00", "bq_m3": 3.08}, {"completed_at": "2026-07-25T15:00:00+00:00", "bq_m3": 6.16}], "daily": [], "histogram": [], "weekday_profile": [], "hourly_profile": [], "weekly_heatmap": [], "events": []},
     }
 
 
@@ -162,21 +162,21 @@ def _launch_browser(p):
     return p.chromium.launch(executable_path="/usr/bin/chromium", headless=True, args=["--no-sandbox", "--allow-file-access-from-files"])
 
 
-def _new_page(browser, width, height, locale="de", text_scale=1.0, state_override=None):
+def _new_page(browser, width, height, locale="de", text_scale=1.0, state_override=None, state_delay_ms=0, settle_ms=500):
     html = _fixture_html(locale)
     page = browser.new_page(viewport={"width": width, "height": height})
     payloads = _payloads(locale)
     if state_override is not None:
         payloads["api/state"] = state_override
     init_payloads = json.dumps(payloads)
-    mock_script = f"""<script>window.__TEST_PAYLOADS__={init_payloads}; window.__TEST_CALLS__=[]; window.fetch = async (url, options={{}}) => {{ const requestUrl=String(url), method=options.method||'GET'; window.__TEST_CALLS__.push({{url:requestUrl,method,body:options.body||null,headers:options.headers||{{}}}}); let body=null; if(method==='POST' && requestUrl.includes('api/locations?') && !requestUrl.includes('/assign')) {{ const submitted=typeof options.body==='string'?JSON.parse(options.body):{{}}; const existing=(window.__TEST_PAYLOADS__['api/catalog'].locations||[]).find(item=>Number(item.id)===Number(submitted.id)); const item={{...(existing||{{}}),id:existing?.id||Math.max(0,...window.__TEST_PAYLOADS__['api/catalog'].locations.map(x=>Number(x.id)||0))+1,name:submitted.room,room:submitted.room,building:'',measurement_height_m:submitted.measurement_height_m,latest_bq_m3:null,latest_at:null,sample_count:0}}; const index=window.__TEST_PAYLOADS__['api/catalog'].locations.findIndex(x=>Number(x.id)===Number(item.id)); if(index>=0)window.__TEST_PAYLOADS__['api/catalog'].locations[index]=item;else window.__TEST_PAYLOADS__['api/catalog'].locations.push(item); body={{ok:true,item}}; }} if(body===null) {{ const found=Object.entries(window.__TEST_PAYLOADS__).sort((a,b)=>b[0].length-a[0].length).find(([k])=>requestUrl.includes(k)); body=found?found[1]:{{}}; }} return new Response(JSON.stringify(body),{{status:200,headers:{{'Content-Type':'application/json'}}}}); }};</script>"""
+    mock_script = f"""<script>window.__TEST_PAYLOADS__={init_payloads}; window.__TEST_CALLS__=[]; window.fetch = async (url, options={{}}) => {{ const requestUrl=String(url), method=options.method||'GET'; if({state_delay_ms}>0 && requestUrl.includes('api/state')) await new Promise(resolve=>setTimeout(resolve,{state_delay_ms})); window.__TEST_CALLS__.push({{url:requestUrl,method,body:options.body||null,headers:options.headers||{{}}}}); let body=null; if(method==='POST' && requestUrl.includes('api/locations?') && !requestUrl.includes('/assign')) {{ const submitted=typeof options.body==='string'?JSON.parse(options.body):{{}}; const existing=(window.__TEST_PAYLOADS__['api/catalog'].locations||[]).find(item=>Number(item.id)===Number(submitted.id)); const item={{...(existing||{{}}),id:existing?.id||Math.max(0,...window.__TEST_PAYLOADS__['api/catalog'].locations.map(x=>Number(x.id)||0))+1,name:submitted.room,room:submitted.room,building:'',measurement_height_m:submitted.measurement_height_m,latest_bq_m3:null,latest_at:null,sample_count:0}}; const index=window.__TEST_PAYLOADS__['api/catalog'].locations.findIndex(x=>Number(x.id)===Number(item.id)); if(index>=0)window.__TEST_PAYLOADS__['api/catalog'].locations[index]=item;else window.__TEST_PAYLOADS__['api/catalog'].locations.push(item); body={{ok:true,item}}; }} if(body===null) {{ const found=Object.entries(window.__TEST_PAYLOADS__).sort((a,b)=>b[0].length-a[0].length).find(([k])=>requestUrl.includes(k)); body=found?found[1]:{{}}; }} return new Response(JSON.stringify(body),{{status:200,headers:{{'Content-Type':'application/json'}}}}); }};</script>"""
     html = html.replace("<head>", "<head>" + mock_script, 1)
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
     page.set_content(html, wait_until="load")
     if text_scale != 1.0:
         page.evaluate(f"document.documentElement.style.fontSize='{text_scale * 100}%'")
-    page.wait_for_timeout(500)
+    page.wait_for_timeout(settle_ms)
     return page, errors
 
 
@@ -187,6 +187,20 @@ def shared_browser():
         browser = _launch_browser(p)
         yield browser
         browser.close()
+
+
+def test_weekly_heatmap_renders_before_state_and_uses_record_fallback(shared_browser):
+    page, errors = _new_page(shared_browser, 1280, 900, state_delay_ms=1200, settle_ms=40)
+    page.locator('[data-view="analysis"]').evaluate("(el)=>el.click()")
+    page.wait_for_timeout(300)
+    assert page.locator("#weeklyHeatmap .heatmap-cell").count() == 168
+    assert page.locator("#weeklyHeatmap .heatmap-cell:not(.missing)").count() == 2
+    assert page.locator("#weeklyHeatmap .heatmap-label").count() == 7
+    assert not errors
+    page.wait_for_timeout(1100)
+    assert page.locator("#weeklyHeatmap .heatmap-cell").count() == 168
+    assert not errors
+    page.close()
 
 
 def test_all_visible_views_have_no_horizontal_overflow(shared_browser):

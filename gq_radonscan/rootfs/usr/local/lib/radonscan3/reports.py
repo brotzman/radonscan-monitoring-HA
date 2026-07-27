@@ -513,7 +513,7 @@ class ScientificReport:
             "minimum_bq_m3": stats.get("minimum_bq_m3"),
             "maximum_bq_m3": stats.get("maximum_bq_m3"),
             "app_version": __version__,
-            "analysis_model": "5.5.12",
+            "analysis_model": "5.5.13",
             "homeassistant_location_name": ha_location.get("location_name"),
             "homeassistant_building_name": ha_location.get("building_name"),
             "homeassistant_address": ha_location.get("address"),
