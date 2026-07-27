@@ -291,7 +291,7 @@
   "main_navigation": "Nawigacja główna",
   "mann_kendall_tau": "Tau Manna-Kendalla",
   "manual": "Manual",
-  "manual_note_v3": "Podręcznik użytkownika odpowiada wersji 5.5.8. Oddzielna dokumentacja protokołu SPIR pozostaje w wersji 3.0.0, ponieważ opisuje protokół urządzenia, a nie wersję aplikacji.",
+  "manual_note_v3": "Podręcznik użytkownika odpowiada wersji 5.5.9. Oddzielna dokumentacja protokołu SPIR pozostaje w wersji 3.0.0, ponieważ opisuje protokół urządzenia, a nie wersję aplikacji.",
   "manual_upload": "Przesyłanie ręczne",
   "manual_upload_hint": "Przesyła tylko najnowszy zakończony lokalny odczyt godzinowy. Opublikowany protokół nie pozwala przesyłać historycznych znaczników czasu.",
   "map_click_hint": "Kliknij plan, aby ustawić położenie pomieszczenia.",
@@ -623,5 +623,13 @@
   "device_error_wrong_device": "Na tym porcie odpowiedziało inne urządzenie szeregowe, nie RadonScan.",
   "device_error_read_error": "Nie udało się niezawodnie odczytać portu szeregowego.",
   "device_error_no_ports": "Nie znaleziono odpowiednich portów szeregowych.",
-  "device_error_not_detected": "Automatyczne wykrywanie nie rozpoznało urządzenia RadonScan."
+  "device_error_not_detected": "Automatyczne wykrywanie nie rozpoznało urządzenia RadonScan.",
+  "last_device_read": "Ostatni odczyt urządzenia",
+  "last_completed_measurement": "Ostatni zakończony pomiar",
+  "hour_index_unchanged": "Indeks godzinowy bez zmian",
+  "hour_index_stale_warning": "bez zmian wyjątkowo długo",
+  "import_status": "Stan importu",
+  "zero_confirmation_pending": "Wartość zerowa oczekuje na potwierdzenie",
+  "new_hour_imported": "Zaimportowano nową godzinę",
+  "no_new_hour": "Brak nowej zakończonej godziny"
 }

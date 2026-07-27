@@ -13,7 +13,7 @@ VISIBLE_VIEWS = ("overview", "analysis", "sites", "history", "reports", "data", 
 
 def _state(language="de"):
     return {
-        "app": {"version": "5.5.8"},
+        "app": {"version": "5.5.9"},
         "settings": {
             "preferred_unit": "Bq/m3",
             "factor_bq_m3_per_cph": 1.54,
@@ -101,7 +101,7 @@ def _state(language="de"):
             "first_measurement": "2026-07-01T00:00:00+00:00",
             "last_measurement": "2026-07-25T16:00:00+00:00",
         },
-        "protocol": {"transport": "GET/SPIR", "decoder": "radonscan3", "hourly_record_count": 500, "latest_raw_cph": 57, "latest_hour_index": 500, "block_sha256": {}},
+        "protocol": {"transport": "GET/SPIR", "decoder": "radonscan3", "hourly_record_count": 500, "latest_raw_cph": 57, "latest_hour_index": 500, "last_device_read_at": "2026-07-25T16:10:00+00:00", "latest_measurement_at": "2026-07-25T16:00:00+00:00", "hour_index_unchanged_hours": 0.2, "hour_index_stale": False, "import_status": "unchanged", "pending_zero_confirmation": False, "block_sha256": {}},
         "catalog": {},
         "quality": {"label": "B"},
         "selection": {"explicit": True, "device_id": "dev-1", "location_id": 1, "campaign_id": 7},
@@ -134,10 +134,10 @@ def _fixture_html(locale="de") -> str:
     tr = json.loads((LOCALES / f"{locale}.json").read_text())
     locale_names = {code: code.upper() for code in LOCALE_CODES}
     html = (STATIC / "index.html").read_text()
-    html = html.replace("__LOCALE__", locale).replace("__TRANSLATIONS__", json.dumps(tr)).replace("__LOCALE_NAMES__", json.dumps(locale_names)).replace("__VERSION__", "5.5.8").replace("__ACTION_TOKEN__", "test-token")
-    html = html.replace('<link rel="stylesheet" href="assets/app.css?v=5.5.8">', "<style>" + (STATIC / "app.css").read_text() + "</style>")
+    html = html.replace("__LOCALE__", locale).replace("__TRANSLATIONS__", json.dumps(tr)).replace("__LOCALE_NAMES__", json.dumps(locale_names)).replace("__VERSION__", "5.5.9").replace("__ACTION_TOKEN__", "test-token")
+    html = html.replace('<link rel="stylesheet" href="assets/app.css?v=5.5.9">', "<style>" + (STATIC / "app.css").read_text() + "</style>")
     for script in ("core.js", "accessibility.js", "data-management.js", "rooms-events.js", "system-diagnostics.js", "app.js"):
-        html = html.replace(f'<script src="assets/{script}?v=5.5.8"></script>', "<script>" + (STATIC / script).read_text() + "</script>")
+        html = html.replace(f'<script src="assets/{script}?v=5.5.9"></script>', "<script>" + (STATIC / script).read_text() + "</script>")
     return html
 
 
@@ -153,7 +153,7 @@ def _payloads(language="de"):
         "api/homeassistant/verify-purge": {"operation_id": "verify-test", "verified": True, "checked_entities": 4, "remaining_rows": 0, "checked_at": "2026-07-25T16:05:00+00:00", "period_start": "2026-06-25T16:05:00+00:00", "period_end": "2026-07-25T16:05:00+00:00", "limitation": "Recorder history API verification; long-term statistics may be retained separately."},
         "api/data/summary": {"measurements": 500, "first_measurement": "2026-07-01T00:00:00+00:00", "last_measurement": "2026-07-25T16:00:00+00:00", "database_size_bytes": 1000000, "integrity": "ok", "reports": 0, "report_size_bytes": 0, "schema_version": 8},
         "api/locations/assign": {"ok": True, "assigned": 24, "session_id": 12},
-        "api/self-test": {"ok": True, "status": "warning", "version": "5.5.8", "generated_at": "2026-07-25T16:05:00+00:00", "items": [{"id": "api", "status": "ok", "detail": "5.5.8"}, {"id": "database_integrity", "status": "ok", "detail": "ok"}, {"id": "room_persistence", "status": "ok", "detail": "insert/read/rollback"}, {"id": "device_connection", "status": "warning", "detail": "disconnected"}]},
+        "api/self-test": {"ok": True, "status": "warning", "version": "5.5.9", "generated_at": "2026-07-25T16:05:00+00:00", "items": [{"id": "api", "status": "ok", "detail": "5.5.9"}, {"id": "database_integrity", "status": "ok", "detail": "ok"}, {"id": "room_persistence", "status": "ok", "detail": "insert/read/rollback"}, {"id": "device_connection", "status": "warning", "detail": "disconnected"}]},
         "api/analysis": {"statistics": {}, "thresholds": {"warning": {}, "danger": {}}, "quality_control": {}, "uncertainty": {}, "scientific_quality": {}, "autocorrelation": {}, "change_point": {}, "records": [], "daily": [], "histogram": [], "weekday_profile": [], "hourly_profile": [], "weekly_heatmap": [], "events": []},
     }
 
@@ -464,5 +464,21 @@ def test_system_view_shows_fixed_port_and_actionable_busy_diagnosis(shared_brows
     content = page.locator("#deviceFacts").inner_text()
     assert fixed in content
     assert "bereits von einem anderen Dienst verwendet" in content
+    assert not errors
+    page.close()
+
+
+def test_device_read_and_measurement_times_are_separate(shared_browser):
+    page, errors = _new_page(shared_browser, 390, 844, "de")
+    assert page.locator("#overviewLastDeviceRead").inner_text().strip() != "–"
+    assert page.locator("#overviewLastMeasurement").inner_text().strip() != "–"
+    page.locator('[data-view="system"]').evaluate("(el)=>el.click()")
+    page.wait_for_timeout(100)
+    facts = page.locator("#deviceFacts").inner_text()
+    protocol = page.locator("#protocolFacts").inner_text()
+    assert "Letztes Geräteauslesen" in facts
+    assert "Letzter abgeschlossener Messwert" in facts
+    assert "Stundenindex unverändert" in protocol
+    assert "Keine neue abgeschlossene Stunde" in protocol
     assert not errors
     page.close()

@@ -291,7 +291,7 @@
   "main_navigation": "Main navigation",
   "mann_kendall_tau": "Mann–Kendall tau",
   "manual": "Manual",
-  "manual_note_v3": "The user manual matches version 5.5.8. The separate SPIR protocol reference remains version 3.0.0 because it describes the device protocol, not the app release.",
+  "manual_note_v3": "The user manual matches version 5.5.9. The separate SPIR protocol reference remains version 3.0.0 because it describes the device protocol, not the app release.",
   "manual_upload": "Manual upload",
   "manual_upload_hint": "Uploads only the latest completed local hourly reading. Historical timestamps cannot be sent by the published protocol.",
   "map_click_hint": "Click the floor plan to set the room position.",
@@ -623,5 +623,13 @@
   "device_error_wrong_device": "A different serial device responded on this port, not a RadonScan.",
   "device_error_read_error": "The serial port could not be read reliably.",
   "device_error_no_ports": "No eligible serial ports were found.",
-  "device_error_not_detected": "Automatic discovery did not identify a RadonScan."
+  "device_error_not_detected": "Automatic discovery did not identify a RadonScan.",
+  "last_device_read": "Last device read",
+  "last_completed_measurement": "Last completed measurement",
+  "hour_index_unchanged": "Hour index unchanged",
+  "hour_index_stale_warning": "unchanged unusually long",
+  "import_status": "Import status",
+  "zero_confirmation_pending": "Zero value awaiting confirmation",
+  "new_hour_imported": "New hour imported",
+  "no_new_hour": "No new completed hour"
 }

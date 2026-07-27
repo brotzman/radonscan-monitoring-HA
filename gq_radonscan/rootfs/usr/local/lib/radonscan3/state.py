@@ -55,7 +55,14 @@ def build_state(
         "status": "disconnected",
         "error": "not_scanned",
     }
-    protocol = runtime.get("protocol") or {}
+    protocol = dict(runtime.get("protocol") or {})
+    unchanged_since = parse_dt(protocol.get("hour_index_unchanged_since"))
+    unchanged_hours = (
+        (datetime.now(timezone.utc) - unchanged_since).total_seconds() / 3600.0
+        if unchanged_since else None
+    )
+    protocol["hour_index_unchanged_hours"] = unchanged_hours
+    protocol["hour_index_stale"] = unchanged_hours is not None and unchanged_hours >= 2.0
     mqtt = runtime.get("mqtt") or {"connected": False}
     if stats is None:
         stats = storage.stats(settings.minimum_data_coverage_percent, current_device_id)

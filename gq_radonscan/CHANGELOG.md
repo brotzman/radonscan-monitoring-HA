@@ -1,14 +1,17 @@
 # Changelog
 
-## 5.5.8 - Valid Home Assistant MQTT discovery payloads
+## 5.5.9 - Reliable hourly timestamps and confirmed zero-count hours
 
-- Fixed the actual reason the RadonScan device was absent from Home Assistant: the discovery payload used the unsupported origin field `sw` instead of the schema field `sw_version`, causing Home Assistant to reject the complete discovery message.
-- Removed the optional discovery `origin` block entirely to maximise compatibility across Home Assistant releases.
-- Removed the optional `radon` device class from MQTT discovery so the three sensors also work with Home Assistant versions that predate that device class; the unit remains `Bq/m³` and `state_class` remains `measurement`.
-- Publish retained discovery, availability and state messages with MQTT QoS 1.
-- Keep one stable device identifier and exactly three entities: completed hourly value, 24-hour mean and 7-day mean.
-- Continue cleaning obsolete diagnostic entities without deleting the three current sensors on the stable node.
-- No database, serial protocol, GMCMap or statistical changes.
+- Reconstruct new measurement timestamps from the previous stored hour index instead of assigning the delayed poll time to the measurement.
+- Add a one-time migration that repairs irregular timestamps in existing campaigns from their authoritative hour-index spacing; for example, adjacent indices stored at 09:50 and 11:18 are realigned to 09:50 and 10:50.
+- Hold a newly appearing zero-count record at the current history tip until the next successful device read confirms the same index and value.
+- Preserve legitimate zero-count hours: confirmed zeroes remain in storage and in the 24-hour and 7-day means, and a pending zero is imported immediately if a newer hour index subsequently appears.
+- Distinguish logs for a newly imported hour, an unchanged already stored hour and a zero value awaiting confirmation.
+- Show the last successful device read separately from the last completed measurement in Overview and Devices & System.
+- Show how long the device hour index has remained unchanged and flag it after two hours.
+- Retain the Home Assistant MQTT Discovery compatibility fix, exactly three Bq/m³ sensors, the radon-only GMCMap upload and the fixed serial-port behaviour from previous releases.
+- No database-schema change.
+
 
 ## 5.5.4 - Correct public GMCMap upload endpoint
 

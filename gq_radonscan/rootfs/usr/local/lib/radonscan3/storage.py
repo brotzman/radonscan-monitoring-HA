@@ -480,39 +480,98 @@ class Storage:
         snapshot: Snapshot,
         detected_at: datetime,
         backfill: bool,
+        confirm_latest_zero: bool = True,
     ) -> dict[str, object]:
+        """Import completed hourly records from one SPIR history snapshot.
+
+        Wall-clock timestamps are reconstructed from the previously stored hour
+        index whenever possible. This prevents a delayed poll from assigning its
+        *read time* to a measurement that was completed earlier.
+
+        A newly appearing zero-count record at the current history tip is held
+        for one additional successful poll. Historical zero records and a zero
+        that is followed by a newer index are imported immediately. This guards
+        against a transient all-zero decode without discarding legitimate zero
+        hours from averages.
+        """
         latest = snapshot.latest
         if latest is None:
-            return {"inserted": 0, "campaign_reset": False, "latest_hour_index": None}
+            return {
+                "inserted": 0,
+                "campaign_reset": False,
+                "latest_hour_index": None,
+                "import_status": "empty_snapshot",
+                "pending_zero_confirmation": False,
+                "latest_completed_at": None,
+            }
 
+        pending_key = f"pending_zero_confirmation:{device_id}"
+        pending = self.get_runtime(pending_key, None)
         inserted = 0
         reset = False
+        pending_zero_confirmation = False
+        timestamp_source = "device_read_time"
+
         with self._connection() as con:
             campaign = self._active_campaign(con, device_id)
             if campaign is None:
                 campaign_id = self._new_campaign(con, device_id, detected_at, "first_history")
+                last_row = None
                 last_index = None
             else:
                 campaign_id = int(campaign["id"])
-                row = con.execute(
-                    "SELECT MAX(hour_index) AS idx FROM measurements WHERE device_id=? AND campaign_id=?",
+                last_row = con.execute(
+                    """
+                    SELECT hour_index,completed_at FROM measurements
+                    WHERE device_id=? AND campaign_id=?
+                    ORDER BY hour_index DESC,id DESC LIMIT 1
+                    """,
                     (device_id, campaign_id),
                 ).fetchone()
-                last_index = row["idx"] if row else None
+                last_index = int(last_row["hour_index"]) if last_row else None
 
             if last_index is not None and latest.hour_index < int(last_index):
                 campaign_id = self._new_campaign(con, device_id, detected_at, "device_history_reset")
+                last_row = None
                 last_index = None
                 reset = True
 
             if last_index is None:
-                candidates = snapshot.records if backfill else (latest,)
+                candidates = list(snapshot.records if backfill else (latest,))
             else:
-                candidates = tuple(record for record in snapshot.records if record.hour_index > int(last_index))
+                candidates = [record for record in snapshot.records if record.hour_index > int(last_index)]
 
-            for record in candidates:
-                age = latest.hour_index - record.hour_index
-                completed_at_dt = detected_at - timedelta(hours=max(0, age))
+            latest_is_new = last_index is None or latest.hour_index > int(last_index)
+            same_pending_zero = (
+                isinstance(pending, dict)
+                and int(pending.get("hour_index", -1)) == int(latest.hour_index)
+                and int(pending.get("raw_cph", -1)) == 0
+            )
+            if confirm_latest_zero and latest_is_new and int(latest.raw_cph) == 0 and not same_pending_zero:
+                candidates = [record for record in candidates if record.hour_index != latest.hour_index]
+                pending_zero_confirmation = True
+
+            # Reconstruct the timeline from the last persisted hour. If no anchor
+            # exists, retain the previous behaviour and back-calculate from the
+            # successful device-read time.
+            anchor_index = int(last_row["hour_index"]) if last_row else None
+            anchor_dt = parse_dt(last_row["completed_at"]) if last_row else None
+            if anchor_dt is not None and anchor_index is not None:
+                timestamp_source = "reconstructed_from_previous_hour_index"
+
+            for record in sorted(candidates, key=lambda item: item.hour_index):
+                if anchor_dt is not None and anchor_index is not None and record.hour_index > anchor_index:
+                    completed_at_dt = anchor_dt + timedelta(hours=record.hour_index - anchor_index)
+                    # A reconstructed completion must never lie after the poll
+                    # that discovered it. If an earlier timestamp was already
+                    # too recent, anchor the current snapshot at detected_at.
+                    if completed_at_dt > detected_at:
+                        age = latest.hour_index - record.hour_index
+                        completed_at_dt = detected_at - timedelta(hours=max(0, age))
+                        timestamp_source = "reconstructed_from_device_read_time"
+                else:
+                    age = latest.hour_index - record.hour_index
+                    completed_at_dt = detected_at - timedelta(hours=max(0, age))
                 completed_at = iso(completed_at_dt)
                 session = self._session_for_time(con, device_id, completed_at)
                 location_id = int(session["location_id"]) if session and session["location_id"] is not None else None
@@ -540,13 +599,105 @@ class Storage:
                 )
                 inserted += int(cur.rowcount > 0)
 
+            latest_row = con.execute(
+                """
+                SELECT hour_index,completed_at,raw_cph,bq_m3 FROM measurements
+                WHERE device_id=? AND campaign_id=?
+                ORDER BY hour_index DESC,id DESC LIMIT 1
+                """,
+                (device_id, campaign_id),
+            ).fetchone()
+
+        if pending_zero_confirmation:
+            self.set_runtime(
+                pending_key,
+                {
+                    "hour_index": int(latest.hour_index),
+                    "raw_cph": 0,
+                    "first_seen_at": iso(detected_at),
+                },
+            )
+        else:
+            self.set_runtime(pending_key, None)
+
+        if pending_zero_confirmation:
+            import_status = "pending_zero_confirmation"
+        elif inserted:
+            import_status = "imported"
+        else:
+            import_status = "unchanged"
+
         return {
             "inserted": inserted,
             "campaign_reset": reset,
             "latest_hour_index": latest.hour_index,
             "latest_raw_cph": latest.raw_cph,
             "latest_bq_m3": latest.bq_m3,
+            "import_status": import_status,
+            "pending_zero_confirmation": pending_zero_confirmation,
+            "latest_completed_at": latest_row["completed_at"] if latest_row else None,
+            "stored_latest_hour_index": int(latest_row["hour_index"]) if latest_row else None,
+            "timestamp_source": timestamp_source,
         }
+
+    def repair_measurement_timeline(self) -> dict[str, int]:
+        """Conservatively align stored timestamps with consecutive hour indices.
+
+        Older releases used the poll/read time for each newly discovered latest
+        hour. When a poll was delayed this produced irregular gaps such as 88
+        minutes between consecutive indices. Within one device campaign the
+        hour index is the authoritative spacing signal, so all later records are
+        aligned to the first stored record plus the corresponding index delta.
+        """
+        updated = 0
+        campaigns = 0
+        with self._connection() as con:
+            groups = con.execute(
+                """
+                SELECT DISTINCT device_id,campaign_id FROM measurements
+                ORDER BY device_id,campaign_id
+                """
+            ).fetchall()
+            for group in groups:
+                rows = con.execute(
+                    """
+                    SELECT id,hour_index,completed_at FROM measurements
+                    WHERE device_id=? AND campaign_id=?
+                    ORDER BY hour_index,id
+                    """,
+                    (group["device_id"], group["campaign_id"]),
+                ).fetchall()
+                if len(rows) < 2:
+                    continue
+                anchor_index = int(rows[0]["hour_index"])
+                anchor_dt = parse_dt(rows[0]["completed_at"])
+                if anchor_dt is None:
+                    continue
+                group_updates = 0
+                for row in rows[1:]:
+                    expected_dt = anchor_dt + timedelta(hours=int(row["hour_index"]) - anchor_index)
+                    actual_dt = parse_dt(row["completed_at"])
+                    if actual_dt is not None and abs((actual_dt - expected_dt).total_seconds()) <= 60:
+                        continue
+                    completed_at = iso(expected_dt)
+                    session = self._session_for_time(con, str(group["device_id"]), completed_at)
+                    location_id = int(session["location_id"]) if session and session["location_id"] is not None else None
+                    session_id = int(session["id"]) if session else None
+                    con.execute(
+                        "UPDATE measurements SET completed_at=?,location_id=?,session_id=? WHERE id=?",
+                        (completed_at, location_id, session_id, int(row["id"])),
+                    )
+                    updated += 1
+                    group_updates += 1
+                if group_updates:
+                    campaigns += 1
+        if updated:
+            self.audit(
+                "measurement_timeline_repair",
+                "measurements",
+                {"updated_records": updated, "campaigns": campaigns, "method": "hour_index_spacing"},
+            )
+        return {"updated_records": updated, "campaigns": campaigns}
 
     def prune(self, retention_days: int) -> int:
         cutoff = iso(utc_now() - timedelta(days=int(retention_days)))

@@ -256,7 +256,9 @@
     $('peak24Time').textContent=peakAvailable?`${tr('measured_at')}: ${fmtDate(peak24.observed_maximum_at||peak24.period_end)} · ${tr('coverage')}: ${fmtNumber(peak24.coverage_percent||0,0)} %`:periodReason(peak24);
     $('overviewDeviceStatus').textContent=connected?tr('connected'):tr('disconnected');
     $('overviewMqttStatus').textContent=state.mqtt?.connected?tr('online'):tr('offline');
-    $('overviewLastUpdate').textContent=fmtDate(m.completed_at);
+    const protocol=state.protocol||{};
+    $('overviewLastDeviceRead').textContent=fmtDate(protocol.last_device_read_at||state.connection?.last_scan);
+    $('overviewLastMeasurement').textContent=fmtDate(m.completed_at);
     $('overviewDatabaseStatus').textContent=`${fmtInteger(state.database?.sample_count||0)} / ${fmtInteger(state.database?.total_sample_count||state.database?.sample_count||0)} ${tr('hours_short')} · ${fmtBytes(state.database?.size_bytes||0)}`;
     const q=state.statistics?.['30d']?.quality||state.statistics?.all?.quality||'insufficient';
     const qBadge=$('qualityBadge');qBadge.className=`badge ${q}`;qBadge.textContent=tr(`quality_${q}`);
@@ -272,8 +274,11 @@
     const connectionKey=`device_error_${connectionCode}`;
     const connectionDetail=c.connected?tr('device_error_connected'):(tr(connectionKey)===connectionKey?tr('connection_error'):tr(connectionKey));
     const checkedPort=c.port||d.serial_port||state.settings?.serial_port||tr('automatic');
-    $('deviceFacts').innerHTML=[fact(tr('status'),c.connected?tr('connected'):tr('disconnected')),fact(tr('connection_detail'),connectionDetail),fact(tr('checked_port'),checkedPort),fact(tr('model'),d.model),fact(tr('firmware'),fmtFirmware(d.firmware)),fact(tr('serial_number'),d.serial_number),fact(tr('last_scan'),fmtDate(c.last_scan))].join('');
-    $('protocolFacts').innerHTML=[fact(tr('protocol'),p.transport||'GET/SPIR'),fact(tr('decoder'),p.decoder),fact(tr('detected_records'),p.hourly_record_count),fact(tr('latest_raw'),p.latest_raw_cph),fact(tr('hour_index'),p.latest_hour_index),fact(tr('conversion_factor'),`${state.settings.factor_bq_m3_per_cph} ${tr('factor_unit')}`)].join('');
+    const unchangedHours=Number(p.hour_index_unchanged_hours);
+    const indexAge=Number.isFinite(unchangedHours)?`${fmtNumber(unchangedHours,1)} h${p.hour_index_stale?` · ${tr('hour_index_stale_warning')}`:''}`:tr('not_available');
+    const importState=p.pending_zero_confirmation?tr('zero_confirmation_pending'):(p.import_status==='imported'?tr('new_hour_imported'):tr('no_new_hour'));
+    $('deviceFacts').innerHTML=[fact(tr('status'),c.connected?tr('connected'):tr('disconnected')),fact(tr('connection_detail'),connectionDetail),fact(tr('checked_port'),checkedPort),fact(tr('model'),d.model),fact(tr('firmware'),fmtFirmware(d.firmware)),fact(tr('serial_number'),d.serial_number),fact(tr('last_device_read'),fmtDate(p.last_device_read_at||c.last_scan)),fact(tr('last_completed_measurement'),fmtDate(state.measurement?.completed_at))].join('');
+    $('protocolFacts').innerHTML=[fact(tr('protocol'),p.transport||'GET/SPIR'),fact(tr('decoder'),p.decoder),fact(tr('detected_records'),p.hourly_record_count),fact(tr('latest_raw'),p.latest_raw_cph),fact(tr('hour_index'),p.latest_hour_index),fact(tr('hour_index_unchanged'),indexAge),fact(tr('import_status'),importState),fact(tr('conversion_factor'),`${state.settings.factor_bq_m3_per_cph} ${tr('factor_unit')}`)].join('');
     $('serviceFacts').innerHTML=[fact(tr('mqtt'),state.mqtt?.connected?tr('online'):tr('offline')),fact(tr('home_assistant'),state.homeassistant?.connected?tr('online'):tr('offline')),fact(tr('api'),tr('online')),fact(tr('version'),state.app?.version)].join('');
     $('databaseFacts').innerHTML=[fact(tr('sample_count'),fmtInteger(state.database?.sample_count)),fact(tr('database_size'),fmtBytes(state.database?.size_bytes)),fact(tr('schema'),state.database?.schema_version),fact(tr('integrity'),state.database?.integrity),fact(tr('start'),fmtDate(state.database?.first_measurement)),fact(tr('end'),fmtDate(state.database?.last_measurement))].join('');
   }

@@ -34,6 +34,15 @@ def main() -> int:
     configure_logging(settings)
 
     storage = Storage(settings.data_dir / "radonscan_v3.sqlite3")
+    if not storage.get_runtime("timeline_repair_5_5_9_completed", False):
+        repair = storage.repair_measurement_timeline()
+        storage.set_runtime("timeline_repair_5_5_9_completed", True)
+        if repair.get("updated_records"):
+            LOGGER.info(
+                "Reconstructed %s stored measurement timestamps across %s campaign(s) from hour-index spacing",
+                repair.get("updated_records"),
+                repair.get("campaigns"),
+            )
     collector = Collector(settings)
     mqtt = MqttPublisher(settings, storage.set_runtime)
     web = WebServer(settings, storage)
@@ -72,21 +81,39 @@ def main() -> int:
                     seen_at=result.detected_at,
                 )
                 skip_backfill_once = bool(storage.get_runtime("skip_history_backfill_once", False))
+                previous_protocol = storage.get_runtime("protocol", {})
                 imported = storage.import_snapshot(
                     device_id=result.device_id,
                     snapshot=result.snapshot,
                     detected_at=result.detected_at,
                     backfill=settings.backfill_history and not skip_backfill_once,
+                    confirm_latest_zero=True,
                 )
                 if skip_backfill_once:
                     storage.set_runtime("skip_history_backfill_once", False)
                 update_connection_runtime(storage, result)
                 protocol = result.snapshot.as_dict()
+                read_at = result.detected_at.astimezone().isoformat(timespec="seconds")
+                previous_index = previous_protocol.get("latest_hour_index") if isinstance(previous_protocol, dict) else None
+                if previous_index == protocol.get("latest_hour_index"):
+                    unchanged_since = (
+                        previous_protocol.get("hour_index_unchanged_since")
+                        or previous_protocol.get("last_device_read_at")
+                        or read_at
+                    )
+                else:
+                    unchanged_since = read_at
                 protocol.update(
                     {
                         "status": "decoded",
                         "transport": "GETVER + SPIR",
                         "imported": imported,
+                        "import_status": imported.get("import_status"),
+                        "pending_zero_confirmation": imported.get("pending_zero_confirmation", False),
+                        "last_device_read_at": read_at,
+                        "latest_measurement_at": imported.get("latest_completed_at"),
+                        "hour_index_unchanged_since": unchanged_since,
+                        "timestamp_source": imported.get("timestamp_source"),
                     }
                 )
                 storage.set_runtime("protocol", protocol)
@@ -97,13 +124,28 @@ def main() -> int:
                             ha.fire_event("radon_monitoring_campaign_started", {"device_id": result.device_id, "reason": "device_history_reset"})
                         except HomeAssistantError as exc:
                             LOGGER.debug("Could not emit Home Assistant event: %s", exc)
-                LOGGER.info(
-                    "RadonScan read: index=%s raw=%s bq_m3=%s imported=%s",
-                    protocol.get("latest_hour_index"),
-                    protocol.get("latest_raw_cph"),
-                    protocol.get("latest_bq_m3"),
-                    imported.get("inserted"),
-                )
+                if imported.get("pending_zero_confirmation"):
+                    LOGGER.info(
+                        "RadonScan read: index=%s raw=0 bq_m3=0.0 pending zero confirmation; no measurement stored yet",
+                        protocol.get("latest_hour_index"),
+                    )
+                elif imported.get("inserted"):
+                    LOGGER.info(
+                        "RadonScan import: index=%s raw=%s bq_m3=%s inserted=%s completed_at=%s timestamp=%s",
+                        protocol.get("latest_hour_index"),
+                        protocol.get("latest_raw_cph"),
+                        protocol.get("latest_bq_m3"),
+                        imported.get("inserted"),
+                        imported.get("latest_completed_at"),
+                        imported.get("timestamp_source"),
+                    )
+                else:
+                    LOGGER.info(
+                        "RadonScan read unchanged: index=%s raw=%s bq_m3=%s already stored; no new completed hour",
+                        protocol.get("latest_hour_index"),
+                        protocol.get("latest_raw_cph"),
+                        protocol.get("latest_bq_m3"),
+                    )
                 if gmcmap.should_auto_upload():
                     try:
                         uploaded = gmcmap.upload_next(trigger="automatic")

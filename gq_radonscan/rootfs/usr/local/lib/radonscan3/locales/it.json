@@ -291,7 +291,7 @@
   "main_navigation": "Navigazione principale",
   "mann_kendall_tau": "Tau di Mann-Kendall",
   "manual": "Manual",
-  "manual_note_v3": "Il manuale utente corrisponde alla versione 5.5.8. Il riferimento separato del protocollo SPIR rimane alla versione 3.0.0 perché descrive il protocollo del dispositivo, non la versione dell’app.",
+  "manual_note_v3": "Il manuale utente corrisponde alla versione 5.5.9. Il riferimento separato del protocollo SPIR rimane alla versione 3.0.0 perché descrive il protocollo del dispositivo, non la versione dell’app.",
   "manual_upload": "Caricamento manuale",
   "manual_upload_hint": "Carica solo l’ultima lettura oraria locale completata. Il protocollo pubblicato non consente di inviare timestamp storici.",
   "map_click_hint": "Fare clic sulla planimetria per impostare la posizione della stanza.",
@@ -623,5 +623,13 @@
   "device_error_wrong_device": "Su questa porta ha risposto un altro dispositivo seriale, non un RadonScan.",
   "device_error_read_error": "Non è stato possibile leggere in modo affidabile la porta seriale.",
   "device_error_no_ports": "Non sono state trovate porte seriali adatte.",
-  "device_error_not_detected": "Il rilevamento automatico non ha identificato un RadonScan."
+  "device_error_not_detected": "Il rilevamento automatico non ha identificato un RadonScan.",
+  "last_device_read": "Ultima lettura del dispositivo",
+  "last_completed_measurement": "Ultima misurazione completata",
+  "hour_index_unchanged": "Indice orario invariato",
+  "hour_index_stale_warning": "invariato da un tempo insolitamente lungo",
+  "import_status": "Stato importazione",
+  "zero_confirmation_pending": "Valore zero in attesa di conferma",
+  "new_hour_imported": "Nuova ora importata",
+  "no_new_hour": "Nessuna nuova ora completata"
 }

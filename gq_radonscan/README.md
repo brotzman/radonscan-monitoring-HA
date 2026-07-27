@@ -1,4 +1,4 @@
-# Radon Monitoring 5.5.8
+# Radon Monitoring 5.5.9
 
 Radon Monitoring is a local Home Assistant app for read-only monitoring of compatible GQ RadonScan devices. It imports completed hourly values, stores raw and converted measurements in SQLite, publishes Home Assistant entities through MQTT, provides scientific time-series analysis, generates PDF reports and can optionally upload measurements to the GQ Radiation World Map.
 
@@ -24,31 +24,27 @@ Radon Monitoring is a local Home Assistant app for read-only monitoring of compa
 - optional complete Home Assistant Recorder purge for RadonScan entities, plus verification through the History API
 - interface and Home Assistant option translations in German, English, Spanish, French, Croatian, Italian, Dutch and Polish
 
-## Version 5.5.8
+## Version 5.5.9
 
-Version 5.5.8 corrects the MQTT Discovery payload itself. Version 5.5.7 included an `origin` object with the field `sw`; Home Assistant accepts `sw_version` in that object and rejects invalid origin information. As a result, all three discovery messages could be ignored even though the app was connected to the MQTT broker.
+Version 5.5.9 separates the time at which the service successfully reads the RadonScan from the time represented by the latest completed hourly measurement. When the device hour index advances, the new timestamp is reconstructed from the previous stored index and its completion time. A delayed poll therefore no longer creates an irregular measurement interval.
 
-The optional `origin` object has now been removed for broad compatibility. The optional `radon` device class is also omitted so installations running a Home Assistant release from before that class was introduced can still create the sensors. The unit remains `Bq/m³`, and `state_class: measurement` preserves recorder and long-term statistics support.
+During the first start of 5.5.9, existing campaigns are checked once. Consecutive records are aligned to the first stored timestamp plus their hour-index difference. This repairs older entries that were stored at poll time, while preserving the raw count, Bq/m³ value, factor, source and campaign.
 
-Discovery now uses retained QoS 1 messages and creates one stable **GQ RadonScan** device with exactly:
+A newly appearing zero-count value at the current end of the device history is held for one additional successful read. If the same index still reports zero, the hour is stored normally and included in all averages. If a newer index appears first, the historical zero is imported together with the newer record so no legitimate zero hour is lost.
 
-- completed hourly Radon value in `Bq/m³`
-- 24-hour mean in `Bq/m³`
-- 7-day mean in `Bq/m³`
+The log now distinguishes **new hour imported**, **already stored / no new completed hour** and **zero value awaiting confirmation**. Overview and Devices & System display the last successful device read separately from the last completed measurement. The duration for which the hour index has remained unchanged is shown and marked as unusually long after two hours.
 
-The device and entity identifiers remain stable and do not depend on USB availability or imported measurements. Obsolete diagnostic entities continue to be removed, while the three current sensors are never deleted from the stable discovery node.
-
-No database schema, measurement, serial, GMCMap or statistical behaviour changes in this release.
+The MQTT compatibility correction from 5.5.8 remains included: one stable GQ RadonScan device with exactly the completed hourly value, 24-hour mean and 7-day mean in Bq/m³.
 
 ## Upgrade notes
 
-The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.8 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
+The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.9 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
 
 Before upgrading:
 
 1. Create a Home Assistant backup and, where appropriate, an app database backup.
 2. Stop the app before replacing a local repository package.
-3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.8.
+3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.9.
 4. Reopen the Ingress panel if an old iframe remains visible.
 5. Review `location_display_mode` if the Overview is shown in screenshots or shared displays.
 
