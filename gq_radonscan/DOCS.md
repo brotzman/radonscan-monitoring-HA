@@ -1,4 +1,4 @@
-# Radon Monitoring 5.5.4 - App documentation
+# Radon Monitoring 5.5.5 - App documentation
 
 ## Purpose
 
@@ -16,9 +16,21 @@ The app is an orientation and documentation tool. It does not turn a consumer mo
 
 Only completed hours are imported. A newly connected device may therefore remain without a current value until a completed record is available.
 
-## Fixed serial-port selection in 5.5.4
+## Home Assistant entities in 5.5.5
 
-A configured `serial_port` is now exclusive. Radon Monitoring opens only that path and no longer appends every serial interface found on the host. This prevents accidental probes of Sonoff/ITEAD Zigbee adapters, other USB serial devices and internal `/dev/ttyAMA*` console ports.
+MQTT discovery exposes exactly three sensor entities and all of them use `Bq/m³`:
+
+- completed hourly Radon value
+- 24-hour mean
+- 7-day mean
+
+The web-interface preference for `pCi/L` affects only the app display and reports; it does not change the Home Assistant entity units. The 30-day mean, raw CPH, hour index, last update, sample count and connectivity binary sensor are no longer published as Home Assistant entities.
+
+During the first successful MQTT connection after an upgrade, retained empty discovery payloads are published for those obsolete entity topics. Home Assistant should therefore remove them automatically. The three retained sensors keep their existing unique IDs so their entity IDs and history remain associated with the same sensors wherever Home Assistant permits the unit transition.
+
+## Fixed serial-port selection retained from 5.5.3
+
+A configured `serial_port` is exclusive. Radon Monitoring opens only that path and does not append every serial interface found on the host. This prevents accidental probes of Sonoff/ITEAD Zigbee adapters, other USB serial devices and internal `/dev/ttyAMA*` console ports.
 
 The default stable path for this installation is:
 
@@ -26,11 +38,11 @@ The default stable path for this installation is:
 /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0
 ```
 
-When an older Home Assistant options file still contains an empty value, the app adopts this path automatically if it exists. The explicit value `auto` always keeps automatic discovery enabled.
+When an older Home Assistant options file still contains an empty value, the app adopts this path automatically. The explicit value `auto` always keeps automatic discovery enabled.
 
 Automatic discovery prefers `/dev/serial/by-id/` aliases, de-duplicates aliases by their resolved device path and skips names that clearly identify Sonoff, ITEAD, Zigbee, Z-Wave, ConBee, SkyConnect or Ember adapters. `/dev/ttyAMA*` is never scanned automatically but can still be used when configured explicitly.
 
-The connection runtime and Devices & System view distinguish `port_busy`, `port_not_found`, `permission_denied`, `no_response`, `wrong_device`, `read_error`, `no_ports` and `not_detected`. The checked port remains visible even when the device is disconnected. The service start log now reads the real application version.
+The connection runtime and Devices & System view distinguish `port_busy`, `port_not_found`, `permission_denied`, `no_response`, `wrong_device`, `read_error`, `no_ports` and `not_detected`. The checked port remains visible even when the device is disconnected. The service start log reads the real application version.
 
 ## Views
 
@@ -195,6 +207,6 @@ From the repository root:
 python3 -m pytest
 ```
 
-Version 5.5.4 includes request-level tests for radon-only GMCMap uploads and tests for filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, automatic room resolution, read-only Home Assistant place/building data, guided room creation and assignment, inline validation, query/header/chunked Ingress fallbacks, idempotent room saves, the non-destructive System self-test, visible assignment cards, separation of local rooms from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
+Version 5.5.5 includes request-level tests for radon-only GMCMap uploads and tests for filter-coherent Overview statistics, context query parameters, 24-hour traffic-light assessment and provisional fallback, precise/reduced/hidden location display, coordinate units, event markers, automatic room resolution, read-only Home Assistant place/building data, guided room creation and assignment, inline validation, query/header/chunked Ingress fallbacks, idempotent room saves, the non-destructive System self-test, visible assignment cards, separation of local rooms from the optional World Map, collapsed advanced Analysis, release assets, API routes, destructive workflows, token redaction, USB reconnect state, database migrations, damaged restores, three years of hourly report data, responsive layouts, all eight interface languages, keyboard operation and 200% text scaling.
 
 Real-device and real-Home-Assistant field testing remains necessary for USB hardware variations, Home Assistant upgrades and Recorder backends.

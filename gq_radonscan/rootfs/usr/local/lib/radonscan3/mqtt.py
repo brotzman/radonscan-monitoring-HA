@@ -133,31 +133,24 @@ class MqttPublisher:
                 + "{% else %}" + fallback + "{% endif %}"
             )
 
-        if self.settings.preferred_unit == "pCi/L":
-            radon_value = guarded("{{ value_json.measurement.pci_l }}")
-            stat_path = "mean_pci_l"
-            unit = "pCi/L"
-            precision = 3
-        else:
-            radon_value = guarded("{{ value_json.measurement.bq_m3 }}")
-            stat_path = "mean_bq_m3"
-            unit = "Bq/m³"
-            precision = 1
-
+        # Home Assistant intentionally exposes only the three user-facing radon
+        # entities requested for dashboards and history.  These entities always
+        # use Bq/m³, independently of the display unit selected inside the app.
+        unit = "Bq/m³"
+        precision = 1
         sensors = {
             "radon_hourly": {
                 "name": t["hourly_value"],
-                "value_template": radon_value,
+                "value_template": guarded("{{ value_json.measurement.bq_m3 }}"),
                 "unit_of_measurement": unit,
                 "device_class": "radon",
                 "state_class": "measurement",
                 "icon": "mdi:radioactive",
                 "suggested_display_precision": precision,
-                "json_attributes_topic": self.state_topic,
             },
             "average_24h": {
                 "name": t["average_24h"],
-                "value_template": guarded(f"{{{{ value_json.statistics['24h']['{stat_path}'] }}}}"),
+                "value_template": guarded("{{ value_json.statistics['24h']['mean_bq_m3'] }}"),
                 "unit_of_measurement": unit,
                 "device_class": "radon",
                 "state_class": "measurement",
@@ -166,51 +159,33 @@ class MqttPublisher:
             },
             "average_7d": {
                 "name": t["average_7d"],
-                "value_template": guarded(f"{{{{ value_json.statistics['7d']['{stat_path}'] }}}}"),
+                "value_template": guarded("{{ value_json.statistics['7d']['mean_bq_m3'] }}"),
                 "unit_of_measurement": unit,
                 "device_class": "radon",
                 "state_class": "measurement",
                 "icon": "mdi:calendar-week",
                 "suggested_display_precision": precision,
             },
-            "average_30d": {
-                "name": t["average_30d"],
-                "value_template": guarded(f"{{{{ value_json.statistics['30d']['{stat_path}'] }}}}"),
-                "unit_of_measurement": unit,
-                "device_class": "radon",
-                "state_class": "measurement",
-                "icon": "mdi:calendar-month",
-                "suggested_display_precision": precision,
-            },
-            "hour_index": {
-                "name": t["hour_index"],
-                "value_template": guarded("{{ value_json.measurement.hour_index }}"),
-                "state_class": "measurement",
-                "entity_category": "diagnostic",
-                "icon": "mdi:counter",
-            },
-            "raw_cph": {
-                "name": t["raw_cph"],
-                "value_template": guarded("{{ value_json.measurement.raw_cph }}"),
-                "unit_of_measurement": "counts/h",
-                "state_class": "measurement",
-                "entity_category": "diagnostic",
-                "icon": "mdi:sigma",
-            },
-            "last_update": {
-                "name": t["last_update"],
-                "value_template": guarded("{{ value_json.measurement.completed_at }}"),
-                "device_class": "timestamp",
-                "entity_category": "diagnostic",
-                "icon": "mdi:clock-check-outline",
-            },
-            "sample_count": {
-                "name": t["sample_count"],
-                "value_template": guarded("{{ value_json.database.sample_count }}"),
-                "entity_category": "diagnostic",
-                "icon": "mdi:database-outline",
-            },
         }
+
+        # Delete retained MQTT discovery configurations from older releases so
+        # Home Assistant removes the obsolete entities automatically after the
+        # first successful MQTT connection following an upgrade.
+        obsolete_sensor_ids = (
+            "average_30d",
+            "hour_index",
+            "raw_cph",
+            "last_update",
+            "sample_count",
+        )
+        for object_id in obsolete_sensor_ids:
+            topic = f"{self.settings.discovery_prefix}/sensor/{device_id}/{object_id}/config"
+            self.client.publish(topic, "", retain=True)
+        self.client.publish(
+            f"{self.settings.discovery_prefix}/binary_sensor/{device_id}/connected/config",
+            "",
+            retain=True,
+        )
         for object_id, extra in sensors.items():
             payload = {
                 **base,
@@ -220,21 +195,6 @@ class MqttPublisher:
             topic = f"{self.settings.discovery_prefix}/sensor/{device_id}/{object_id}/config"
             self.client.publish(topic, json.dumps(payload, ensure_ascii=False), retain=True)
 
-        binary = {
-            **base,
-            "name": t["connected"],
-            "unique_id": f"gq_radonscan_{device_id}_connected",
-            "value_template": guarded("{{ 'ON' if value_json.connection.connected else 'OFF' }}", "OFF"),
-            "payload_on": "ON",
-            "payload_off": "OFF",
-            "device_class": "connectivity",
-            "entity_category": "diagnostic",
-        }
-        self.client.publish(
-            f"{self.settings.discovery_prefix}/binary_sensor/{device_id}/connected/config",
-            json.dumps(binary, ensure_ascii=False),
-            retain=True,
-        )
         self._discovery_device_id = device_id
 
     def publish(self, state: dict[str, Any]) -> None:

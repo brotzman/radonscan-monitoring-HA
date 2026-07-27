@@ -1,5 +1,14 @@
 # Changelog
 
+## 5.5.5 - Minimal Home Assistant entity set in Bq/m³
+
+- Reduced MQTT discovery to exactly three Home Assistant sensor entities: completed hourly Radon value, 24-hour mean and 7-day mean.
+- Forced all three Home Assistant entities to use `Bq/m³`, independently of the display unit selected inside the Radon Monitoring web interface.
+- Removed the 30-day mean, raw counts per hour, hour index, last-update timestamp, sample count and connectivity binary sensor from Home Assistant discovery.
+- Publish retained empty discovery payloads for the removed entities so Home Assistant deletes the obsolete MQTT entities automatically after the first successful MQTT connection following the upgrade.
+- Removed the full JSON state as attributes from the hourly Radon entity, leaving only the requested measurement state.
+- No database schema, measurement storage or application-view changes.
+
 ## 5.5.4 - Correct public GMCMap upload endpoint
 
 - Corrected the World Map target from the unavailable `rdlog.asp` URL to GMCMap's documented public `log2.asp` submission endpoint.

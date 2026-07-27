@@ -291,7 +291,7 @@
   "main_navigation": "Nawigacja główna",
   "mann_kendall_tau": "Tau Manna-Kendalla",
   "manual": "Manual",
-  "manual_note_v3": "Podręcznik użytkownika odpowiada wersji 5.5.4. Oddzielna dokumentacja protokołu SPIR pozostaje w wersji 3.0.0, ponieważ opisuje protokół urządzenia, a nie wersję aplikacji.",
+  "manual_note_v3": "Podręcznik użytkownika odpowiada wersji 5.5.5. Oddzielna dokumentacja protokołu SPIR pozostaje w wersji 3.0.0, ponieważ opisuje protokół urządzenia, a nie wersję aplikacji.",
   "manual_upload": "Przesyłanie ręczne",
   "manual_upload_hint": "Przesyła tylko najnowszy zakończony lokalny odczyt godzinowy. Opublikowany protokół nie pozwala przesyłać historycznych znaczników czasu.",
   "map_click_hint": "Kliknij plan, aby ustawić położenie pomieszczenia.",

@@ -291,7 +291,7 @@
   "main_navigation": "Main navigation",
   "mann_kendall_tau": "Mann–Kendall tau",
   "manual": "Manual",
-  "manual_note_v3": "The user manual matches version 5.5.4. The separate SPIR protocol reference remains version 3.0.0 because it describes the device protocol, not the app release.",
+  "manual_note_v3": "The user manual matches version 5.5.5. The separate SPIR protocol reference remains version 3.0.0 because it describes the device protocol, not the app release.",
   "manual_upload": "Manual upload",
   "manual_upload_hint": "Uploads only the latest completed local hourly reading. Historical timestamps cannot be sent by the published protocol.",
   "map_click_hint": "Click the floor plan to set the room position.",

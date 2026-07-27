@@ -1,4 +1,4 @@
-# Radon Monitoring 5.5.4
+# Radon Monitoring 5.5.5
 
 Radon Monitoring is a local Home Assistant app for read-only monitoring of compatible GQ RadonScan devices. It imports completed hourly values, stores raw and converted measurements in SQLite, publishes Home Assistant entities through MQTT, provides scientific time-series analysis, generates PDF reports and can optionally upload measurements to the GQ Radiation World Map.
 
@@ -6,6 +6,7 @@ Radon Monitoring is a local Home Assistant app for read-only monitoring of compa
 
 - read-only SPIR device communication
 - completed hourly values with raw CPH and the factor stored for each record
+- exactly three Home Assistant MQTT entities in Bq/m³: hourly Radon value, 24-hour mean and 7-day mean
 - coherent Overview for device and campaign with automatic room resolution
 - Radon traffic light based primarily on the 24-hour mean, with an explicitly provisional hourly fallback
 - Home Assistant location summary with configurable privacy level and no external geocoding
@@ -23,29 +24,29 @@ Radon Monitoring is a local Home Assistant app for read-only monitoring of compa
 - optional complete Home Assistant Recorder purge for RadonScan entities, plus verification through the History API
 - interface and Home Assistant option translations in German, English, Spanish, French, Croatian, Italian, Dutch and Polish
 
-## Version 5.5.4
+## Version 5.5.5
 
-Version 5.5.4 corrects the GQ Radiation World Map integration. The `rdlog.asp` address shown in the device's Wi-Fi server menu is not available as the public HTTPS submission endpoint and returns HTTP 404. Radon Monitoring therefore uses GMCMap's documented public endpoint:
+Version 5.5.5 simplifies the Home Assistant entity model. MQTT discovery now publishes exactly three sensors:
 
-```text
-https://www.gmcmap.com/log2.asp
-```
+- completed hourly Radon value in `Bq/m³`
+- 24-hour mean in `Bq/m³`
+- 7-day mean in `Bq/m³`
 
-RadonScan uploads remain strictly radon-only. The query contains exactly `AID`, `GID` and `pCi`; the application does not send `CPM`, `ACPM` or `uSV`. This prevents artificial `0 CPM` radioactivity entries while restoring a reachable upload target. HTTP status codes and response bodies are stored in the upload result so server, account and device-ID errors are easier to diagnose.
+The Home Assistant unit no longer follows the web-interface display preference. Even when the app itself is configured to display `pCi/L`, the three Home Assistant sensors remain in `Bq/m³`.
 
-The fixed-port and serial-discovery improvements from 5.5.3 remain unchanged. A configured `serial_port` is used exclusively; for this installation the stable path is `/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0`. An explicit `auto` value still enables filtered automatic discovery.
+The following discovery entities from earlier releases are removed: 30-day mean, raw counts per hour, hour index, last update, sample count and the connectivity binary sensor. On the first successful MQTT connection after the upgrade, Radon Monitoring publishes retained empty discovery messages for these old topics so Home Assistant removes them automatically. The hourly sensor also no longer receives the complete internal JSON state as attributes.
 
-The database schema, queue format, measurements, MQTT identifiers and analysis functions remain unchanged.
+The radon-only GMCMap upload through `log2.asp`, the fixed serial-port selection and all analysis functions remain unchanged. There is no database-schema change and stored measurements are not modified.
 
 ## Upgrade notes
 
-The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.4 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
+The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.5 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
 
 Before upgrading:
 
 1. Create a Home Assistant backup and, where appropriate, an app database backup.
 2. Stop the app before replacing a local repository package.
-3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.4.
+3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.5.
 4. Reopen the Ingress panel if an old iframe remains visible.
 5. Review `location_display_mode` if the Overview is shown in screenshots or shared displays.
 

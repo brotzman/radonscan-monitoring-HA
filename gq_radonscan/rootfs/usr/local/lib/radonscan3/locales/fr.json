@@ -291,7 +291,7 @@
   "main_navigation": "Navigation principale",
   "mann_kendall_tau": "Tau de Mann-Kendall",
   "manual": "Manual",
-  "manual_note_v3": "Le manuel utilisateur correspond à la version 5.5.4. La référence séparée du protocole SPIR reste en version 3.0.0, car elle décrit le protocole de l’appareil et non la version de l’application.",
+  "manual_note_v3": "Le manuel utilisateur correspond à la version 5.5.5. La référence séparée du protocole SPIR reste en version 3.0.0, car elle décrit le protocole de l’appareil et non la version de l’application.",
   "manual_upload": "Envoi manuel",
   "manual_upload_hint": "Envoie uniquement le dernier relevé horaire local terminé. Le protocole publié ne permet pas d’envoyer des horodatages historiques.",
   "map_click_hint": "Cliquez sur le plan pour définir la position de la pièce.",
