@@ -1,5 +1,14 @@
 # Changelog
 
+## 5.5.14 - Long-running SPIR history compatibility
+
+- Fixed repeated `read_error: first time record is not t=0` failures when a long-running RadonScan exposes a continuous visible time-record window that no longer contains the original `t=0` marker.
+- Preserve the established fresh-history interpretation where `t=0` is a marker with no matching raw CPH value.
+- Accept a non-zero first time record only when all visible records remain hour-aligned and advance by exactly 3600 seconds; in that state every visible record is paired with one raw CPH value.
+- Added diagnostics for origin-marker presence and visible history-window start hour.
+- Added regression coverage for fresh histories, rolling windows, maximum 292-record windows, malformed timing and continuity into the existing measurement campaign.
+- Kept read-only transport, raw-value plausibility checks, database schema, MQTT identifiers and stored data format unchanged.
+
 ## 5.5.13 - Reliable weekly heatmap rendering
 
 - Fixed the blank **Weekly heatmap** that could occur when Analysis loaded before the initial application state and threshold settings were available.

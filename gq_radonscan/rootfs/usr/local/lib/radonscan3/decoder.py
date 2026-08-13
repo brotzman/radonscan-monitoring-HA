@@ -8,7 +8,7 @@ from .protocol import BLOCK_SIZE
 
 TIME_RECORD_SIZE = 14
 RAW_END_OFFSET = 0x0CBC
-DECODER_ID = "radonscan-re2-hourly-v2"
+DECODER_ID = "radonscan-re2-hourly-v3"
 
 
 class DecodeError(ValueError):
@@ -53,6 +53,8 @@ class Snapshot:
             "factor_bq_m3_per_cph": self.factor,
             "time_record_count": len(self.time_records),
             "hourly_record_count": len(self.records),
+            "history_origin_marker_present": bool(self.time_records and self.time_records[0].seconds == 0),
+            "history_window_start_hour_index": self.time_records[0].hour_index if self.time_records else None,
             "latest_hour_index": latest.hour_index if latest else None,
             "latest_time_seconds": latest.time_seconds if latest else None,
             "latest_raw_cph": latest.raw_cph if latest else None,
@@ -93,8 +95,6 @@ def parse_time_records(block_fe: bytes) -> tuple[TimeRecord, ...]:
         previous = seconds
     if not records:
         raise DecodeError("0x1FE000 contains no AA55 time records")
-    if records[0].seconds != 0:
-        raise DecodeError("first time record is not t=0")
     return tuple(records)
 
 
@@ -120,16 +120,27 @@ def decode(block_fc: bytes, block_fd: bytes, block_fe: bytes, factor: float) -> 
     if not 0.001 <= factor <= 1000:
         raise DecodeError("conversion factor outside supported range")
     time_records = parse_time_records(block_fe)
-    count = max(0, len(time_records) - 1)
-    raw_values, raw_start = _raw_values(block_fc, count)
+
+    # Fresh RadonScan histories begin with a special t=0 marker that has no
+    # corresponding CPH value. Field devices can outlive the 14-byte history
+    # window, however, and then present a continuous hour-aligned window whose
+    # first visible record is greater than zero. In that rolling-window state
+    # every visible time record represents a completed hourly measurement.
+    #
+    # Keep the original marker behaviour byte-for-byte compatible while also
+    # accepting a non-zero start only after parse_time_records() has verified
+    # strict +3600-second continuity for the complete visible window.
+    origin_marker_present = time_records[0].seconds == 0
+    measurement_time_records = time_records[1:] if origin_marker_present else time_records
+    raw_values, raw_start = _raw_values(block_fc, len(measurement_time_records))
     records = tuple(
         HourlyRecord(
-            hour_index=time_records[position].hour_index,
-            time_seconds=time_records[position].seconds,
+            hour_index=time_record.hour_index,
+            time_seconds=time_record.seconds,
             raw_cph=int(raw),
             bq_m3=round(float(raw) * factor, 6),
         )
-        for position, raw in enumerate(raw_values, start=1)
+        for time_record, raw in zip(measurement_time_records, raw_values)
     )
     return Snapshot(
         records=records,

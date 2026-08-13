@@ -1,4 +1,4 @@
-# Radon Monitoring 5.5.13
+# Radon Monitoring 5.5.14
 
 Radon Monitoring is a local Home Assistant app for read-only monitoring of compatible GQ RadonScan devices. It imports completed hourly values, stores raw and converted measurements in SQLite, publishes Home Assistant entities through MQTT, provides scientific time-series analysis, generates PDF reports and can optionally upload measurements to the GQ Radiation World Map.
 
@@ -24,6 +24,14 @@ Radon Monitoring is a local Home Assistant app for read-only monitoring of compa
 - optional complete Home Assistant Recorder purge for RadonScan entities, plus verification through the History API
 - interface and Home Assistant option translations in German, English, Spanish, French, Croatian, Italian, Dutch and Polish
 
+## Version 5.5.14
+
+Version 5.5.14 fixes a long-running SPIR history compatibility failure seen after the device's visible 14-byte time-record window no longer starts with the original `t=0` marker. Earlier releases treated any non-zero first record as corrupt and repeatedly reported `first time record is not t=0`.
+
+The decoder now preserves the original marker semantics for fresh histories and additionally accepts a non-zero first hour when the complete visible time-record sequence is still strictly hour-aligned and advances by exactly 3600 seconds. In that rolling-window state every visible time record is paired with one raw CPH value. Alignment, 4096-byte block-size, conversion-factor and implausible-CPH checks remain unchanged.
+
+The decoder diagnostics now expose whether the origin marker is present and the first visible hour index. The database schema, stored measurements, MQTT identifiers, World Map format and read-only device transport are unchanged.
+
 ## Version 5.5.13
 
 Version 5.5.13 fixes a load-order error that could leave the **Weekly heatmap** panel empty. When Analysis was opened before the initial application state had finished loading, the renderer tried to read threshold settings from an unavailable state object and stopped before creating the grid.
@@ -34,13 +42,13 @@ Cells without sufficient data remain visibly hatched. Existing measurements, sta
 
 ## Upgrade notes
 
-The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.13 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
+The slug `gq_radonscan`, data path, SQLite filename, MQTT identifiers and entity unique IDs remain unchanged. Version 5.5.14 does not introduce a database-schema change. Existing 4.x, 5.0.0, 5.1.0, 5.2.0 and 5.3.0 databases open in place.
 
 Before upgrading:
 
 1. Create a Home Assistant backup and, where appropriate, an app database backup.
 2. Stop the app before replacing a local repository package.
-3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.13.
+3. Start the updated app and confirm that the sidebar or Help view reports version 5.5.14.
 4. Reopen the Ingress panel if an old iframe remains visible.
 5. Review `location_display_mode` if the Overview is shown in screenshots or shared displays.
 

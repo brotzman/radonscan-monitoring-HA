@@ -1,4 +1,4 @@
-# Testing - Radon Monitoring 5.5.13
+# Testing - Radon Monitoring 5.5.14
 
 ## Standard command
 
@@ -18,6 +18,7 @@ Root `pyproject.toml` supplies the app library path and test directory. The app 
 - Home Assistant purge payload and purge verification
 - token and error redaction
 - USB disconnect/reconnect runtime state
+- fresh `t=0` SPIR decoding plus continuous non-zero rolling-window decoding and campaign continuity
 - GQ World Map queue and manual POST route
 - Radon-only GMCMap request contract: `log2.asp` with exactly `AID`, `GID` and `pCi`; no `CPM`, `ACPM` or `uSV`
 - actual web-server static assets and protected endpoints

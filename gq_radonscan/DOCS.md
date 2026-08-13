@@ -1,4 +1,12 @@
-# Radon Monitoring 5.5.13 - App documentation
+# Radon Monitoring 5.5.14 - App documentation
+
+## Rolling SPIR history compatibility in 5.5.14
+
+Long-running devices can present a valid visible time-record window whose first record is no longer `t=0`. Version 5.5.14 treats that state as a rolling history window when every visible record is hour-aligned and the sequence advances by exactly 3600 seconds. Each visible time record is then paired with one raw CPH value.
+
+Fresh histories still use the original interpretation: `t=0` is a marker and therefore has no raw CPH value; records 1..N are paired with the raw history. A non-zero start does not weaken the structural checks: malformed block lengths, non-hour-aligned records, broken 3600-second sequences and implausible CPH values are still rejected.
+
+The state payload exposes `history_origin_marker_present` and `history_window_start_hour_index` for diagnosis. This compatibility handling is based on observed long-running device behaviour; the bundled community SPIR protocol reference remains deliberately conservative and is not presented as an official GQ specification.
 
 ## Weekly heatmap reliability in 5.5.13
 

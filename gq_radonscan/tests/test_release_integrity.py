@@ -9,16 +9,16 @@ LOCALES = LIB / 'locales'
 
 
 def test_release_versions_are_consistent():
-    assert 'version: 5.5.13' in (ROOT / 'config.yaml').read_text(encoding='utf-8')
-    assert 'BUILD_VERSION="5.5.13"' in (ROOT / 'Dockerfile').read_text(encoding='utf-8')
-    assert '__version__ = "5.5.13"' in (LIB / '__init__.py').read_text(encoding='utf-8')
-    assert 'Radon Monitoring 5.5.13' in (ROOT / 'README.md').read_text(encoding='utf-8')
+    assert 'version: 5.5.14' in (ROOT / 'config.yaml').read_text(encoding='utf-8')
+    assert 'BUILD_VERSION="5.5.14"' in (ROOT / 'Dockerfile').read_text(encoding='utf-8')
+    assert '__version__ = "5.5.14"' in (LIB / '__init__.py').read_text(encoding='utf-8')
+    assert 'Radon Monitoring 5.5.14' in (ROOT / 'README.md').read_text(encoding='utf-8')
 
 
 def test_current_manuals_exist_and_obsolete_manuals_are_removed():
     docs = ROOT / 'rootfs/usr/local/share/radonscan3/docs'
     for lang in ('de', 'en'):
-        path = docs / f'Radon_Monitoring_User_Manual_5.5.13_{lang}.pdf'
+        path = docs / f'Radon_Monitoring_User_Manual_5.5.14_{lang}.pdf'
         assert path.is_file() and path.stat().st_size > 10_000
     assert not list(docs.glob('Radon_Monitoring_User_Manual_4.2.1_*.pdf'))
     assert not list(docs.glob('Radon_Monitoring_User_Manual_4.9.0_*.pdf'))
@@ -26,7 +26,7 @@ def test_current_manuals_exist_and_obsolete_manuals_are_removed():
     assert not list(docs.glob('Radon_Monitoring_User_Manual_5.3.0_*.pdf'))
     assert not list(docs.glob('Radon_Monitoring_User_Manual_5.3.2_*.pdf'))
     assert not list(docs.glob('Radon_Monitoring_User_Manual_5.5.8_*.pdf'))
-    assert 'Radon_Monitoring_User_Manual_5.5.13' in (LIB / 'web.py').read_text(encoding='utf-8')
+    assert 'Radon_Monitoring_User_Manual_5.5.14' in (LIB / 'web.py').read_text(encoding='utf-8')
 
 
 def test_frontend_assets_and_ids_are_consistent():

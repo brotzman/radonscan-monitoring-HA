@@ -260,6 +260,14 @@ class Collector:
 
             blocks = [self._read_block(handle, address) for address in TARGET_ADDRESSES]
             snapshot = decode(*blocks, self.settings.factor_bq_m3_per_cph)
+            if snapshot.time_records and snapshot.time_records[0].seconds != 0:
+                LOGGER.info(
+                    "SPIR rolling history window accepted on %s: first_hour_index=%s last_hour_index=%s time_records=%s",
+                    port,
+                    snapshot.time_records[0].hour_index,
+                    snapshot.time_records[-1].hour_index,
+                    len(snapshot.time_records),
+                )
             model = "GQ RadonScan"
             firmware = version
             return ScanResult(
