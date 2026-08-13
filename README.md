@@ -1,11 +1,9 @@
-# Radon Monitoring Home Assistant Repository 5.5.13
+# Radon Monitoring Home Assistant Repository 5.5.14
 
 This repository contains the Home Assistant app **Radon Monitoring** for compatible GQ RadonScan devices.
 
-Version 5.5.13 fixes the blank **Weekly heatmap** in Analysis. The heatmap now renders reliably even when the Analysis response arrives before the initial application settings, and it can reconstruct the full 7 x 24 grid from the selected records if the precomputed API grid is unavailable.
+Version 5.5.14 fixes long-running read-only SPIR imports when the visible 14-byte time-record window no longer begins with the original `t=0` marker. A continuous, hour-aligned non-zero history window is now accepted and paired with the matching raw CPH values instead of being rejected with `first time record is not t=0`.
 
-All weekday and hourly cells are always visible. Missing combinations remain hatched, while available measurements are coloured according to the configured warning and danger thresholds once the application state has loaded.
-
-All stored measurements, calculations, MQTT entities, upload logic, API routes and database structures remain unchanged.
+Fresh histories keep the established `t=0` marker behaviour unchanged. Strict 3600-second continuity, block-size checks, raw-value plausibility checks and read-only transport remain enforced. No database-schema change is introduced.
 
 See `gq_radonscan/README.md`, `gq_radonscan/DOCS.md`, `gq_radonscan/maintainer/COMPATIBILITY.md` and `gq_radonscan/CHANGELOG.md` for installation, operation and release details.
